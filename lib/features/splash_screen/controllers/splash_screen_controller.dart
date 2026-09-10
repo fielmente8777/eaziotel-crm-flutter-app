@@ -2,6 +2,7 @@ import 'package:eazotel/core/local_storage/token_storage.dart';
 import 'package:eazotel/features/auth/screens/login_screen.dart';
 
 import 'package:eazotel/main.dart';
+import 'package:eazotel/welcome.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

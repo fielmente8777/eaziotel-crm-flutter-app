@@ -194,4 +194,40 @@ class ApiClient {
       return false;
     }
   }
+  // ============================================================
+// GOOGLE AUTH API
+// ============================================================
+
+static Future<http.Response> googleAuth(
+  String idToken,
+) async {
+  print('🚀 Sending Google token to backend...');
+
+  final url = Uri.parse(
+    BaseUrl.googleAuthUrl,
+  );
+
+  final response = await _client.post(
+    url,
+
+    // Google ID token backend ko bhej rahe hain
+    headers: {
+      'Authorization': 'Bearer $idToken',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+
+    // Backend empty JSON body expect karta hai
+    body: jsonEncode({}),
+  );
+
+  // ==========================================================
+  // API RESPONSE LOG
+  // ==========================================================
+
+  print('📡 API Status Code: ${response.statusCode}');
+  print('📦 API Response: ${response.body}');
+
+  return response;
+}
 }

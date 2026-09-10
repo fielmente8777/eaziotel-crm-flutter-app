@@ -1,9 +1,9 @@
-import 'package:eazotel/core/api/google_signin_api.dart';
 import 'package:eazotel/features/auth/controllers/login_controller.dart';
 import 'package:eazotel/main.dart';
+import 'package:eazotel/welcome.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -13,7 +13,11 @@ class LoginScreen extends StatelessWidget {
     final controller = Get.put(LoginController());
 
     final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
 
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    final isDarkMode = theme.brightness == Brightness.light;
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -23,15 +27,17 @@ class LoginScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 55),
 
-              // Logo
+              // ==================================================
+              // LOGO
+              // ==================================================
               Center(
                 child: Column(
                   children: [
-                    Text(
-                      'EAZOTEL',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -1,
+                    Visibility(
+                      visible: !isDarkMode,
+                      child: SvgPicture.asset(
+                        'assets/image/eazotel.svg',
+                        width: screenWidth * 0.35,
                       ),
                     ),
 
@@ -56,14 +62,16 @@ class LoginScreen extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 42),
+              const SizedBox(height: 32),
 
-              // Welcome
+              // ==================================================
+              // WELCOME
+              // ==================================================
               Center(
                 child: Text(
                   'Welcome back',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
@@ -73,7 +81,8 @@ class LoginScreen extends StatelessWidget {
               Center(
                 child: Text(
                   'Sign in to your HotelCRM account',
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -81,7 +90,9 @@ class LoginScreen extends StatelessWidget {
 
               const SizedBox(height: 36),
 
-              // Email
+              // ==================================================
+              // EMAIL
+              // ==================================================
               Text('EMAIL ADDRESS', style: theme.textTheme.labelSmall),
 
               const SizedBox(height: 7),
@@ -97,14 +108,16 @@ class LoginScreen extends StatelessWidget {
 
               const SizedBox(height: 26),
 
-              // Password
+              // ==================================================
+              // PASSWORD
+              // ==================================================
               Text('PASSWORD', style: theme.textTheme.labelSmall),
 
               const SizedBox(height: 7),
 
               TextFormField(
                 controller: controller.passwordController,
-                obscureText: false,
+                obscureText: true,
                 decoration: const InputDecoration(
                   hintText: '••••••••',
                   suffixIcon: Icon(Icons.visibility_off_outlined),
@@ -113,7 +126,9 @@ class LoginScreen extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              // Forgot password
+              // ==================================================
+              // FORGOT PASSWORD
+              // ==================================================
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
@@ -124,7 +139,9 @@ class LoginScreen extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              // Sign in button
+              // ==================================================
+              // SIGN IN BUTTON
+              // ==================================================
               Obx(() {
                 return SizedBox(
                   width: double.infinity,
@@ -135,16 +152,20 @@ class LoginScreen extends StatelessWidget {
                         : () async {
                             final success = await controller.login();
 
-                            if (success && context.mounted) {
+                            if (!context.mounted) {
+                              return;
+                            }
+
+                            if (success) {
                               Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(
                                   builder: (_) => const WelcomeScreen(),
                                 ),
                                 (route) => false,
                               );
-                            } else if (context.mounted) {
+                            } else {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Login failed')),
+                                const SnackBar(content: Text('❌ Login failed')),
                               );
                             }
                           },
@@ -158,9 +179,12 @@ class LoginScreen extends StatelessWidget {
                   ),
                 );
               }),
+
               const SizedBox(height: 24),
 
+              // ==================================================
               // OR
+              // ==================================================
               Row(
                 children: [
                   const Expanded(child: Divider()),
@@ -181,81 +205,78 @@ class LoginScreen extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // Google
-              // SizedBox(
-              //   width: double.infinity,
-              //   height: 48,
-              //   child: OutlinedButton(
-              //     onPressed: () {},
-              //     style: OutlinedButton.styleFrom(
-              //       backgroundColor: theme.cardTheme.color,
-              //       side: BorderSide(
-              //         color:
-              //             theme.dividerTheme.color ?? theme.colorScheme.outline,
-              //       ),
-              //       shape: RoundedRectangleBorder(
-              //         borderRadius: BorderRadius.circular(10),
-              //       ),
-              //     ),
-              //     child: Row(
-              //       mainAxisAlignment: MainAxisAlignment.center,
-              //       children: [
-              //         Text(
-              //           'G',
-              //           style: theme.textTheme.titleMedium?.copyWith(
-              //             color: Colors.blue,
-              //             fontWeight: FontWeight.bold,
-              //           ),
-              //         ),
-
-              //         const SizedBox(width: 12),
-
-              //         Text(
-              //           'Continue with Google',
-              //           style: theme.textTheme.bodyMedium,
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ),
-
-              // Google Sign Up
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    elevation: 0,
-                    side: BorderSide(
-                      color:
-                          theme.dividerTheme.color ?? theme.colorScheme.outline,
+              // ==================================================
+              // GOOGLE LOGIN
+              // ==================================================
+              Obx(() {
+                return SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      elevation: 0,
+                      side: BorderSide(
+                        color:
+                            theme.dividerTheme.color ??
+                            theme.colorScheme.outline,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  icon: const Icon(
-                    Icons.g_mobiledata,
-                    color: Colors.red,
-                    size: 30,
-                  ),
-                  label: const Text(
-                    'Sign Up with Google',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  onPressed: () async {
-                   ;
 
-                  
-                  },
-                ),
-              ),
+                    icon: const Icon(
+                      Icons.g_mobiledata,
+                      color: Colors.red,
+                      size: 30,
+                    ),
+
+                    label: controller.isLoading.value
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text(
+                            'Continue with Google',
+                            style: TextStyle(fontWeight: FontWeight.w500),
+                          ),
+
+                    onPressed: controller.isLoading.value
+                        ? null
+                        : () async {
+                            final success = await controller.loginWithGoogle();
+
+                            if (!context.mounted) {
+                              return;
+                            }
+
+                            if (success) {
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                  builder: (_) => const WelcomeScreen(),
+                                ),
+                                (route) => false,
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('❌ Google login failed'),
+                                ),
+                              );
+                            }
+                          },
+                  ),
+                );
+              }),
 
               const SizedBox(height: 25),
 
-              // Sign up
+              // ==================================================
+              // SIGN UP
+              // ==================================================
               Center(
                 child: RichText(
                   text: TextSpan(
@@ -266,8 +287,13 @@ class LoginScreen extends StatelessWidget {
                       const TextSpan(text: "Don't have an account? "),
 
                       TextSpan(
-                        text: 'Sign up free',
-                        style: TextStyle(color: theme.colorScheme.primary),
+                        text: 'Sign up',
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          decoration: TextDecoration.lineThrough,
+                          decorationColor: theme.colorScheme.primary,
+                          decorationThickness: 2,
+                        ),
                       ),
                     ],
                   ),
