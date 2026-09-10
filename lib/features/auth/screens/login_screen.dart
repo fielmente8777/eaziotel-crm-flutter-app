@@ -1,4 +1,6 @@
 import 'package:eazotel/features/auth/controllers/login_controller.dart';
+import 'package:eazotel/features/dashboard_screen/screens/dashbord_botum_nav.dart';
+import 'package:eazotel/features/dashboard_screen/screens/test_dashboard_main_screen.dart';
 import 'package:eazotel/main.dart';
 import 'package:eazotel/welcome.dart';
 import 'package:flutter/material.dart';
@@ -159,7 +161,7 @@ class LoginScreen extends StatelessWidget {
                             if (success) {
                               Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(
-                                  builder: (_) => const WelcomeScreen(),
+                                  builder: (_) => const DashboardBottomNav(),
                                 ),
                                 (route) => false,
                               );
@@ -256,7 +258,7 @@ class LoginScreen extends StatelessWidget {
                             if (success) {
                               Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(
-                                  builder: (_) => const WelcomeScreen(),
+                                  builder: (_) => const DashboardBottomNav(),
                                 ),
                                 (route) => false,
                               );

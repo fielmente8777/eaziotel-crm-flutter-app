@@ -26,56 +26,41 @@ class GoogleAuthController extends GetxController {
       // 1. Google Sign In
       // ----------------------------------------------------------
 
-      final account =
-          await GoogleAuthService.signIn();
+      final account = await GoogleAuthService.signIn();
 
       if (account == null) {
-        debugPrint(
-          '⚠️ GOOGLE LOGIN CANCELLED',
-        );
+        debugPrint('⚠️ GOOGLE LOGIN CANCELLED');
 
         return false;
       }
 
-      debugPrint(
-        '👤 GOOGLE USER: ${account.email}',
-      );
+      debugPrint('👤 GOOGLE USER: ${account.email}');
 
       // ----------------------------------------------------------
       // 2. Get Google Authentication
       // ----------------------------------------------------------
 
-      final authentication =
-          await account.authentication;
+      final authentication = await account.authentication;
 
       // ----------------------------------------------------------
       // 3. Get Google ID Token
       // ----------------------------------------------------------
 
-      final idToken =
-          authentication.idToken;
+      final idToken = authentication.idToken;
 
-      if (idToken == null ||
-          idToken.isEmpty) {
-        debugPrint(
-          '❌ GOOGLE ID TOKEN NOT FOUND',
-        );
+      if (idToken == null || idToken.isEmpty) {
+        debugPrint('❌ GOOGLE ID TOKEN NOT FOUND');
 
         return false;
       }
 
-      debugPrint(
-        '🔑 GOOGLE ID TOKEN RECEIVED',
-      );
+      debugPrint('🔑 GOOGLE ID TOKEN RECEIVED');
 
       // ----------------------------------------------------------
       // 4. Send Google ID Token to Backend
       // ----------------------------------------------------------
 
-      final response =
-          await ApiClient.googleAuth(
-        idToken,
-      );
+      final response = await ApiClient.googleAuth(idToken);
 
       debugPrint(
         '📡 GOOGLE API STATUS: '
@@ -91,18 +76,12 @@ class GoogleAuthController extends GetxController {
       // 5. Check Backend Response
       // ----------------------------------------------------------
 
-      if (response.statusCode >= 200 &&
-          response.statusCode < 300) {
-        final data =
-            jsonDecode(response.body);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = jsonDecode(response.body);
 
-        debugPrint(
-          '✅ GOOGLE BACKEND LOGIN SUCCESS',
-        );
+        debugPrint('✅ GOOGLE BACKEND LOGIN SUCCESS');
 
-        debugPrint(
-          '📦 DATA: $data',
-        );
+        debugPrint('📦 DATA: $data');
 
         // --------------------------------------------------------
         // 6. Get Backend Token
@@ -114,34 +93,22 @@ class GoogleAuthController extends GetxController {
             data['accessToken'] ??
             data['access_token'];
 
-        if (token != null &&
-            token.toString().isNotEmpty) {
-          await TokenStorage.saveTokens(
-            accessToken:
-                token.toString(),
-          );
+        if (token != null && token.toString().isNotEmpty) {
+          await TokenStorage.saveTokens(accessToken: token.toString());
 
-          debugPrint(
-            '💾 BACKEND TOKEN SAVED SUCCESSFULLY',
-          );
+          debugPrint('💾 BACKEND TOKEN SAVED SUCCESSFULLY');
         } else {
-          debugPrint(
-            '⚠️ BACKEND TOKEN NOT FOUND',
-          );
+          debugPrint('⚠️ BACKEND TOKEN NOT FOUND');
         }
 
         return true;
       }
 
-      debugPrint(
-        '❌ GOOGLE BACKEND LOGIN FAILED',
-      );
+      debugPrint('❌ GOOGLE BACKEND LOGIN FAILED');
 
       return false;
     } catch (e) {
-      debugPrint(
-        '❌ GOOGLE LOGIN ERROR: $e',
-      );
+      debugPrint('❌ GOOGLE LOGIN ERROR: $e');
 
       return false;
     } finally {
@@ -154,25 +121,18 @@ class GoogleAuthController extends GetxController {
   // ============================================================
 
   Future<void> logout() async {
-  try {
     debugPrint('🚪 LOGOUT STARTED');
 
-    // SharedPreferences ka SAARA DATA clear
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    try {
+      final prefs = await SharedPreferences.getInstance();
 
-    debugPrint('🗑️ ALL SHARED PREFERENCES CLEARED');
+      await prefs.clear();
 
-    // Google account sign out
-    await GoogleAuthService.signOut();
+      debugPrint('🗑️ ALL SHARED PREFERENCES CLEARED');
+    } catch (e) {
+      debugPrint('❌ LOGOUT ERROR: $e');
+    }
 
-    debugPrint('🚪 GOOGLE SIGN OUT SUCCESSFUL');
-  } catch (e) {
-    debugPrint('❌ LOGOUT ERROR: $e');
-
-    // Error aaye tab bhi SharedPreferences clear karo
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    debugPrint('✅ LOGOUT FUNCTION COMPLETE');
   }
-}
 }

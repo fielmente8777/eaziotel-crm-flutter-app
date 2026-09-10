@@ -1,14 +1,9 @@
-import 'dart:convert';
-
-import 'package:eazotel/features/auth/controllers/google_auth_controller.dart';
-import 'package:eazotel/features/splash_screen/screens/splash_screen.dart';
+ 
+ import 'package:eazotel/features/splash_screen/screens/splash_screen.dart';
 import 'package:eazotel/routs/app_routs.dart';
-import 'package:eazotel/utils/theme/theme.dart';
+ import 'package:eazotel/utils/theme/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:http/http.dart' as http;
-import 'package:get/get.dart';
-
+  
 void main() {
   runApp(const MyApp());
 }
@@ -46,9 +41,9 @@ class _MyAppState extends State<MyApp> {
       theme: TAppTheme.lightTheme,
       darkTheme: TAppTheme.darkTheme,
 
-      // initialRoute: '/',
-      // routes: AppRoutes.routes,
-      home: const SplashScreen(),
+      initialRoute: '/',
+      routes: AppRoutes.routes,
+      // home: const SplashScreen(),
     );
   }
 }

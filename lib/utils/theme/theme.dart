@@ -1,7 +1,6 @@
-
-
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
 import 'package:eazotel/utils/theme/custome_them/appbar_theme.dart';
+import 'package:eazotel/utils/theme/custome_them/bottom_navigation_theme.dart';
 import 'package:eazotel/utils/theme/custome_them/bottom_sheet_theme.dart';
 import 'package:eazotel/utils/theme/custome_them/elevated_button_theme.dart';
 import 'package:eazotel/utils/theme/custome_them/input_decoration.dart';
@@ -33,18 +32,13 @@ class TAppTheme {
 
     textTheme: TTextTheme.lightTextTheme,
 
-    appBarTheme:
-        TAppBarTheme.lightAppBarTheme,
+    appBarTheme: TAppBarTheme.lightAppBarTheme,
 
-    elevatedButtonTheme:
-        TElevatedButtonTheme.lightElevatedButtonTheme,
+    elevatedButtonTheme: TElevatedButtonTheme.lightElevatedButtonTheme,
 
-    inputDecorationTheme:
-        TInputDecorationTheme
-            .lightInputDecorationTheme,
+    inputDecorationTheme: TInputDecorationTheme.lightInputDecorationTheme,
 
-    bottomSheetTheme:
-        TBottomSheetTheme.lightBottomSheetTheme,
+    bottomSheetTheme: TBottomSheetTheme.lightBottomSheetTheme,
     cardTheme: CardThemeData(
       color: TAppColors.lightCard,
       elevation: 1,
@@ -64,6 +58,8 @@ class TAppTheme {
       backgroundColor: TAppColors.primary,
       foregroundColor: Colors.white,
     ),
+
+    bottomNavigationBarTheme: TBottomNavigationTheme.lightBottomNavigationTheme,
 
     chipTheme: ChipThemeData(
       backgroundColor: Colors.white,
@@ -98,15 +94,11 @@ class TAppTheme {
 
     appBarTheme: TAppBarTheme.darkAppBarTheme,
 
-    elevatedButtonTheme:
-        TElevatedButtonTheme.darkElevatedButtonTheme,
+    elevatedButtonTheme: TElevatedButtonTheme.darkElevatedButtonTheme,
 
-    inputDecorationTheme:
-        TInputDecorationTheme
-            .darkInputDecorationTheme,
+    inputDecorationTheme: TInputDecorationTheme.darkInputDecorationTheme,
 
-    bottomSheetTheme:
-        TBottomSheetTheme.darkBottomSheetTheme,
+    bottomSheetTheme: TBottomSheetTheme.darkBottomSheetTheme,
     cardTheme: CardThemeData(
       color: TAppColors.darkCard,
       elevation: 0,
@@ -126,7 +118,7 @@ class TAppTheme {
       backgroundColor: TAppColors.primary,
       foregroundColor: Colors.white,
     ),
-
+    bottomNavigationBarTheme: TBottomNavigationTheme.darkBottomNavigationTheme,
     chipTheme: ChipThemeData(
       backgroundColor: TAppColors.darkCard,
       selectedColor: TAppColors.primary,
