@@ -1,10 +1,10 @@
 import 'package:eazotel/features/dashboard_screen/controllers/bottom_nav_controller.dart';
 import 'package:flutter/material.dart';
  
-class ProfilePage extends StatelessWidget {
+class WhatsappScreen extends StatelessWidget {
   final BottomNavController controller;
 
-  const ProfilePage({super.key, required this.controller});
+  const WhatsappScreen({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {

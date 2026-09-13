@@ -11,73 +11,81 @@ class ApiClient {
   static final http.Client _client = http.Client();
 
   // ============================================================
-  // GET REQUEST
+  // GET
   // ============================================================
 
   static Future<http.Response> get(
     String endpoint, {
     bool authenticated = true,
+    String? baseUrl,
   }) async {
     return _request(
       method: 'GET',
       endpoint: endpoint,
       authenticated: authenticated,
+      baseUrl: baseUrl,
     );
   }
 
   // ============================================================
-  // POST REQUEST
+  // POST
   // ============================================================
 
   static Future<http.Response> post(
     String endpoint, {
     Map<String, dynamic>? body,
     bool authenticated = true,
+    String? baseUrl,
   }) async {
     return _request(
       method: 'POST',
       endpoint: endpoint,
       body: body,
       authenticated: authenticated,
+      baseUrl: baseUrl,
     );
   }
 
   // ============================================================
-  // PUT REQUEST
+  // PUT
   // ============================================================
 
   static Future<http.Response> put(
     String endpoint, {
     Map<String, dynamic>? body,
     bool authenticated = true,
+    String? baseUrl,
   }) async {
     return _request(
       method: 'PUT',
       endpoint: endpoint,
       body: body,
       authenticated: authenticated,
+      baseUrl: baseUrl,
     );
   }
 
   // ============================================================
-  // DELETE REQUEST
+  // DELETE
   // ============================================================
 
   static Future<http.Response> delete(
     String endpoint, {
     Map<String, dynamic>? body,
     bool authenticated = true,
+    String? baseUrl,
   }) async {
     return _request(
       method: 'DELETE',
       endpoint: endpoint,
       body: body,
       authenticated: authenticated,
+      baseUrl: baseUrl,
     );
   }
 
   // ============================================================
-  // MAIN HTTP REQUEST
+  // MAIN REQUEST
   // ============================================================
 
   static Future<http.Response> _request({
@@ -86,63 +94,65 @@ class ApiClient {
     Map<String, dynamic>? body,
     bool authenticated = true,
     bool retry = true,
+    String? baseUrl,
   }) async {
     String? accessToken;
 
-    // ----------------------------------------------------------
-    // GET SAVED ACCESS TOKEN
-    // ----------------------------------------------------------
+    // ============================================================
+    // TOKEN
+    // ============================================================
 
     if (authenticated) {
-      accessToken =
-          await TokenStorage.getAccessToken();
+      accessToken = await TokenStorage.getAccessToken();
     }
 
-    // ----------------------------------------------------------
-    // REQUEST HEADERS
-    // ----------------------------------------------------------
+    // ============================================================
+    // HEADERS
+    // ============================================================
 
     final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
 
-    // Add access token if available
-    if (accessToken != null &&
-        accessToken.isNotEmpty) {
-      headers['Authorization'] =
-          'Bearer $accessToken';
+    if (accessToken != null && accessToken.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $accessToken';
     }
 
-    // ----------------------------------------------------------
-    // CREATE URL
-    // ----------------------------------------------------------
+    // ============================================================
+    // BASE URL
+    // ============================================================
 
-    final url = Uri.parse(
-      '${BaseUrl.production}$endpoint',
-    );
+    final server = baseUrl ?? BaseUrl.production;
+
+    final url = Uri.parse('$server$endpoint');
+
+    print('');
+    print('========================================');
+    print('🌐 API REQUEST');
+    print('========================================');
+    print('METHOD: $method');
+    print('URL: $url');
+    print('AUTH: $authenticated');
+    print('TOKEN: ${accessToken != null}');
+    print('========================================');
 
     late http.Response response;
 
-    // ----------------------------------------------------------
-    // SEND REQUEST
-    // ----------------------------------------------------------
+    // ============================================================
+    // REQUEST
+    // ============================================================
 
     switch (method) {
       case 'GET':
-        response = await _client.get(
-          url,
-          headers: headers,
-        );
+        response = await _client.get(url, headers: headers);
         break;
 
       case 'POST':
         response = await _client.post(
           url,
           headers: headers,
-          body: body == null
-              ? null
-              : jsonEncode(body),
+          body: body == null ? null : jsonEncode(body),
         );
         break;
 
@@ -150,9 +160,7 @@ class ApiClient {
         response = await _client.put(
           url,
           headers: headers,
-          body: body == null
-              ? null
-              : jsonEncode(body),
+          body: body == null ? null : jsonEncode(body),
         );
         break;
 
@@ -160,27 +168,27 @@ class ApiClient {
         response = await _client.delete(
           url,
           headers: headers,
-          body: body == null
-              ? null
-              : jsonEncode(body),
+          body: body == null ? null : jsonEncode(body),
         );
         break;
 
       default:
-        throw Exception(
-          'Unsupported HTTP method: $method',
-        );
+        throw Exception('Unsupported HTTP method: $method');
     }
 
-    // ==========================================================
-    // TOKEN EXPIRED
-    // ==========================================================
+    // ============================================================
+    // RESPONSE
+    // ============================================================
 
-    if (response.statusCode == 401 &&
-        authenticated &&
-        retry) {
-      final refreshed =
-          await _refreshToken();
+    print('📡 STATUS: ${response.statusCode}');
+    print('📦 RESPONSE: ${response.body}');
+
+    // ============================================================
+    // TOKEN EXPIRED
+    // ============================================================
+
+    if (response.statusCode == 401 && authenticated && retry) {
+      final refreshed = await _refreshToken();
 
       if (refreshed) {
         return _request(
@@ -189,6 +197,7 @@ class ApiClient {
           body: body,
           authenticated: true,
           retry: false,
+          baseUrl: baseUrl,
         );
       }
 
@@ -202,40 +211,23 @@ class ApiClient {
   // GOOGLE AUTH
   // ============================================================
 
-  static Future<http.Response> googleAuth(
-    String idToken,
-  ) async {
+  static Future<http.Response> googleAuth(String idToken) async {
     print('🚀 Sending Google token to backend...');
 
-    final url = Uri.parse(
-      BaseUrl.googleAuthUrl,
-    );
+    final url = Uri.parse(BaseUrl.googleAuthUrl);
 
     final response = await _client.post(
       url,
-
-      // Google ID token goes here
       headers: {
         'Authorization': 'Bearer $idToken',
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-
-      // Backend expects empty body
       body: jsonEncode({}),
     );
 
-    // ==========================================================
-    // PRINT RESPONSE
-    // ==========================================================
-
-    print(
-      '📡 API Status Code: ${response.statusCode}',
-    );
-
-    print(
-      '📦 API Response: ${response.body}',
-    );
+    print('📡 API Status Code: ${response.statusCode}');
+    print('📦 API Response: ${response.body}');
 
     return response;
   }
@@ -246,11 +238,9 @@ class ApiClient {
 
   static Future<bool> _refreshToken() async {
     try {
-      final refreshToken =
-          await TokenStorage.getRefreshToken();
+      final refreshToken = await TokenStorage.getRefreshToken();
 
-      if (refreshToken == null ||
-          refreshToken.isEmpty) {
+      if (refreshToken == null || refreshToken.isEmpty) {
         return false;
       }
 
@@ -265,39 +255,27 @@ class ApiClient {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          'refreshToken': refreshToken,
-        }),
+        body: jsonEncode({'refreshToken': refreshToken}),
       );
 
-      if (response.statusCode < 200 ||
-          response.statusCode >= 300) {
+      if (response.statusCode < 200 || response.statusCode >= 300) {
         return false;
       }
 
-      final data =
-          jsonDecode(response.body);
+      final data = jsonDecode(response.body);
 
       final newAccessToken =
-          data['accessToken'] ??
-          data['access_token'] ??
-          data['token'];
+          data['accessToken'] ?? data['access_token'] ?? data['token'];
 
-      final newRefreshToken =
-          data['refreshToken'] ??
-          data['refresh_token'];
+      final newRefreshToken = data['refreshToken'] ?? data['refresh_token'];
 
-      if (newAccessToken == null ||
-          newAccessToken.toString().isEmpty) {
+      if (newAccessToken == null || newAccessToken.toString().isEmpty) {
         return false;
       }
 
       await TokenStorage.saveTokens(
-        accessToken:
-            newAccessToken.toString(),
-        refreshToken:
-            newRefreshToken?.toString() ??
-                refreshToken,
+        accessToken: newAccessToken.toString(),
+        refreshToken: newRefreshToken?.toString() ?? refreshToken,
       );
 
       return true;

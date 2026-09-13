@@ -22,6 +22,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   ThemeMode themeMode = ThemeMode.system;
 
+
+// them change krne ke liya use krne ha  using button
   void changeTheme(ThemeMode mode) {
     setState(() {
       themeMode = mode;

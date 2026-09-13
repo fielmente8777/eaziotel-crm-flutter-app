@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 // SEARCH
 // ============================================================
 
-class SearchPage extends StatelessWidget {
+class LeadsScreen extends StatelessWidget {
   final BottomNavController controller;
 
-  const SearchPage({super.key, required this.controller});
+  const LeadsScreen({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {

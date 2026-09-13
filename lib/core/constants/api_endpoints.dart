@@ -1,10 +1,6 @@
 class AuthApiEndpoint {
   AuthApiEndpoint._();
 
-  // ============================================================
-  // AUTH ENDPOINTS
-  // ============================================================
-
   static const String login =
       '/eazotel/ceateuser';
 
@@ -39,6 +35,9 @@ class AuthApiEndpoint {
       '/auth/refresh-token';
 }
 
+// ============================================================
+// DASHBOARD
+// ============================================================
 
 class DashboardApiEndpoint {
   DashboardApiEndpoint._();
@@ -47,18 +46,24 @@ class DashboardApiEndpoint {
       '/api/v1/analytics/';
 }
 
+// ============================================================
+// LEADS
+// ============================================================
 
 class LeadsApiEndpoint {
   LeadsApiEndpoint._();
 
   static const String getLeads =
-      '/leads';
+      '/api/v1/leads/get';
 
   static String updateLead(String id) {
     return '/leads/$id';
   }
 }
 
+// ============================================================
+// BOOKING
+// ============================================================
 
 class BookingApiEndpoint {
   BookingApiEndpoint._();
