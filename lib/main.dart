@@ -1,11 +1,10 @@
- 
- import 'package:eazotel/features/splash_screen/screens/splash_screen.dart';
+import 'package:device_preview/device_preview.dart';
 import 'package:eazotel/routs/app_routs.dart';
- import 'package:eazotel/utils/theme/theme.dart';
+import 'package:eazotel/utils/theme/theme.dart';
 import 'package:flutter/material.dart';
-  
+
 void main() {
-  runApp(const MyApp());
+  runApp(DevicePreview(enabled: true, builder: (context) => const MyApp()));
 }
 
 // ============================================================
@@ -22,14 +21,12 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   ThemeMode themeMode = ThemeMode.system;
 
-
-// them change krne ke liya use krne ha  using button
+  // them change krne ke liya use krne ha  using button
   void changeTheme(ThemeMode mode) {
     setState(() {
       themeMode = mode;
     });
   }
-
 
   @override
   Widget build(BuildContext context) {

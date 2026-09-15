@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
@@ -13,10 +11,7 @@ class TAppBarTheme {
     foregroundColor: TAppColors.lightText,
     surfaceTintColor: Colors.transparent,
 
-    iconTheme: IconThemeData(
-      color: TAppColors.lightText,
-      size: 20,
-    ),
+    iconTheme: IconThemeData(color: TAppColors.lightText, size: 20),
 
     titleTextStyle: TextStyle(
       fontSize: 18,
@@ -32,10 +27,7 @@ class TAppBarTheme {
     foregroundColor: TAppColors.darkText,
     surfaceTintColor: Colors.transparent,
 
-    iconTheme: IconThemeData(
-      color: TAppColors.darkText,
-      size: 20,
-    ),
+    iconTheme: IconThemeData(color: TAppColors.darkText, size: 20),
 
     titleTextStyle: TextStyle(
       fontSize: 18,

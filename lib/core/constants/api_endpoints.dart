@@ -61,6 +61,22 @@ class LeadsApiEndpoint {
   }
 }
 
+
+// ============================================================
+// LEADS
+// ============================================================
+
+class analytics {
+  analytics._();
+
+  static const String getLeads =
+      '/api/v1/analytics';
+
+  static String updateLead(String id) {
+    return '/leads/$id';
+  }
+}
+
 // ============================================================
 // BOOKING
 // ============================================================

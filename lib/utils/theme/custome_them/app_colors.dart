@@ -34,4 +34,7 @@ class TAppColors {
   static const warning = Color(0xFFF59E0B);
   static const error = Color(0xFFEF4444);
   static const info = Color(0xFF3B82F6);
+
+  static const whatsappLight = Color(0xFF25D366);
+  static const whatsappDark = Color(0xFF20B858);
 }

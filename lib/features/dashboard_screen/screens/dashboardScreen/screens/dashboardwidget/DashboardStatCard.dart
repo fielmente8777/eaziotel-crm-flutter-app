@@ -38,12 +38,7 @@ class DashboardStatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.cardTheme.color,
         borderRadius: BorderRadius.circular(12),
-        border: Border(
-          top: BorderSide(
-            color: accentColor,
-            width: 2,
-          ),
-        ),
+        border: Border(top: BorderSide(color: accentColor, width: 2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,11 +51,7 @@ class DashboardStatCard extends StatelessWidget {
               color: iconColor.withOpacity(.15),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              size: 18,
-              color: iconColor,
-            ),
+            child: Icon(icon, size: 18, color: iconColor),
           ),
 
           const SizedBox(height: 8),
@@ -113,12 +104,8 @@ class DashboardStatCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Shimmer.fromColors(
-      baseColor: isDark
-          ? TAppColors.darkCard
-          : TAppColors.lightBorder,
-      highlightColor: isDark
-          ? TAppColors.darkBorder
-          : TAppColors.lightCard,
+      baseColor: isDark ? TAppColors.darkCard : TAppColors.lightBorder,
+      highlightColor: isDark ? TAppColors.darkBorder : TAppColors.lightCard,
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -139,27 +126,15 @@ class DashboardStatCard extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            Container(
-              height: 22,
-              width: 70,
-              color: Colors.white,
-            ),
+            Container(height: 22, width: 70, color: Colors.white),
 
             const SizedBox(height: 7),
 
-            Container(
-              height: 10,
-              width: 80,
-              color: Colors.white,
-            ),
+            Container(height: 10, width: 80, color: Colors.white),
 
             const Spacer(),
 
-            Container(
-              height: 9,
-              width: 65,
-              color: Colors.white,
-            ),
+            Container(height: 9, width: 65, color: Colors.white),
           ],
         ),
       ),
