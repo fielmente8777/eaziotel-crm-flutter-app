@@ -1,4 +1,8 @@
+import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
 
@@ -11,7 +15,6 @@ class DashboardStatCard extends StatelessWidget {
   final Color accentColor;
   final Color iconColor;
   final Color? valueColor;
-  final bool isLoading;
 
   const DashboardStatCard({
     super.key,
@@ -22,82 +25,85 @@ class DashboardStatCard extends StatelessWidget {
     required this.accentColor,
     required this.iconColor,
     this.valueColor,
-    this.isLoading = false,
   });
 
   @override
+  @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return _shimmerCard(context);
-    }
+    final DashboardController dashboardController =
+        Get.find<DashboardController>();
 
-    final theme = Theme.of(context);
+    return Obx(() {
+      final isLoading = dashboardController.isAnalyticsLoading.value;
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(12),
-        border: Border(top: BorderSide(color: accentColor, width: 2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon
-          Container(
-            height: 32,
-            width: 32,
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(.15),
-              borderRadius: BorderRadius.circular(8),
+      if (isLoading) {
+        return _shimmerCard(context);
+      }
+
+      final theme = Theme.of(context);
+
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: theme.cardTheme.color,
+          borderRadius: BorderRadius.circular(12),
+          border: Border(top: BorderSide(color: accentColor, width: 2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 32,
+              width: 32,
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 20, color: iconColor),
             ),
-            child: Icon(icon, size: 18, color: iconColor),
-          ),
 
-          const SizedBox(height: 8),
+            const SizedBox(height: 8),
 
-          // Value
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontSize: 21,
-              fontWeight: FontWeight.w500,
-              color: valueColor ?? theme.textTheme.titleLarge?.color,
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontSize: 21,
+                fontWeight: FontWeight.w500,
+                color: valueColor ?? theme.textTheme.titleLarge?.color,
+              ),
             ),
-          ),
 
-          const SizedBox(height: 2),
+            const SizedBox(height: 8),
 
-          // Title
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 10,
-              color: theme.brightness == Brightness.dark
-                  ? TAppColors.darkSecondaryText
-                  : TAppColors.lightSecondaryText,
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 10,
+                color: theme.brightness == Brightness.dark
+                    ? TAppColors.darkSecondaryText
+                    : TAppColors.lightSecondaryText,
+              ),
             ),
-          ),
 
-          const Spacer(),
+            const Spacer(),
 
-          // Bottom text
-          Text(
-            bottomText,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 9,
-              color: iconColor,
+            Text(
+              bottomText,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 9,
+                color: iconColor,
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 
   Widget _shimmerCard(BuildContext context) {

@@ -8,11 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class LoginController extends GetxController {
-  final emailController =
-      TextEditingController();
+  final emailController = TextEditingController();
 
-  final passwordController =
-      TextEditingController();
+  final passwordController = TextEditingController();
 
   final isLoading = false.obs;
 
@@ -21,11 +19,9 @@ class LoginController extends GetxController {
   // ============================================================
 
   Future<bool> login() async {
-    final email =
-        emailController.text.trim();
+    final email = emailController.text.trim();
 
-    final password =
-        passwordController.text.trim();
+    final password = passwordController.text.trim();
 
     if (email.isEmpty) {
       return false;
@@ -49,62 +45,39 @@ class LoginController extends GetxController {
         },
       );
 
-      debugPrint(
-        'LOGIN STATUS: ${response.statusCode}',
-      );
+      debugPrint('LOGIN STATUS: ${response.statusCode}');
 
-      debugPrint(
-        'LOGIN RESPONSE: ${response.body}',
-      );
+      debugPrint('LOGIN RESPONSE: ${response.body}');
 
-      if (response.statusCode >= 200 &&
-          response.statusCode < 300) {
-        final Map<String, dynamic> data =
-            jsonDecode(response.body);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
 
         final token = data['Token'];
 
         final status = data['Status'];
 
-        debugPrint(
-          'API STATUS: $status',
-        );
+        debugPrint('API STATUS: $status');
 
-        debugPrint(
-          'TOKEN: $token',
-        );
+        debugPrint('TOKEN: $token');
 
-        if (status == true &&
-            token != null &&
-            token.toString().isNotEmpty) {
-          await TokenStorage.saveTokens(
-            accessToken:
-                token.toString(),
-          );
+        if (status == true && token != null && token.toString().isNotEmpty) {
+          await TokenStorage.saveTokens(accessToken: token.toString());
 
-          debugPrint(
-            'TOKEN SAVED SUCCESSFULLY',
-          );
+          debugPrint('TOKEN SAVED SUCCESSFULLY');
 
           return true;
         }
 
-        debugPrint(
-          'TOKEN NOT FOUND',
-        );
+        debugPrint('TOKEN NOT FOUND');
 
         return false;
       }
 
-      debugPrint(
-        'LOGIN FAILED: ${response.body}',
-      );
+      debugPrint('LOGIN FAILED: ${response.body}');
 
       return false;
     } catch (e) {
-      debugPrint(
-        'LOGIN ERROR: $e',
-      );
+      debugPrint('LOGIN ERROR: $e');
 
       return false;
     } finally {
@@ -120,53 +93,36 @@ class LoginController extends GetxController {
     isLoading.value = true;
 
     try {
-      debugPrint(
-        '🔵 Starting Google Login...',
-      );
+      debugPrint('🔵 Starting Google Login...');
 
       // 1. Google Sign In
-      final account =
-          await GoogleAuthService.signIn();
+      final account = await GoogleAuthService.signIn();
 
       // User cancelled login
       if (account == null) {
-        debugPrint(
-          '⚠️ Google Login Cancelled',
-        );
+        debugPrint('⚠️ Google Login Cancelled');
 
         return false;
       }
 
-      debugPrint(
-        '👤 Google Email: ${account.email}',
-      );
+      debugPrint('👤 Google Email: ${account.email}');
 
       // 2. Get Google authentication
-      final authentication =
-          await account.authentication;
+      final authentication = await account.authentication;
 
       // 3. Get Google ID token
-      final idToken =
-          authentication.idToken;
+      final idToken = authentication.idToken;
 
-      if (idToken == null ||
-          idToken.isEmpty) {
-        debugPrint(
-          '❌ Google ID Token is null',
-        );
+      if (idToken == null || idToken.isEmpty) {
+        debugPrint('❌ Google ID Token is null');
 
         return false;
       }
 
-      debugPrint(
-        '🔑 Google ID Token received',
-      );
+      debugPrint('🔑 Google ID Token received');
 
       // 4. Send token to backend
-      final response =
-          await ApiClient.googleAuth(
-        idToken,
-      );
+      final response = await ApiClient.googleAuth(idToken);
 
       debugPrint(
         '📡 GOOGLE API STATUS: '
@@ -179,18 +135,12 @@ class LoginController extends GetxController {
       );
 
       // 5. Check response
-      if (response.statusCode >= 200 &&
-          response.statusCode < 300) {
-        final data =
-            jsonDecode(response.body);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = jsonDecode(response.body);
 
-        debugPrint(
-          '✅ Google Backend Login Successful',
-        );
+        debugPrint('✅ Google Backend Login Successful');
 
-        debugPrint(
-          '📦 DATA: $data',
-        );
+        debugPrint('📦 DATA: $data');
 
         // ======================================================
         // GET BACKEND TOKEN
@@ -202,34 +152,22 @@ class LoginController extends GetxController {
             data['accessToken'] ??
             data['access_token'];
 
-        if (token != null &&
-            token.toString().isNotEmpty) {
-          await TokenStorage.saveTokens(
-            accessToken:
-                token.toString(),
-          );
+        if (token != null && token.toString().isNotEmpty) {
+          await TokenStorage.saveTokens(accessToken: token.toString());
 
-          debugPrint(
-            '💾 BACKEND TOKEN SAVED',
-          );
+          debugPrint('💾 BACKEND TOKEN SAVED');
         } else {
-          debugPrint(
-            '⚠️ No backend token found',
-          );
+          debugPrint('⚠️ No backend token found');
         }
 
         return true;
       }
 
-      debugPrint(
-        '❌ GOOGLE LOGIN FAILED',
-      );
+      debugPrint('❌ GOOGLE LOGIN FAILED');
 
       return false;
     } catch (e) {
-      debugPrint(
-        '❌ GOOGLE LOGIN ERROR: $e',
-      );
+      debugPrint('❌ GOOGLE LOGIN ERROR: $e');
 
       return false;
     } finally {
@@ -241,11 +179,9 @@ class LoginController extends GetxController {
   // LOGOUT
   // ============================================================
 
-  Future<void> logout() async {
+  Future<void> logoutUser() async {
     try {
-      debugPrint(
-        '🚪 Logging out...',
-      );
+      debugPrint('🚪 Logging out...');
 
       // Clear application token
       await TokenStorage.clearTokens();
@@ -253,15 +189,11 @@ class LoginController extends GetxController {
       // Google sign out
       await GoogleAuthService.signOut();
 
-      debugPrint(
-        '✅ LOGOUT SUCCESSFUL',
-      );
+      debugPrint('✅ LOGOUT SUCCESSFUL');
 
       Get.offAllNamed('/login');
     } catch (e) {
-      debugPrint(
-        '❌ LOGOUT ERROR: $e',
-      );
+      debugPrint('❌ LOGOUT ERROR: $e');
 
       // Even if Google logout has an issue,
       // clear local session and go to login.

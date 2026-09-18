@@ -25,6 +25,10 @@ class AuthApiEndpoint {
   static const String getUserProfile =
       '/eazotel/getuser';
 
+
+      static const String UserProfile =
+      '/user';
+
   static const String updateProfile =
       '/auth/profile';
 

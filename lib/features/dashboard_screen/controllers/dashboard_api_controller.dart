@@ -5,6 +5,7 @@ import 'package:eazotel/core/constants/api_base_url.dart';
 import 'package:eazotel/core/constants/api_endpoints.dart';
 import 'package:eazotel/core/local_storage/token_storage.dart';
 import 'package:eazotel/features/auth/controllers/google_auth_controller.dart';
+import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';
 import 'package:eazotel/features/dashboard_screen/models/ProfileResponseModel%20.dart';
 import 'package:eazotel/features/dashboard_screen/models/analytics_responce_modle.dart';
 import 'package:eazotel/features/dashboard_screen/models/leads_responce_modle.dart';
@@ -17,17 +18,23 @@ class DashboardController extends GetxController {
   // ============================================================
   // LOADING
   // ============================================================
-
+  final Rxn<LeadModel> selectedLead = Rxn<LeadModel>();
   final isLoading = false.obs;
 
   final isLeadsLoading = false.obs;
 
   final isLoadingMoreLeads = false.obs;
 
-  final isAnalyticsLoading = false.obs;
+  final isAnalyticsLoading = true.obs;
 
   // ============================================================
-  // USER
+  // USER name
+  // ============================================================
+
+  final userNameResponse = Rxn<UserResponseModel>();
+
+  // ============================================================
+  // USER profile
   // ============================================================
 
   final user = Rxn<ProfileResponseModel>();
@@ -87,6 +94,8 @@ class DashboardController extends GetxController {
     super.onInit();
 
     getUser();
+
+    getUserDetails();
   }
 
   // ============================================================
@@ -148,6 +157,29 @@ class DashboardController extends GetxController {
       debugPrint('Get user error: $e');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  // ============================================================
+  // get user detail
+  // ============================================================
+
+  Future<void> getUserDetails() async {
+    final token = await TokenStorage.getAccessToken();
+
+    final response = await ApiClient.get(
+      '${AuthApiEndpoint.UserProfile}/$token',
+      authenticated: false,
+    );
+
+    debugPrint('USER DETAILS RESPONSE: ${response.body}');
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final data = jsonDecode(response.body);
+
+      if (data is Map<String, dynamic>) {
+        userNameResponse.value = UserResponseModel.fromJson(data);
+      }
     }
   }
 
@@ -353,6 +385,57 @@ class DashboardController extends GetxController {
       isLoadingMoreLeads.value = false;
     }
   }
+
+  // ============================================================
+  // ANALYTICS API
+  // ============================================================
+  Future<void> getAnalytics(String hotelId) async {
+    if (hotelId.isEmpty) {
+      return;
+    }
+
+    // API call start hote hi loading true
+    isAnalyticsLoading.value = true;
+
+    try {
+      final token = await TokenStorage.getAccessToken();
+
+      if (token == null || token.isEmpty) {
+        debugPrint('Access token not found');
+        return;
+      }
+
+      debugPrint('ANALYTICS LOADING: TRUE');
+      debugPrint('GET ANALYTICS FOR HOTEL: $hotelId');
+
+      final response = await ApiClient.get(
+        '${analytics.getLeads}?hid=$hotelId&limit=500',
+        authenticated: true,
+        baseUrl: BaseUrl.production2,
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = jsonDecode(response.body);
+
+        debugPrint('ANALYTICS API RESPONSE: ${response.body}');
+
+        if (data is Map<String, dynamic>) {
+          analyticsResponse.value = AnalyticsResponse.fromJson(data);
+
+          debugPrint('ANALYTICS DATA LOADED');
+        }
+      } else {
+        debugPrint('Analytics API failed: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Get analytics error: $e');
+    } finally {
+      // API complete hone ke baad loading false
+      isAnalyticsLoading.value = false;
+
+      debugPrint('ANALYTICS LOADING: FALSE');
+    }
+  }
   // ============================================================
   // LEADS PAGINATION
   // ============================================================
@@ -473,53 +556,6 @@ class DashboardController extends GetxController {
   }
 
   // ============================================================
-  // ANALYTICS API
-  // ============================================================
-
-  Future<void> getAnalytics(String hotelId) async {
-    if (hotelId.isEmpty || isAnalyticsLoading.value) {
-      return;
-    }
-
-    isAnalyticsLoading.value = true;
-
-    try {
-      final token = await TokenStorage.getAccessToken();
-
-      if (token == null || token.isEmpty) {
-        debugPrint('Access token not found');
-
-        return;
-      }
-
-      final response = await ApiClient.get(
-        '${analytics.getLeads}?hid=$hotelId&limit=500',
-        authenticated: true,
-        baseUrl: BaseUrl.production2,
-      );
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        final data = jsonDecode(response.body);
-
-        debugPrint('ANALYTICS API RESPONSE: ${response.body}');
-
-        if (data is Map<String, dynamic>) {
-          analyticsResponse.value = AnalyticsResponse.fromJson(data);
-        }
-      } else {
-        debugPrint(
-          'Analytics API failed: '
-          '${response.statusCode}',
-        );
-      }
-    } catch (e) {
-      debugPrint('Get analytics error: $e');
-    } finally {
-      isAnalyticsLoading.value = false;
-    }
-  }
-
-  // ============================================================
   // CHANGE HOTEL
   // ============================================================
 
@@ -527,6 +563,7 @@ class DashboardController extends GetxController {
     if (hotelId.isEmpty || selectedHotelId.value == hotelId) {
       return;
     }
+  isAnalyticsLoading.value = true;
 
     selectedHotelId.value = hotelId;
 

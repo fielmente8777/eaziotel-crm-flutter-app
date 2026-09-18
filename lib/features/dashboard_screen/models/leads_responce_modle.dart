@@ -38,7 +38,6 @@ class LeadResponseModel {
   }
 }
 
-
 // ============================================================
 // REQUEST
 // ============================================================
@@ -48,11 +47,7 @@ class LeadRequestModel {
   String? basesurl;
   String? endpoint;
 
-  LeadRequestModel({
-    this.method,
-    this.basesurl,
-    this.endpoint,
-  });
+  LeadRequestModel({this.method, this.basesurl, this.endpoint});
 
   factory LeadRequestModel.fromJson(Map<String, dynamic> json) {
     return LeadRequestModel(
@@ -63,14 +58,9 @@ class LeadRequestModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'method': method,
-      'basesurl': basesurl,
-      'endpoint': endpoint,
-    };
+    return {'method': method, 'basesurl': basesurl, 'endpoint': endpoint};
   }
 }
-
 
 // ============================================================
 // RESULT
@@ -80,16 +70,11 @@ class LeadResultModel {
   LeadDocsModel? docs;
   LeadPaginationModel? pagination;
 
-  LeadResultModel({
-    this.docs,
-    this.pagination,
-  });
+  LeadResultModel({this.docs, this.pagination});
 
   factory LeadResultModel.fromJson(Map<String, dynamic> json) {
     return LeadResultModel(
-      docs: json['docs'] != null
-          ? LeadDocsModel.fromJson(json['docs'])
-          : null,
+      docs: json['docs'] != null ? LeadDocsModel.fromJson(json['docs']) : null,
       pagination: json['pagination'] != null
           ? LeadPaginationModel.fromJson(json['pagination'])
           : null,
@@ -97,13 +82,9 @@ class LeadResultModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'docs': docs?.toJson(),
-      'pagination': pagination?.toJson(),
-    };
+    return {'docs': docs?.toJson(), 'pagination': pagination?.toJson()};
   }
 }
-
 
 // ============================================================
 // DOCS
@@ -113,18 +94,13 @@ class LeadDocsModel {
   List<LeadModel>? leads;
   List<dynamic>? allCampaigns;
 
-  LeadDocsModel({
-    this.leads,
-    this.allCampaigns,
-  });
+  LeadDocsModel({this.leads, this.allCampaigns});
 
   factory LeadDocsModel.fromJson(Map<String, dynamic> json) {
     return LeadDocsModel(
       leads: json['leads'] != null
           ? List<LeadModel>.from(
-              json['leads'].map(
-                (x) => LeadModel.fromJson(x),
-              ),
+              json['leads'].map((x) => LeadModel.fromJson(x)),
             )
           : null,
 
@@ -141,7 +117,6 @@ class LeadDocsModel {
     };
   }
 }
-
 
 // ============================================================
 // LEAD
@@ -163,12 +138,14 @@ class LeadModel {
   String? createdAt;
   String? createdFrom;
   String? status;
+  String? turnAwayCode;
   String? updatedAt;
   bool? isConvertable;
   bool? isConverted;
   String? convertedBy;
   String? sourceUrl;
   String? remark;
+  String? conversationId;
 
   List<LeadChatModel>? chats;
 
@@ -225,12 +202,16 @@ class LeadModel {
     this.metaCreatedDate,
     this.createdAtDate,
     this.sortDate,
+    this.conversationId,
+    this.turnAwayCode
   });
 
   factory LeadModel.fromJson(Map<String, dynamic> json) {
     return LeadModel(
       id: json['_id'],
+      turnAwayCode:json['turnAwayCode'],
       ndid: json['ndid'],
+      conversationId: json['conversationId'],
       hId: json['hId'],
       name: json['Name'],
       guestId: json['guest_id'],
@@ -253,16 +234,12 @@ class LeadModel {
 
       chats: json['chats'] != null
           ? List<LeadChatModel>.from(
-              json['chats'].map(
-                (x) => LeadChatModel.fromJson(x),
-              ),
+              json['chats'].map((x) => LeadChatModel.fromJson(x)),
             )
           : null,
 
       requestMetadata: json['request_metadata'] != null
-          ? LeadRequestMetadataModel.fromJson(
-              json['request_metadata'],
-            )
+          ? LeadRequestMetadataModel.fromJson(json['request_metadata'])
           : null,
 
       hid: json['hid'],
@@ -270,9 +247,7 @@ class LeadModel {
 
       notes: json['notes'] != null
           ? List<LeadNoteModel>.from(
-              json['notes'].map(
-                (x) => LeadNoteModel.fromJson(x),
-              ),
+              json['notes'].map((x) => LeadNoteModel.fromJson(x)),
             )
           : null,
 
@@ -281,9 +256,7 @@ class LeadModel {
       assigneeNumber: json['assigneeNumber'],
 
       otherDetails: json['other_details'] != null
-          ? Map<String, dynamic>.from(
-              json['other_details'],
-            )
+          ? Map<String, dynamic>.from(json['other_details'])
           : null,
 
       followUpDate: json['followUpDate'],
@@ -296,6 +269,8 @@ class LeadModel {
   Map<String, dynamic> toJson() {
     return {
       '_id': id,
+      'ndid': ndid,
+      'conversationId': conversationId,
       'ndid': ndid,
       'hId': hId,
       'Name': name,
@@ -339,8 +314,6 @@ class LeadModel {
     };
   }
 }
-
-
 // ============================================================
 // REQUEST METADATA
 // ============================================================
@@ -364,9 +337,7 @@ class LeadRequestMetadataModel {
     this.geo,
   });
 
-  factory LeadRequestMetadataModel.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory LeadRequestMetadataModel.fromJson(Map<String, dynamic> json) {
     return LeadRequestMetadataModel(
       ip: json['ip'],
       userAgent: json['user_agent'],
@@ -375,9 +346,7 @@ class LeadRequestMetadataModel {
       host: json['host'],
       acceptLanguage: json['accept_language'],
 
-      geo: json['geo'] != null
-          ? LeadGeoModel.fromJson(json['geo'])
-          : null,
+      geo: json['geo'] != null ? LeadGeoModel.fromJson(json['geo']) : null,
     );
   }
 
@@ -393,7 +362,6 @@ class LeadRequestMetadataModel {
     };
   }
 }
-
 
 // ============================================================
 // GEO
@@ -451,7 +419,6 @@ class LeadGeoModel {
   }
 }
 
-
 // ============================================================
 // CHAT
 // ============================================================
@@ -461,11 +428,7 @@ class LeadChatModel {
   String? message;
   String? createdAt;
 
-  LeadChatModel({
-    this.senderType,
-    this.message,
-    this.createdAt,
-  });
+  LeadChatModel({this.senderType, this.message, this.createdAt});
 
   factory LeadChatModel.fromJson(Map<String, dynamic> json) {
     return LeadChatModel(
@@ -484,7 +447,6 @@ class LeadChatModel {
   }
 }
 
-
 // ============================================================
 // NOTES
 // ============================================================
@@ -494,11 +456,7 @@ class LeadNoteModel {
   String? message;
   String? createdAt;
 
-  LeadNoteModel({
-    this.activitySource,
-    this.message,
-    this.createdAt,
-  });
+  LeadNoteModel({this.activitySource, this.message, this.createdAt});
 
   factory LeadNoteModel.fromJson(Map<String, dynamic> json) {
     return LeadNoteModel(
@@ -516,7 +474,6 @@ class LeadNoteModel {
     };
   }
 }
-
 
 // ============================================================
 // PAGINATION
@@ -539,9 +496,7 @@ class LeadPaginationModel {
     this.hasPrevPage,
   });
 
-  factory LeadPaginationModel.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory LeadPaginationModel.fromJson(Map<String, dynamic> json) {
     return LeadPaginationModel(
       total: json['total'],
       page: json['page'],

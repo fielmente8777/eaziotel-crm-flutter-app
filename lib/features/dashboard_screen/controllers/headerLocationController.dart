@@ -49,6 +49,7 @@ class LocationController extends GetxController {
   void openHotelSelector() {
     filteredHotels.assignAll(hotels);
     showHotels.value = true;
+    
   }
 
   // ============================================================

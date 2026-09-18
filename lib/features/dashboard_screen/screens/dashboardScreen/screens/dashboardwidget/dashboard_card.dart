@@ -30,8 +30,7 @@ Widget dashboardBody() {
 
   final todayLeads = docs?.todayLeads ?? 0;
 
-  final isLoading = docs == null;
-
+ 
   final dashboardCards = [
     {
       'value': totalLeads.toString(),
@@ -99,8 +98,7 @@ Widget dashboardBody() {
         accentColor: card['accentColor'] as Color,
         iconColor: card['iconColor'] as Color,
         valueColor: card['valueColor'] as Color?,
-        isLoading: isLoading,
-      );
+       );
     },
   );
 }
