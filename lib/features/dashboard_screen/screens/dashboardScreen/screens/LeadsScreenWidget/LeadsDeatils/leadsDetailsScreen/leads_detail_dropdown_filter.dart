@@ -15,7 +15,7 @@ class LeadDetailsFilterWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     controller.setCurrentLead(leads);
 
-    final String assigneeBy = leads.assignee?.trim().isNotEmpty == true
+    final String attemptedBy = leads.assignee?.trim().isNotEmpty == true
         ? leads.assignee!.trim()
         : 'Select';
 
@@ -27,8 +27,8 @@ class LeadDetailsFilterWidget extends StatelessWidget {
         ? leads.turnAwayCode!.trim()
         : 'Select';
 
-    final List<UserModel> attemptedByUsers =
-        controller.controller.userNameResponse()?.data ?? [];
+    final List<UserModel> users =
+        controller.dashboardController.userNameResponse()?.data ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,7 +36,7 @@ class LeadDetailsFilterWidget extends StatelessWidget {
         // ========================================================
         // ATTEMPTED BY
         // ========================================================
-        _attemptedByDropdown(users: attemptedByUsers, currentValue: assigneeBy),
+        _attemptedByDropdown(users: users, currentValue: attemptedBy),
 
         const SizedBox(height: 12),
 
@@ -71,12 +71,86 @@ class LeadDetailsFilterWidget extends StatelessWidget {
             }
           },
         ),
+
+        const SizedBox(height: 12),
+
+        // ========================================================
+        // FOLLOW UP
+        // ========================================================
+        _followUpDateTime(context),
       ],
     );
   }
 
   // ============================================================
-  // ATTEMPTED BY DROPDOWN
+  // FOLLOW UP DATE + TIME
+  // ============================================================
+
+  Widget _followUpDateTime(BuildContext context) {
+    return Obx(() {
+      final DateTime? date = controller.selectedFollowUpDate.value;
+
+      String displayValue = '';
+
+      if (date != null) {
+        final DateTime localDate = date.toLocal();
+
+        final String day = localDate.day.toString().padLeft(2, '0');
+
+        final String month = localDate.month.toString().padLeft(2, '0');
+
+        final String year = localDate.year.toString();
+
+        int hour = localDate.hour;
+
+        final String minute = localDate.minute.toString().padLeft(2, '0');
+
+        final String period = hour >= 12 ? 'PM' : 'AM';
+
+        if (hour == 0) {
+          hour = 12;
+        } else if (hour > 12) {
+          hour -= 12;
+        }
+
+        displayValue =
+            '$day/$month/$year '
+            '$hour:$minute $period';
+      }
+
+      return InkWell(
+        onTap: () async {
+          await controller.selectFollowUpDateTime(context);
+        },
+        borderRadius: BorderRadius.circular(4),
+        child: InputDecorator(
+          decoration: const InputDecoration(
+            labelText: 'Follow Up',
+            labelStyle: TextStyle(fontSize: 13),
+            border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  displayValue.isEmpty ? 'Select Follow Up' : displayValue,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+
+              const Icon(Icons.keyboard_arrow_down, size: 20),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  // ============================================================
+  // ATTEMPTED BY
   // ============================================================
 
   Widget _attemptedByDropdown({
@@ -84,61 +158,76 @@ class LeadDetailsFilterWidget extends StatelessWidget {
     required String currentValue,
   }) {
     return Obx(() {
-      final String selectedValue =
-          controller.selectedAttemptedBy.value.isNotEmpty
-          ? controller.selectedAttemptedBy.value
-          : currentValue;
+      final validUsers = users.where((user) {
+        final name = user.displayName?.trim() ?? '';
 
-      final bool hasSelectedValue =
-          selectedValue.isNotEmpty &&
-          selectedValue != 'Select' &&
-          users.any((user) => user.displayName?.trim() == selectedValue);
+        return name.isNotEmpty;
+      }).toList();
 
-      return DropdownButtonFormField<String>(
-        value: hasSelectedValue ? selectedValue : null,
+      int? selectedIndex;
+
+      final String selectedName = controller.selectedAttemptedBy.value.trim();
+
+      if (selectedName.isNotEmpty) {
+        final int index = validUsers.indexWhere(
+          (user) => (user.displayName?.trim() ?? '') == selectedName,
+        );
+
+        if (index != -1) {
+          selectedIndex = index;
+        }
+      } else if (currentValue != 'Select') {
+        final int index = validUsers.indexWhere(
+          (user) => (user.displayName?.trim() ?? '') == currentValue,
+        );
+
+        if (index != -1) {
+          selectedIndex = index;
+        }
+      }
+
+      return DropdownButtonFormField<int>(
+        value: selectedIndex,
 
         decoration: const InputDecoration(
           labelText: 'Attempted By',
+          labelStyle: TextStyle(fontSize: 13),
           border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
         ),
 
         isExpanded: true,
 
         hint: Text(currentValue),
 
-        items: users
-            .map((user) {
-              final String name = user.displayName?.trim() ?? '';
+        items: List.generate(validUsers.length, (index) {
+          final user = validUsers[index];
 
-              if (name.isEmpty) {
-                return null;
-              }
+          final String name = user.displayName?.trim() ?? '';
 
-              return DropdownMenuItem<String>(value: name, child: Text(name));
-            })
-            .whereType<DropdownMenuItem<String>>()
-            .toList(),
+          return DropdownMenuItem<int>(
+            value: index,
+            child: Text(
+              name,
+              style: const TextStyle(fontSize: 14),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          );
+        }),
 
-        onChanged: (String? value) async {
-          if (value == null || value.isEmpty) {
+        onChanged: (int? index) async {
+          if (index == null) {
             return;
           }
 
-          UserModel? selectedUser;
-
-          for (final user in users) {
-            if (user.displayName?.trim() == value) {
-              selectedUser = user;
-              break;
-            }
-          }
-
-          if (selectedUser == null) {
-            print('❌ USER NOT FOUND');
+          if (index < 0 || index >= validUsers.length) {
             return;
           }
 
-          await controller.onAttemptedByChanged(selectedUser);
+          final UserModel user = validUsers[index];
+
+          await controller.onAttemptedByChanged(user);
         },
       );
     });
@@ -156,29 +245,50 @@ class LeadDetailsFilterWidget extends StatelessWidget {
     required ValueChanged<String?> onChanged,
   }) {
     return Obx(() {
-      final String selectedValue = value.value.isNotEmpty
-          ? value.value
+      final List<String> uniqueItems = items
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .toSet()
+          .toList();
+
+      final String controllerValue = value.value.trim();
+
+      final String selectedValue = controllerValue.isNotEmpty
+          ? controllerValue
           : currentValue;
 
       final bool hasSelectedValue =
           selectedValue.isNotEmpty &&
           selectedValue != 'Select' &&
-          items.contains(selectedValue);
+          uniqueItems.contains(selectedValue);
 
       return DropdownButtonFormField<String>(
         value: hasSelectedValue ? selectedValue : null,
 
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: const TextStyle(fontSize: 13),
           border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 16,
+          ),
         ),
 
         isExpanded: true,
 
         hint: Text(currentValue),
 
-        items: items.map((item) {
-          return DropdownMenuItem<String>(value: item, child: Text(item));
+        items: uniqueItems.map((item) {
+          return DropdownMenuItem<String>(
+            value: item,
+            child: Text(
+              item,
+              style: const TextStyle(fontSize: 14),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          );
         }).toList(),
 
         onChanged: onChanged,

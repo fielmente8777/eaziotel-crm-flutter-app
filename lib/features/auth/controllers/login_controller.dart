@@ -4,12 +4,15 @@ import 'package:eazotel/core/api/api_clint_servic.dart';
 import 'package:eazotel/core/api/google_auth_service.dart';
 import 'package:eazotel/core/constants/api_endpoints.dart';
 import 'package:eazotel/core/local_storage/token_storage.dart';
+import 'package:eazotel/features/auth/screens/login_screen.dart';
+import 'package:eazotel/features/dashboard_screen/controllers/bottom_nav_controller.dart';
+import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
+import 'package:eazotel/features/dashboard_screen/controllers/headerLocationController.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class LoginController extends GetxController {
   final emailController = TextEditingController();
-
   final passwordController = TextEditingController();
 
   final isLoading = false.obs;
@@ -20,7 +23,6 @@ class LoginController extends GetxController {
 
   Future<bool> login() async {
     final email = emailController.text.trim();
-
     final password = passwordController.text.trim();
 
     if (email.isEmpty) {
@@ -53,12 +55,9 @@ class LoginController extends GetxController {
         final Map<String, dynamic> data = jsonDecode(response.body);
 
         final token = data['Token'];
-
         final status = data['Status'];
 
         debugPrint('API STATUS: $status');
-
-        debugPrint('TOKEN: $token');
 
         if (status == true && token != null && token.toString().isNotEmpty) {
           await TokenStorage.saveTokens(accessToken: token.toString());
@@ -95,10 +94,8 @@ class LoginController extends GetxController {
     try {
       debugPrint('🔵 Starting Google Login...');
 
-      // 1. Google Sign In
       final account = await GoogleAuthService.signIn();
 
-      // User cancelled login
       if (account == null) {
         debugPrint('⚠️ Google Login Cancelled');
 
@@ -107,10 +104,8 @@ class LoginController extends GetxController {
 
       debugPrint('👤 Google Email: ${account.email}');
 
-      // 2. Get Google authentication
       final authentication = await account.authentication;
 
-      // 3. Get Google ID token
       final idToken = authentication.idToken;
 
       if (idToken == null || idToken.isEmpty) {
@@ -121,7 +116,6 @@ class LoginController extends GetxController {
 
       debugPrint('🔑 Google ID Token received');
 
-      // 4. Send token to backend
       final response = await ApiClient.googleAuth(idToken);
 
       debugPrint(
@@ -134,17 +128,10 @@ class LoginController extends GetxController {
         '${response.body}',
       );
 
-      // 5. Check response
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final data = jsonDecode(response.body);
 
         debugPrint('✅ Google Backend Login Successful');
-
-        debugPrint('📦 DATA: $data');
-
-        // ======================================================
-        // GET BACKEND TOKEN
-        // ======================================================
 
         final token =
             data['Token'] ??
@@ -178,32 +165,83 @@ class LoginController extends GetxController {
   // ============================================================
   // LOGOUT
   // ============================================================
-
-  Future<void> logoutUser() async {
+  Future<void> logoutUser(BuildContext context) async {
     try {
       debugPrint('🚪 Logging out...');
 
-      // Clear application token
+      // 1. Clear DashboardController
+      if (Get.isRegistered<DashboardController>()) {
+        Get.delete<DashboardController>(force: true);
+        debugPrint('🧹 DashboardController deleted');
+      }
+
+      // 2. Clear LocationController
+      if (Get.isRegistered<LocationController>()) {
+        Get.delete<LocationController>(force: true);
+        debugPrint('🧹 LocationController deleted');
+      }
+
+      // 3. Clear BottomNavController
+      if (Get.isRegistered<BottomNavController>()) {
+        Get.delete<BottomNavController>(force: true);
+        debugPrint('🧹 BottomNavController deleted');
+      }
+
+      // ============================================================
+      // CLEAR DASHBOARD CONTROLLER
+      // ============================================================
+
+      if (Get.isRegistered<DashboardController>()) {
+        final dashboardController = Get.find<DashboardController>();
+
+        dashboardController.clearDashboardData();
+
+        Get.delete<DashboardController>(force: true);
+
+        debugPrint('🧹 DashboardController deleted');
+      }
+
+      // ============================================================
+      // CLEAR TOKEN
+      // ============================================================
+
       await TokenStorage.clearTokens();
 
-      // Google sign out
-      await GoogleAuthService.signOut();
+      // ============================================================
+      // GOOGLE LOGOUT
+      // ============================================================
+
+      try {
+        await GoogleAuthService.signOut();
+
+        debugPrint('✅ Google Sign Out Successful');
+      } catch (e) {
+        debugPrint('⚠️ Google Sign Out Error: $e');
+      }
 
       debugPrint('✅ LOGOUT SUCCESSFUL');
 
-      Get.offAllNamed('/login');
+      // ============================================================
+      // LOGIN SCREEN
+      // ============================================================
+
+      if (!context.mounted) return;
+
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
     } catch (e) {
       debugPrint('❌ LOGOUT ERROR: $e');
 
-      // Even if Google logout has an issue,
-      // clear local session and go to login.
+      // Always clear token
       await TokenStorage.clearTokens();
 
-      Get.offAllNamed('/login');
-    }
-  }
+      if (!context.mounted) return;
 
-  // ============================================================
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  } // ============================================================
   // DISPOSE
   // ============================================================
 

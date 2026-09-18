@@ -1,6 +1,9 @@
 import 'package:eazotel/common/widgets/spacing.dart';
+import 'package:eazotel/features/dashboard_screen/controllers/lead_details_filter_controller.dart';
 import 'package:eazotel/features/dashboard_screen/models/leads_responce_modle.dart';
+import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/LeadsScreenWidget/LeadsDeatils/leadsDetailsScreen/leads_detail_dropdown_filter.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 Container leads_detail_header(
   BuildContext context,
@@ -38,10 +41,11 @@ Container leads_detail_header(
                 Navigator.pop(context);
               },
             ),
+
             _headerButton(
               icon: Icons.more_vert,
               onTap: () {
-                _showMenu(context);
+                _showMenu(context, leads);
               },
             ),
           ],
@@ -53,9 +57,9 @@ Container leads_detail_header(
         // PROFILE
         // ======================================================
         Row(
-          mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Avatar
             Container(
               width: 52,
               height: 52,
@@ -77,6 +81,7 @@ Container leads_detail_header(
 
             const SizedBox(width: 12),
 
+            // Details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,10 +97,9 @@ Container leads_detail_header(
                     ),
                   ),
 
-                  // ======================================================
-                  // SOURCE + STATUS
-                  // ======================================================
                   VSpace(height: 8),
+
+                  // Source + Status
                   Row(
                     children: [
                       _headerChip(
@@ -139,6 +143,10 @@ Container leads_detail_header(
   );
 }
 
+// ============================================================
+// HEADER BUTTON
+// ============================================================
+
 Widget _headerButton({required IconData icon, required VoidCallback onTap}) {
   return Material(
     color: Colors.white.withValues(alpha: 0.12),
@@ -146,14 +154,17 @@ Widget _headerButton({required IconData icon, required VoidCallback onTap}) {
     child: InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
-      child: SizedBox(
-        width: 34,
-        height: 34,
-        child: Icon(icon, color: Colors.white, size: 18),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Icon(icon, color: Colors.white, size: 20),
       ),
     ),
   );
 }
+
+// ============================================================
+// FIRST LETTER
+// ============================================================
 
 String _firstLetter(String name) {
   if (name.trim().isEmpty) {
@@ -167,41 +178,207 @@ String _firstLetter(String name) {
 // MORE MENU
 // ============================================================
 
-void _showMenu(BuildContext context) {
+void _showMenu(BuildContext context, LeadModel leads) {
   final theme = Theme.of(context);
+
+  final isDark = theme.brightness == Brightness.dark;
 
   showModalBottomSheet(
     context: context,
-    backgroundColor: theme.scaffoldBackgroundColor,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-    ),
-    builder: (context) {
-      return SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: const Text('Edit Lead'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline),
-              title: const Text('Delete Lead'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (bottomSheetContext) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF202630) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ==================================================
+              // HANDLE
+              // ==================================================
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF566171)
+                      : const Color(0xFFD1D5DB),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // ==================================================
+              // FILTER
+              // ==================================================
+              LeadDetailsFilterWidget(leads: leads),
+
+              const SizedBox(height: 16),
+
+              // ==================================================
+              // DELETE BUTTON
+              // ==================================================
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    // Close bottom sheet
+                    Navigator.pop(bottomSheetContext);
+
+                    // Open confirmation
+                    _confirmDeleteLead(context, leads);
+                  },
+                  icon: const Icon(Icons.delete_outline, color: Colors.white),
+                  label: const Text(
+                    'Delete Lead',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     },
   );
 }
 
+// ============================================================
+// DELETE CONFIRMATION
+// ============================================================
+
+void _confirmDeleteLead(BuildContext context, LeadModel leads) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialogContext) {
+      return AlertDialog(
+        title: const Text('Delete Lead?'),
+        content: const Text(
+          'Are you sure you want to delete this lead? '
+          'This action cannot be undone.',
+        ),
+        actions: [
+          // ----------------------------------------------------
+          // CANCEL
+          // ----------------------------------------------------
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey.shade700,
+                foregroundColor: Colors.white,
+                elevation: 0,
+              ),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('Cancel'),
+            ),
+          ),
+
+          // ----------------------------------------------------
+          // DELETE
+          // ----------------------------------------------------
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                elevation: 0,
+              ),
+              onPressed: () async {
+                // Close dialog first
+                Navigator.pop(dialogContext);
+
+                await _deleteLead(context, leads);
+              },
+              child: const Text('Delete'),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+// ============================================================
+// DELETE LEAD
+// ============================================================
+
+Future<void> _deleteLead(BuildContext context, LeadModel leads) async {
+  // ----------------------------------------------------------
+  // Get controller safely
+  // ----------------------------------------------------------
+
+  final LeadFilterController controller =
+      Get.isRegistered<LeadFilterController>()
+      ? Get.find<LeadFilterController>()
+      : Get.put(LeadFilterController());
+
+  // Set current lead
+  controller.setCurrentLead(leads);
+
+  // ----------------------------------------------------------
+  // API DELETE
+  // ----------------------------------------------------------
+
+  final bool success = await controller.deleteLead(leads);
+
+  // ----------------------------------------------------------
+  // SUCCESS
+  // ----------------------------------------------------------
+
+  if (success) {
+    Get.snackbar(
+      'Success',
+      'Lead deleted successfully',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+    );
+
+    // Go back from Lead Details screen
+    if (context.mounted) {
+      Navigator.pop(context);
+    }
+
+    return;
+  }
+
+  // ----------------------------------------------------------
+  // ERROR
+  // ----------------------------------------------------------
+
+  Get.snackbar(
+    'Error',
+    'Failed to delete lead',
+    snackPosition: SnackPosition.BOTTOM,
+    duration: const Duration(seconds: 2),
+  );
+}
+
+// ============================================================
 // HEADER CHIP
 // ============================================================
 

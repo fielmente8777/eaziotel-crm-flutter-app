@@ -45,21 +45,21 @@ class LoginScreen extends StatelessWidget {
 
                     const SizedBox(height: 10),
 
-                    Container(
-                      height: 50,
-                      width: 50,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'H',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          color: theme.colorScheme.onPrimary,
-                        ),
-                      ),
-                    ),
+                    // Container(
+                    //   height: 50,
+                    //   width: 50,
+                    //   decoration: BoxDecoration(
+                    //     color: theme.colorScheme.primary,
+                    //     borderRadius: BorderRadius.circular(15),
+                    //   ),
+                    //   alignment: Alignment.center,
+                    //   child: Text(
+                    //     'H',
+                    //     style: theme.textTheme.titleLarge?.copyWith(
+                    //       color: theme.colorScheme.onPrimary,
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),

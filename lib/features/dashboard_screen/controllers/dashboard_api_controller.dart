@@ -5,8 +5,9 @@ import 'package:eazotel/core/constants/api_base_url.dart';
 import 'package:eazotel/core/constants/api_endpoints.dart';
 import 'package:eazotel/core/local_storage/token_storage.dart';
 import 'package:eazotel/features/auth/controllers/google_auth_controller.dart';
+import 'package:eazotel/features/auth/controllers/login_controller.dart';
 import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';
-import 'package:eazotel/features/dashboard_screen/models/ProfileResponseModel%20.dart';
+import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
 import 'package:eazotel/features/dashboard_screen/models/analytics_responce_modle.dart';
 import 'package:eazotel/features/dashboard_screen/models/leads_responce_modle.dart';
 import 'package:flutter/foundation.dart';
@@ -14,6 +15,8 @@ import 'package:get/get.dart';
 
 class DashboardController extends GetxController {
   final googleAuthController = Get.put(GoogleAuthController());
+
+  final loginController = Get.put(LoginController());
 
   // ============================================================
   // LOADING
@@ -111,6 +114,7 @@ class DashboardController extends GetxController {
 
     try {
       final token = await TokenStorage.getAccessToken();
+      debugPrint('acces token: ${token}');
 
       if (token == null || token.isEmpty) {
         debugPrint('Access token not found');
@@ -563,7 +567,7 @@ class DashboardController extends GetxController {
     if (hotelId.isEmpty || selectedHotelId.value == hotelId) {
       return;
     }
-  isAnalyticsLoading.value = true;
+    isAnalyticsLoading.value = true;
 
     selectedHotelId.value = hotelId;
 
@@ -598,6 +602,45 @@ class DashboardController extends GetxController {
     // ==========================================================
 
     await getAnalytics(hotelId);
+  }
+
+  void clearDashboardData() {
+    // Leads
+    leads.clear();
+    leadResponse.value = null;
+
+    // Analytics
+    analyticsResponse.value = null;
+
+    // Selected hotel
+    selectedHotelId.value = '';
+
+    // Pagination
+    leadsPage.value = 0;
+    hasMoreLeads.value = true;
+
+    // Search / filters
+    leadsSearch.value = '';
+    leadsSources.clear();
+    leadsStages.clear();
+
+    leadsStartDate.value = null;
+    leadsEndDate.value = null;
+
+    // User data
+    userNameResponse.value = null;
+    user.value = null;
+
+    // Loading states
+    isLoading.value = false;
+    isLeadsLoading.value = false;
+    isLoadingMoreLeads.value = false;
+    isAnalyticsLoading.value = false;
+
+    // Selected lead
+    selectedLead.value = null;
+
+    debugPrint('🧹 DASHBOARD DATA CLEARED');
   }
 }
 

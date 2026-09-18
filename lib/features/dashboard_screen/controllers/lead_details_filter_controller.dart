@@ -3,35 +3,32 @@ import 'package:eazotel/core/constants/api_base_url.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
 import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';
 import 'package:eazotel/features/dashboard_screen/models/leads_responce_modle.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class LeadFilterController extends GetxController {
-  final DashboardController controller =
+  final DashboardController dashboardController =
       Get.find<DashboardController>();
 
   LeadModel? currentLead;
 
+  String _currentLeadId = '';
 
-
-  
-
-  
-
-  // ------------------------------------------------------------
+  // ============================================================
   // SELECTED VALUES
-  // ------------------------------------------------------------
+  // ============================================================
 
   final selectedAttemptedBy = ''.obs;
+  final selectedStage = ''.obs;
+  final selectedTurnAwayCode = ''.obs;
+
+  final Rxn<DateTime> selectedFollowUpDate = Rxn<DateTime>();
 
   UserModel? selectedAttemptedByUser;
 
-  final selectedStage = ''.obs;
-
-  final selectedTurnAwayCode = ''.obs;
-
-  // ------------------------------------------------------------
+  // ============================================================
   // STAGE LIST
-  // ------------------------------------------------------------
+  // ============================================================
 
   final List<String> stageList = [
     'Open Queries',
@@ -52,9 +49,9 @@ class LeadFilterController extends GetxController {
     'Hot',
   ];
 
-  // ------------------------------------------------------------
+  // ============================================================
   // TURN AWAY CODE LIST
-  // ------------------------------------------------------------
+  // ============================================================
 
   final List<String> turnAwayCodeList = [
     'GD',
@@ -76,223 +73,327 @@ class LeadFilterController extends GetxController {
   // ============================================================
 
   void setCurrentLead(LeadModel lead) {
+    final String leadId = lead.leadId ?? lead.id ?? '';
+
+    // Same lead already loaded.
+    if (_currentLeadId == leadId && currentLead != null) {
+      currentLead = lead;
+      return;
+    }
+
     currentLead = lead;
-    
+    _currentLeadId = leadId;
+
+    selectedAttemptedBy.value = lead.assignee?.trim() ?? '';
+
+    selectedStage.value = lead.status?.trim() ?? '';
+
+    selectedTurnAwayCode.value = lead.turnAwayCode?.trim() ?? '';
+
+    // Follow Up Date
+    final String? followUpValue = lead.followUpDate;
+
+    if (followUpValue != null && followUpValue.trim().isNotEmpty) {
+      selectedFollowUpDate.value = DateTime.tryParse(followUpValue.trim());
+    } else {
+      selectedFollowUpDate.value = null;
+    }
   }
 
   // ============================================================
-  // ATTEMPTED BY CHANGE
+  // COMMON UPDATE LEAD API
+  // ============================================================
+
+  Future<bool> updateLead(Map<String, dynamic> fields) async {
+    final LeadModel? lead = currentLead;
+
+    if (lead == null) {
+      debugPrint('❌ CURRENT LEAD IS NULL');
+      return false;
+    }
+
+    final String leadId = lead.leadId ?? lead.id ?? '';
+
+    final String hid = lead.hid ?? lead.hId ?? '';
+
+    if (leadId.isEmpty || hid.isEmpty) {
+      debugPrint('❌ LEAD ID OR HID EMPTY');
+      return false;
+    }
+
+    final String endpoint = '/api/v1/leads/$leadId/update?hid=$hid';
+
+    final Map<String, dynamic> body = {'leadId': leadId, 'hid': hid, ...fields};
+
+    try {
+      final response = await ApiClient.put(
+        endpoint,
+        body: body,
+        authenticated: true,
+        baseUrl: BaseUrl.production2,
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        debugPrint('✅ LEAD UPDATED');
+
+        return true;
+      }
+
+      debugPrint('❌ UPDATE FAILED: ${response.statusCode}');
+
+      debugPrint('Response: ${response.body}');
+
+      return false;
+    } catch (e) {
+      debugPrint('❌ UPDATE LEAD ERROR: $e');
+
+      return false;
+    }
+  }
+
+  // ============================================================
+  // ATTEMPTED BY
   // ============================================================
 
   Future<void> onAttemptedByChanged(UserModel user) async {
-    selectedAttemptedBy.value = user.displayName ?? '';
+    final String name = user.displayName?.trim() ?? '';
+
+    if (name.isEmpty) {
+      return;
+    }
+
+    selectedAttemptedBy.value = name;
     selectedAttemptedByUser = user;
 
-    final lead = currentLead;
+    final bool success = await updateLead({
+      'assignee': name,
+      'assigneeEmail': user.emailId?.trim() ?? '',
+      'assigneeNumber': user.phone?.trim() ?? '',
+    });
 
-    if (lead == null) {
-      print('❌ CURRENT LEAD IS NULL');
-      return;
+    if (success) {
+      currentLead?.assignee = name;
+
+      currentLead?.assigneeEmail = user.emailId?.trim() ?? '';
+
+      currentLead?.assigneeNumber = user.phone?.trim() ?? '';
     }
-
-    final String leadId = lead.leadId ?? lead.id ?? '';
-    final String hid = lead.hid ?? lead.hId ?? '';
-
-    if (leadId.isEmpty || hid.isEmpty) {
-      print('❌ LEAD ID OR HID EMPTY');
-      return;
-    }
-
-    await updateAttemptedBy(
-      leadId: leadId,
-      hid: hid,
-      assignee: user.displayName?.trim() ?? '',
-      assigneeEmail: user.emailId?.trim() ?? '',
-      assigneeNumber: user.phone?.trim() ?? '',
-    );
   }
 
   // ============================================================
-  // STAGE CHANGE
+  // STAGE
   // ============================================================
 
   Future<void> onStageChanged(String stage) async {
+    if (stage.trim().isEmpty) {
+      return;
+    }
+
     selectedStage.value = stage;
 
-    final lead = currentLead;
+    final bool success = await updateLead({'status': stage});
 
-    if (lead == null) {
-      print('❌ CURRENT LEAD IS NULL');
-      return;
+    if (success) {
+      currentLead?.status = stage;
     }
-
-    final String leadId = lead.leadId ?? lead.id ?? '';
-    final String hid = lead.hid ?? lead.hId ?? '';
-
-    if (leadId.isEmpty || hid.isEmpty) {
-      print('❌ LEAD ID OR HID EMPTY');
-      return;
-    }
-
-    await updateStage(
-      leadId: leadId,
-      hid: hid,
-      status: stage,
-    );
   }
 
   // ============================================================
-  // TURN AWAY CODE CHANGE
+  // TURN AWAY CODE
   // ============================================================
 
   Future<void> onTurnAwayCodeChanged(String code) async {
+    if (code.trim().isEmpty) {
+      return;
+    }
+
     selectedTurnAwayCode.value = code;
 
-    final lead = currentLead;
+    final bool success = await updateLead({
+      'status': 'Turn Away',
+      'turnAwayCode': code,
+    });
+
+    if (success) {
+      currentLead?.status = 'Turn Away';
+
+      currentLead?.turnAwayCode = code;
+
+      selectedStage.value = 'Turn Away';
+    }
+  }
+
+  // ============================================================
+  // FOLLOW UP DATE + TIME
+  // ============================================================
+
+  Future<void> selectFollowUpDateTime(BuildContext context) async {
+    final LeadModel? lead = currentLead;
 
     if (lead == null) {
-      print('❌ CURRENT LEAD IS NULL');
+      debugPrint('❌ CURRENT LEAD IS NULL');
       return;
     }
 
     final String leadId = lead.leadId ?? lead.id ?? '';
+
     final String hid = lead.hid ?? lead.hId ?? '';
 
     if (leadId.isEmpty || hid.isEmpty) {
-      print('❌ LEAD ID OR HID EMPTY');
+      debugPrint('❌ LEAD ID OR HID EMPTY');
       return;
     }
 
-    await updateTurnAwayCode(
-      leadId: leadId,
-      hid: hid,
-      status: 'Turn Away',
-      turnAwayCode: code,
+    final DateTime now = DateTime.now();
+
+    DateTime initialDate = selectedFollowUpDate.value ?? now;
+
+    if (initialDate.isBefore(now)) {
+      initialDate = now;
+    }
+
+    // ----------------------------------------------------------
+    // DATE PICKER
+    // ----------------------------------------------------------
+
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: DateTime(now.year + 5, 12, 31),
+    );
+
+    if (pickedDate == null) {
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // TIME PICKER
+    // ----------------------------------------------------------
+
+    final DateTime currentDateTime = selectedFollowUpDate.value ?? now;
+
+    final TimeOfDay initialTime = TimeOfDay(
+      hour: currentDateTime.hour,
+      minute: currentDateTime.minute,
+    );
+
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+    );
+
+    if (pickedTime == null) {
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // FINAL DATE TIME
+    // ----------------------------------------------------------
+
+    final DateTime selectedDateTime = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
+    );
+
+    final String utcDate = selectedDateTime.toUtc().toIso8601String();
+
+    // ----------------------------------------------------------
+    // API
+    // ----------------------------------------------------------
+
+    final bool success = await updateLead({
+      'status': 'Follow Up',
+      'followUpDate': utcDate,
+    });
+
+    if (!success) {
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // LOCAL UPDATE
+    // ----------------------------------------------------------
+
+    selectedFollowUpDate.value = selectedDateTime;
+
+    selectedStage.value = 'Follow Up';
+
+    currentLead?.status = 'Follow Up';
+
+    currentLead?.followUpDate = utcDate;
+
+    Get.snackbar(
+      'Success',
+      'Follow up updated successfully',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
     );
   }
 
   // ============================================================
-  // ATTEMPTED BY API
+  // DELETE LEAD
   // ============================================================
 
-  Future<void> updateAttemptedBy({
-    required String leadId,
-    required String hid,
-    required String assignee,
-    required String assigneeEmail,
-    required String assigneeNumber,
-  }) async {
-    final String endpoint =
-        '/api/v1/leads/$leadId/update?hid=$hid';
+  Future<bool> deleteLead(LeadModel lead) async {
+    final String leadId = lead.leadId ?? lead.id ?? '';
 
-    final Map<String, dynamic> body = {
-      'leadId': leadId,
-      'hid': hid,
-      'assignee': assignee,
-      'assigneeEmail': assigneeEmail,
-      'assigneeNumber': assigneeNumber,
-    };
-
-    try {
-      final response = await ApiClient.put(
-        endpoint,
-        body: body,
-        authenticated: true,
-        baseUrl: BaseUrl.production2,
-      );
-
-      if (response.statusCode >= 200 &&
-          response.statusCode < 300) {
-        print('✅ ATTEMPTED BY UPDATED');
-      } else {
-        print('❌ ATTEMPTED BY UPDATE FAILED');
-        print('Status: ${response.statusCode}');
-        print('Response: ${response.body}');
-      }
-    } catch (e) {
-      print('❌ ATTEMPTED BY API ERROR: $e');
+    if (leadId.isEmpty) {
+      debugPrint('❌ LEAD ID EMPTY');
+      return false;
     }
-  }
-
-  // ============================================================
-  // STAGE API
-  // ============================================================
-
-  Future<void> updateStage({
-    required String leadId,
-    required String hid,
-    required String status,
-  }) async {
-    final String endpoint =
-        '/api/v1/leads/$leadId/update?hid=$hid';
-
-    final Map<String, dynamic> body = {
-      'leadId': leadId,
-      'status': status,
-      'hid': hid,
-      'followUpDate': null,
-    };
 
     try {
-      final response = await ApiClient.put(
-        endpoint,
-        body: body,
+      debugPrint('🗑️ DELETE LEAD ID: $leadId');
+
+      final response = await ApiClient.delete(
+        '/eazotel/delete-multiple-contact-queries',
+        body: {
+          'ids': [leadId],
+        },
         authenticated: true,
-        baseUrl: BaseUrl.production2,
+        baseUrl: 'https://nexon.eazotel.com',
       );
 
-      if (response.statusCode >= 200 &&
-          response.statusCode < 300) {
-        print('✅ STAGE UPDATED: $status');
-      } else {
-        print('❌ STAGE UPDATE FAILED');
-        print('Status: ${response.statusCode}');
-        print('Response: ${response.body}');
+      debugPrint('DELETE STATUS: ${response.statusCode}');
+
+      debugPrint('DELETE RESPONSE: ${response.body}');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        // ------------------------------------------------------
+        // REMOVE FROM DASHBOARD LOCAL LIST
+        // ------------------------------------------------------
+
+        dashboardController.leads.removeWhere((item) {
+          final String itemId = item.leadId ?? item.id ?? '';
+
+          return itemId == leadId;
+        });
+
+        // ------------------------------------------------------
+        // CLEAR CURRENT LEAD
+        // ------------------------------------------------------
+
+        if ((currentLead?.leadId ?? currentLead?.id ?? '') == leadId) {
+          currentLead = null;
+          _currentLeadId = '';
+        }
+
+        debugPrint('✅ LEAD DELETED SUCCESSFULLY');
+
+        return true;
       }
+
+      debugPrint('❌ DELETE FAILED: ${response.statusCode}');
+
+      return false;
     } catch (e) {
-      print('❌ STAGE API ERROR: $e');
-    }
-  }
+      debugPrint('❌ DELETE LEAD ERROR: $e');
 
-  // ============================================================
-  // TURN AWAY CODE API
-  // ============================================================
-
-  Future<void> updateTurnAwayCode({
-    required String leadId,
-    required String hid,
-    required String status,
-    required String turnAwayCode,
-  }) async {
-    final String endpoint =
-        '/api/v1/leads/$leadId/update?hid=$hid';
-
-    final Map<String, dynamic> body = {
-      'leadId': leadId,
-      'status': status,
-      'hid': hid,
-      'followUpDate': null,
-      'turnAwayCode': turnAwayCode,
-    };
-
-    try {
-      final response = await ApiClient.put(
-        endpoint,
-        body: body,
-        authenticated: true,
-        baseUrl: BaseUrl.production2,
-      );
-
-      if (response.statusCode >= 200 &&
-          response.statusCode < 300) {
-        print('✅ TURN AWAY CODE UPDATED: $turnAwayCode');
-      } else {
-        print('❌ TURN AWAY CODE UPDATE FAILED');
-        print('Status: ${response.statusCode}');
-        print('Response: ${response.body}');
-      }
-    } catch (e) {
-      print('❌ TURN AWAY CODE API ERROR: $e');
+      return false;
     }
   }
 }

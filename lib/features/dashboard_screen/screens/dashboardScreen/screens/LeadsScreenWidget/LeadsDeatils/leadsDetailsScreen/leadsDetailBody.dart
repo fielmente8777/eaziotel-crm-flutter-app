@@ -6,6 +6,7 @@ import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screen
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 Container leads_detail_body(
   ThemeData theme,
@@ -40,7 +41,9 @@ Container leads_detail_body(
                 title: 'Call Now',
                 icon: Icons.call,
                 iconColor: TAppColors.success,
-                onTap: () {},
+                onTap: () {
+                  _openDialer(phone.toString());
+                },
               ),
             ),
 
@@ -201,7 +204,7 @@ Container leads_detail_body(
 // TAB CONTENT
 // ============================================================
 
-Widget _buildTabContent(BuildContext context, int tabIndex , LeadModel leads,) {
+Widget _buildTabContent(BuildContext context, int tabIndex, LeadModel leads) {
   switch (tabIndex) {
     case 0:
       return LeadsDetailsOverviewContent(context, leads);
@@ -210,10 +213,10 @@ Widget _buildTabContent(BuildContext context, int tabIndex , LeadModel leads,) {
       return const LeadDetailsNoteScreen();
 
     case 2:
-      return leadDetailsTimelineScreen(context);
+      return LeadDetailsTimelineScreen(lead: leads);
 
     default:
-      return LeadsDetailsOverviewContent(context ,leads);
+      return LeadsDetailsOverviewContent(context, leads);
   }
 }
 
@@ -524,5 +527,29 @@ String _getLeadAge(dynamic leads) {
     return '${difference}d ago';
   } catch (_) {
     return 'Unknown';
+  }
+}
+
+Future<void> _openDialer(String phoneNumber) async {
+  final String phone = phoneNumber.trim();
+
+  if (phone.isEmpty) {
+    debugPrint('❌ Phone number is empty');
+    return;
+  }
+
+  final Uri uri = Uri(scheme: 'tel', path: phone);
+
+  try {
+    final bool launched = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!launched) {
+      debugPrint('❌ Could not open phone dialer');
+    }
+  } catch (e) {
+    debugPrint('❌ Dialer error: $e');
   }
 }

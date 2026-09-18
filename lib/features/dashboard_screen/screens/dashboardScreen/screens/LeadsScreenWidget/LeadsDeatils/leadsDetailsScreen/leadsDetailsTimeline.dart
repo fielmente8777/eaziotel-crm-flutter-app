@@ -1,112 +1,213 @@
+import 'package:eazotel/features/dashboard_screen/models/leads_responce_modle.dart';
 import 'package:flutter/material.dart';
 
-// ============================================================
-// TIMELINE CONTENT
-// ============================================================
+class LeadDetailsTimelineScreen extends StatelessWidget {
+  final LeadModel lead;
 
-class leadDetailsTimelineScreen extends StatelessWidget {
-  final BuildContext context;
-
-  const leadDetailsTimelineScreen(this.context, {super.key});
+  const LeadDetailsTimelineScreen({super.key, required this.lead});
 
   @override
-  Widget build(BuildContext buildContext) {
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // =========================
+    // LEAD CREATED DATA
+    // =========================
+
+    final createdFrom = (lead.createdFrom ?? '').toString().trim();
+
+    final createdDate = _parseDate(lead.createdAtDate);
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _timelineItem(
-          context,
-          icon: Icons.check_circle,
-          title: 'Lead created via Meta Ads',
-          time: 'Today, 10:45 AM',
+        // ==================================================
+        // 1. LEAD CREATED CARD
+        // ==================================================
+        _leadCreatedCard(
+          context: context,
+          theme: theme,
+          isDark: isDark,
+          createdFrom: createdFrom,
+          createdDate: createdDate,
         ),
 
-        _timelineItem(
-          context,
-          icon: Icons.email,
-          title: 'Email sent',
-          time: 'Today, 11:02 AM',
-          message: 'Welcome email with hotel brochure sent.',
-        ),
+        // ==================================================
+        // 2. NOTES CARDS
+        // ==================================================
+        if (lead.notes != null && lead.notes!.isNotEmpty) ...[
+          const SizedBox(height: 12),
 
-        _timelineItem(
-          context,
-          icon: Icons.phone,
-          title: 'Phone call — 4 min 12 sec',
-          time: 'Today, 2:30 PM',
-          message: 'Interested in Deluxe Room. Will confirm by evening.',
-        ),
-
-        const SizedBox(height: 8),
-
-        // ======================================================
-        // MARK AS CONVERTED
-        // ======================================================
-        SizedBox(
-          width: double.infinity,
-          height: 46,
-          child: ElevatedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.check_circle_outline, size: 17),
-            label: const Text(
-              'Mark as Converted',
-              style: TextStyle(fontSize: 14),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(9),
+          ...lead.notes!.map(
+            (note) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _noteAddedCard(
+                context: context,
+                theme: theme,
+                isDark: isDark,
+                note: note,
               ),
             ),
           ),
-        ),
+        ],
       ],
     );
   }
 
-  Widget _timelineItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String time,
-    String? message,
-  }) {
-    final theme = Theme.of(context);
+  // ==========================================================
+  // LEAD CREATED CARD
+  // ==========================================================
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+  Widget _leadCreatedCard({
+    required BuildContext context,
+    required ThemeData theme,
+    required bool isDark,
+    required String createdFrom,
+    required DateTime? createdDate,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF202630) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3A4350) : const Color(0xFF448AFF),
+          width: 1.2,
+        ),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: theme.colorScheme.primary),
+          const Padding(
+            padding: EdgeInsets.only(top: 1),
+            child: Text('✨', style: TextStyle(fontSize: 28)),
+          ),
 
-          const SizedBox(width: 10),
+          const SizedBox(width: 14),
 
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontSize: 13,
+                  'Lead created via ${_formatSource(createdFrom)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontSize: 18,
                     fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
                   ),
                 ),
 
-                const SizedBox(height: 3),
+                const SizedBox(height: 7),
 
                 Text(
-                  time,
-                  style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+                  _formatDateTime(createdDate),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: isDark
+                        ? const Color(0xFF9EABC0)
+                        : const Color(0xFF9AAAC0),
+                  ),
                 ),
 
-                if (message != null) ...[
-                  const SizedBox(height: 4),
+                const SizedBox(height: 18),
+
+                Text(
+                  'Lead entered CRM successfully.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: isDark
+                        ? const Color(0xFFE1E6EE)
+                        : const Color(0xFF293241),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================================
+  // NOTE ADDED CARD
+  // ==========================================================
+
+  Widget _noteAddedCard({
+    required BuildContext context,
+    required ThemeData theme,
+    required bool isDark,
+    required dynamic note,
+  }) {
+    final message = note.message?.toString().trim() ?? '';
+
+    final createdDate = _parseDate(note.createdAt);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF202630) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3A4350) : const Color(0xFF448AFF),
+          width: 1.2,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 1),
+            child: Text('📝', style: TextStyle(fontSize: 28)),
+          ),
+
+          const SizedBox(width: 14),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Note Added',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
+                  ),
+                ),
+
+                const SizedBox(height: 6),
+
+                Text(
+                  _formatDateTime(createdDate),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: isDark
+                        ? const Color(0xFF9EABC0)
+                        : const Color(0xFF9AAAC0),
+                  ),
+                ),
+
+                if (message.isNotEmpty) ...[
+                  const SizedBox(height: 18),
+
                   Text(
                     message,
-                    style: theme.textTheme.bodySmall?.copyWith(fontSize: 12),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: isDark
+                          ? const Color(0xFFE1E6EE)
+                          : const Color(0xFF293241),
+                    ),
                   ),
                 ],
               ],
@@ -115,5 +216,72 @@ class leadDetailsTimelineScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // ==========================================================
+  // PARSE DATE
+  // ==========================================================
+
+  DateTime? _parseDate(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+
+    final valueString = value.toString().trim();
+
+    if (valueString.isEmpty) {
+      return null;
+    }
+
+    return DateTime.tryParse(valueString);
+  }
+
+  // ==========================================================
+  // FORMAT SOURCE
+  // ==========================================================
+
+  String _formatSource(String source) {
+    if (source.isEmpty) {
+      return 'Website';
+    }
+
+    return source
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((word) {
+          if (word.isEmpty) {
+            return word;
+          }
+
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join(' ');
+  }
+
+  // ==========================================================
+  // FORMAT DATE TIME
+  // ==========================================================
+
+  String _formatDateTime(DateTime? dateTime) {
+    if (dateTime == null) {
+      return 'Date not available';
+    }
+
+    final date = dateTime.toLocal();
+
+    final hour = date.hour == 0
+        ? 12
+        : date.hour > 12
+        ? date.hour - 12
+        : date.hour;
+
+    final minute = date.minute.toString().padLeft(2, '0');
+
+    final second = date.second.toString().padLeft(2, '0');
+
+    final period = date.hour >= 12 ? 'PM' : 'AM';
+
+    return '${date.month}/${date.day}/${date.year}, '
+        '$hour:$minute:$second $period';
   }
 }

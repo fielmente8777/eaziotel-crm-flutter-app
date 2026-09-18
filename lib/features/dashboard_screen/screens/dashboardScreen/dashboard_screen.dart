@@ -2,7 +2,7 @@ import 'package:eazotel/common/widgets/spacing.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/bottom_nav_controller.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/headerLocationController.dart';
-import 'package:eazotel/features/dashboard_screen/models/ProfileResponseModel%20.dart';
+import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/LeadsScreenWidget/lead_card.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/LeadsScreenWidget/leads_empty_state.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/dashboardwidget/DashboardStatCard.dart';
@@ -126,22 +126,37 @@ class DashboardScreen extends StatelessWidget {
               controller.changeTab(3);
             },
             borderRadius: BorderRadius.circular(22),
-            child: Container(
-              width: 55,
-              height: 55,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Text(
-                'P',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+            child: Obx(() {
+              final hotelName =
+                  locationController.selectedHotel.value?.local.trim() ?? '';
+
+              final lastWord = hotelName.isNotEmpty
+                  ? hotelName.split(RegExp(r'\s+')).first
+                  : 'E';
+
+              final profileName = lastWord.isNotEmpty
+                  ? lastWord[0].toUpperCase()
+                  : '';
+
+              return Container(
+                width: 55,
+                height: 55,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Color(0xFF3B82F6)
+                      : Color(0xFF3B82F6),
+                  borderRadius: BorderRadius.circular(22),
                 ),
-              ),
-            ),
+                child: Text(
+                  profileName,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              );
+            }),
           ),
         ),
       ],
@@ -366,7 +381,7 @@ class DashboardScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Leads',
+                'Recent Leads',
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),

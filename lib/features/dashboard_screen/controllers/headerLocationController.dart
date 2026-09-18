@@ -1,5 +1,5 @@
  import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
-import 'package:eazotel/features/dashboard_screen/models/ProfileResponseModel%20.dart';
+import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
 import 'package:get/get.dart';
 
 class LocationController extends GetxController {
