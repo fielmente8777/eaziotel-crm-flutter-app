@@ -3,8 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 class GoogleAuthService {
   GoogleAuthService._();
 
-  static final GoogleSignIn _googleSignIn =
-      GoogleSignIn.instance;
+  static final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 
   static const String webClientId =
       '737012285391-mvm0kikmmfqm8vu8hr3lmcc39lb8blj2.apps.googleusercontent.com';
@@ -20,9 +19,7 @@ class GoogleAuthService {
       return;
     }
 
-    await _googleSignIn.initialize(
-      serverClientId: webClientId,
-    );
+    await _googleSignIn.initialize(serverClientId: webClientId);
 
     _initialized = true;
 
@@ -33,27 +30,19 @@ class GoogleAuthService {
   // SIGN IN
   // ============================================================
 
-  static Future<GoogleSignInAccount?>
-      signIn() async {
+  static Future<GoogleSignInAccount?> signIn() async {
     await initialize();
 
     try {
-      final account =
-          await _googleSignIn.authenticate();
+      final account = await _googleSignIn.authenticate();
 
-      print(
-        '✅ Google Sign In Successful',
-      );
+      print('✅ Google Sign In Successful');
 
-      print(
-        '👤 Google User: ${account.email}',
-      );
+      print('👤 Google User: ${account.email}');
 
       return account;
     } catch (e) {
-      print(
-        '❌ Google Sign In Error: $e',
-      );
+      print('❌ Google Sign In Error: $e');
 
       rethrow;
     }
@@ -67,13 +56,9 @@ class GoogleAuthService {
     try {
       await _googleSignIn.signOut();
 
-      print(
-        '🚪 Google Sign Out Successful',
-      );
+      print('🚪 Google Sign Out Successful');
     } catch (e) {
-      print(
-        '❌ Google Sign Out Error: $e',
-      );
+      print('❌ Google Sign Out Error: $e');
 
       rethrow;
     }

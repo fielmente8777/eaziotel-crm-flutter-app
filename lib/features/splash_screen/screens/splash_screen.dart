@@ -17,9 +17,11 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
 
-    controller = Get.put(
-      SplashController(),
-    );
+   Get.lazyPut<SplashController>(
+  () => SplashController(),
+);
+
+controller = Get.find<SplashController>();
 
     WidgetsBinding.instance.addPostFrameCallback(
       (_) {

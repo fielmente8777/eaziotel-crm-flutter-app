@@ -1,4 +1,5 @@
 import 'package:device_preview/device_preview.dart';
+import 'package:eazotel/core/api/apiexception/api_error_handler.dart';
 import 'package:eazotel/routs/app_routs.dart';
 import 'package:eazotel/utils/theme/theme.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +32,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: ApiErrorHandler.navigatorKey,
       themeAnimationDuration: const Duration(seconds: 0),
       themeAnimationCurve: Curves.easeInOut,
       debugShowCheckedModeBanner: false,

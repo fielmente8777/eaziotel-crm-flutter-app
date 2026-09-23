@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:eazotel/core/api/apiexception/api_exception.dart';
 import 'package:eazotel/core/constants/api_base_url.dart';
 import 'package:eazotel/core/constants/api_endpoints.dart' hide BaseUrl;
 import 'package:eazotel/core/local_storage/token_storage.dart';
@@ -10,15 +13,12 @@ class ApiClient {
 
   static final http.Client _client = http.Client();
 
-  // ============================================================
   // GET
-  // ============================================================
-
   static Future<http.Response> get(
     String endpoint, {
     bool authenticated = true,
     String? baseUrl,
-  }) async {
+  }) {
     return _request(
       method: 'GET',
       endpoint: endpoint,
@@ -27,16 +27,13 @@ class ApiClient {
     );
   }
 
-  // ============================================================
   // POST
-  // ============================================================
-
   static Future<http.Response> post(
     String endpoint, {
     Map<String, dynamic>? body,
     bool authenticated = true,
     String? baseUrl,
-  }) async {
+  }) {
     return _request(
       method: 'POST',
       endpoint: endpoint,
@@ -46,16 +43,13 @@ class ApiClient {
     );
   }
 
-  // ============================================================
   // PUT
-  // ============================================================
-
   static Future<http.Response> put(
     String endpoint, {
     Map<String, dynamic>? body,
     bool authenticated = true,
     String? baseUrl,
-  }) async {
+  }) {
     return _request(
       method: 'PUT',
       endpoint: endpoint,
@@ -65,16 +59,13 @@ class ApiClient {
     );
   }
 
-  // ============================================================
   // DELETE
-  // ============================================================
-
   static Future<http.Response> delete(
     String endpoint, {
     Map<String, dynamic>? body,
     bool authenticated = true,
     String? baseUrl,
-  }) async {
+  }) {
     return _request(
       method: 'DELETE',
       endpoint: endpoint,
@@ -84,10 +75,6 @@ class ApiClient {
     );
   }
 
-  // ============================================================
-  // MAIN REQUEST
-  // ============================================================
-
   static Future<http.Response> _request({
     required String method,
     required String endpoint,
@@ -96,145 +83,256 @@ class ApiClient {
     bool retry = true,
     String? baseUrl,
   }) async {
-    String? accessToken;
+    try {
+      final token = authenticated ? await TokenStorage.getAccessToken() : null;
 
-    // ============================================================
-    // TOKEN
-    // ============================================================
+      final headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      };
 
-    if (authenticated) {
-      accessToken = await TokenStorage.getAccessToken();
-    }
+      final server = baseUrl ?? BaseUrl.production;
+      final url = Uri.parse('$server$endpoint');
 
-    // ============================================================
-    // HEADERS
-    // ============================================================
+      // 🚀 API REQUEST
+      print('🚀 $method $url');
 
-    final headers = <String, String>{
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    };
+      if (body != null) {
+        print('📦 Body: $body');
+      }
 
-    if (accessToken != null && accessToken.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $accessToken';
-    }
+      final response = await _sendRequest(
+        method: method,
+        url: url,
+        headers: headers,
+        body: body,
+      );
 
-    // ============================================================
-    // BASE URL
-    // ============================================================
+      // 📡 API RESPONSE
+      print('📡 Status: ${response.statusCode}');
 
-    final server = baseUrl ?? BaseUrl.production;
+      // 🔄 Access token expired
+      if (response.statusCode == 401 && authenticated && retry) {
+        print('🔄 Token expired, refreshing...');
 
-    final url = Uri.parse('$server$endpoint');
+        final refreshed = await _refreshToken();
 
-    print('');
-    print('========================================');
-    print('🌐 API REQUEST');
-    print('========================================');
-    print('METHOD: $method');
-    print('URL: $url');
-    print('AUTH: $authenticated');
-    print('TOKEN: ${accessToken != null}');
-    print('========================================');
+        if (refreshed) {
+          print('✅ Token refreshed');
 
-    late http.Response response;
+          return _request(
+            method: method,
+            endpoint: endpoint,
+            body: body,
+            authenticated: true,
+            retry: false,
+            baseUrl: baseUrl,
+          );
+        }
 
-    // ============================================================
-    // REQUEST
-    // ============================================================
+        print('❌ Token refresh failed');
 
-    switch (method) {
-      case 'GET':
-        response = await _client.get(url, headers: headers);
-        break;
+        await TokenStorage.clearTokens();
 
-      case 'POST':
-        response = await _client.post(
-          url,
-          headers: headers,
-          body: body == null ? null : jsonEncode(body),
-        );
-        break;
-
-      case 'PUT':
-        response = await _client.put(
-          url,
-          headers: headers,
-          body: body == null ? null : jsonEncode(body),
-        );
-        break;
-
-      case 'DELETE':
-        response = await _client.delete(
-          url,
-          headers: headers,
-          body: body == null ? null : jsonEncode(body),
-        );
-        break;
-
-      default:
-        throw Exception('Unsupported HTTP method: $method');
-    }
-
-    // ============================================================
-    // RESPONSE
-    // ============================================================
-
-    print('📡 STATUS: ${response.statusCode}');
-    print('📦 RESPONSE: ${response.body}');
-
-    // ============================================================
-    // TOKEN EXPIRED
-    // ============================================================
-
-    if (response.statusCode == 401 && authenticated && retry) {
-      final refreshed = await _refreshToken();
-
-      if (refreshed) {
-        return _request(
-          method: method,
-          endpoint: endpoint,
-          body: body,
-          authenticated: true,
-          retry: false,
-          baseUrl: baseUrl,
+        throw ApiException(
+          message: 'Session expired. Please login again.',
+          statusCode: 401,
+          type: ApiExceptionType.unauthorized,
         );
       }
 
-      await TokenStorage.clearTokens();
-    }
+      // ❌ HTTP error
+      if (response.statusCode >= 400) {
+        print('❌ API Error: ${response.statusCode}');
+        throw _handleHttpError(response);
+      }
 
-    return response;
+      return response;
+    } on SocketException {
+      print('🌐 No internet connection');
+
+      throw ApiException(
+        message: 'No internet connection. Please check your network.',
+        type: ApiExceptionType.noInternet,
+      );
+    } on TimeoutException {
+      print('⏰ Request timeout');
+
+      throw ApiException(
+        message: 'Request timed out. Please try again.',
+        type: ApiExceptionType.timeout,
+      );
+    } on http.ClientException {
+      print('❌ Connection error');
+
+      throw ApiException(
+        message: 'Unable to connect to server.',
+        type: ApiExceptionType.connection,
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      print('❌ API Error: $e');
+
+      throw ApiException(
+        message: 'Something went wrong. Please try again.',
+        type: ApiExceptionType.unknown,
+      );
+    }
   }
 
-  // ============================================================
-  // GOOGLE AUTH
-  // ============================================================
+  static Future<http.Response> _sendRequest({
+    required String method,
+    required Uri url,
+    required Map<String, String> headers,
+    Map<String, dynamic>? body,
+  }) {
+    final encodedBody = body == null ? null : jsonEncode(body);
+
+    switch (method) {
+      case 'GET':
+        return _client
+            .get(url, headers: headers)
+            .timeout(const Duration(seconds: 30));
+
+      case 'POST':
+        return _client
+            .post(url, headers: headers, body: encodedBody)
+            .timeout(const Duration(seconds: 30));
+
+      case 'PUT':
+        return _client
+            .put(url, headers: headers, body: encodedBody)
+            .timeout(const Duration(seconds: 30));
+
+      case 'DELETE':
+        return _client
+            .delete(url, headers: headers, body: encodedBody)
+            .timeout(const Duration(seconds: 30));
+
+      default:
+        throw ApiException(
+          message: 'Unsupported HTTP method: $method',
+          type: ApiExceptionType.unknown,
+        );
+    }
+  }
+
+  static ApiException _handleHttpError(http.Response response) {
+    switch (response.statusCode) {
+      case 400:
+        return ApiException(
+          message: 'Bad request. Please check your data.',
+          statusCode: 400,
+          type: ApiExceptionType.badRequest,
+        );
+
+      case 401:
+        return ApiException(
+          message: 'Unauthorized. Please login again.',
+          statusCode: 401,
+          type: ApiExceptionType.unauthorized,
+        );
+
+      case 403:
+        return ApiException(
+          message: 'You do not have permission to perform this action.',
+          statusCode: 403,
+          type: ApiExceptionType.forbidden,
+        );
+
+      case 404:
+        return ApiException(
+          message: 'Requested resource was not found.',
+          statusCode: 404,
+          type: ApiExceptionType.notFound,
+        );
+
+      case 408:
+        return ApiException(
+          message: 'Request timeout. Please try again.',
+          statusCode: 408,
+          type: ApiExceptionType.timeout,
+        );
+
+      case 429:
+        return ApiException(
+          message: 'Too many requests. Please try again later.',
+          statusCode: 429,
+          type: ApiExceptionType.tooManyRequests,
+        );
+
+      case 500:
+        return ApiException(
+          message: 'Internal server error.',
+          statusCode: 500,
+          type: ApiExceptionType.serverError,
+        );
+
+      case 502:
+      case 503:
+      case 504:
+        return ApiException(
+          message: 'Server is temporarily unavailable.',
+          statusCode: response.statusCode,
+          type: ApiExceptionType.serverError,
+        );
+
+      default:
+        return ApiException(
+          message: 'Something went wrong. Please try again.',
+          statusCode: response.statusCode,
+          type: ApiExceptionType.unknown,
+        );
+    }
+  }
 
   static Future<http.Response> googleAuth(String idToken) async {
-    print('🚀 Sending Google token to backend...');
+    try {
+      final response = await _client
+          .post(
+            Uri.parse(BaseUrl.googleAuthUrl),
+            headers: {
+              'Authorization': 'Bearer $idToken',
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({}),
+          )
+          .timeout(const Duration(seconds: 30));
 
-    final url = Uri.parse(BaseUrl.googleAuthUrl);
+      if (response.statusCode >= 400) {
+        throw _handleHttpError(response);
+      }
 
-    final response = await _client.post(
-      url,
-      headers: {
-        'Authorization': 'Bearer $idToken',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: jsonEncode({}),
-    );
+      return response;
+    } on SocketException {
+      throw ApiException(
+        message: 'No internet connection. Please check your network.',
+        type: ApiExceptionType.noInternet,
+      );
+    } on TimeoutException {
+      throw ApiException(
+        message: 'Request timed out. Please try again.',
+        type: ApiExceptionType.timeout,
+      );
+    } on http.ClientException {
+      throw ApiException(
+        message: 'Unable to connect to server.',
+        type: ApiExceptionType.connection,
+      );
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      print('Google Login Error: $e');
 
-    print('📡 API Status Code: ${response.statusCode}');
-    print('📦 API Response: ${response.body}');
-
-    return response;
+      throw ApiException(
+        message: 'Google login failed. Please try again.',
+        type: ApiExceptionType.unknown,
+      );
+    }
   }
-
-  // ============================================================
-  // REFRESH TOKEN
-  // ============================================================
 
   static Future<bool> _refreshToken() async {
     try {
@@ -245,18 +343,19 @@ class ApiClient {
       }
 
       final url = Uri.parse(
-        '${BaseUrl.production}'
-        '${AuthApiEndpoint.refreshToken}',
+        '${BaseUrl.production}${AuthApiEndpoint.refreshToken}',
       );
 
-      final response = await _client.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({'refreshToken': refreshToken}),
-      );
+      final response = await _client
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({'refreshToken': refreshToken}),
+          )
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         return false;
@@ -280,7 +379,7 @@ class ApiClient {
 
       return true;
     } catch (e) {
-      print('❌ Refresh token error: $e');
+      print('Refresh Token Error: $e');
       return false;
     }
   }

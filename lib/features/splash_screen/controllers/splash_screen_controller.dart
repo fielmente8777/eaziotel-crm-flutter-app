@@ -1,8 +1,7 @@
 import 'package:eazotel/core/local_storage/token_storage.dart';
 import 'package:eazotel/features/auth/screens/login_screen.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashbord_botum_nav.dart';
-import 'package:eazotel/features/dashboard_screen/screens/test_dashboard_main_screen.dart';
-import 'package:flutter/material.dart';
+ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class SplashController extends GetxController {

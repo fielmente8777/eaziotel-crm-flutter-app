@@ -1,9 +1,7 @@
 class BaseUrl {
   BaseUrl._();
 
-  // ============================================================
-  // BACKEND URLS
-  // ============================================================
+  
 
   static const String production =
       'https://nexon.eazotel.com';

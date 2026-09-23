@@ -1,35 +1,40 @@
 import 'dart:convert';
 
-import 'package:eazotel/core/api/api_clint_servic.dart';
+ import 'package:eazotel/core/api/api_clint_servic.dart';
+import 'package:eazotel/core/api/apiexception/api_error_handler.dart';
+import 'package:eazotel/core/api/apiexception/api_exception.dart';
 import 'package:eazotel/core/api/google_auth_service.dart';
 import 'package:eazotel/core/constants/api_endpoints.dart';
 import 'package:eazotel/core/local_storage/token_storage.dart';
 import 'package:eazotel/features/auth/screens/login_screen.dart';
-import 'package:eazotel/features/dashboard_screen/controllers/bottom_nav_controller.dart';
+ import 'package:eazotel/features/dashboard_screen/controllers/bottom_nav_controller.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/headerLocationController.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class LoginController extends GetxController {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+  final emailController =
+      TextEditingController();
+
+  final passwordController =
+      TextEditingController();
 
   final isLoading = false.obs;
 
   // ============================================================
-  // EMAIL / PASSWORD LOGIN
+  // EMAIL LOGIN
   // ============================================================
 
   Future<bool> login() async {
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
+    final email =
+        emailController.text.trim();
 
-    if (email.isEmpty) {
-      return false;
-    }
+    final password =
+        passwordController.text.trim();
 
-    if (password.isEmpty) {
+    if (email.isEmpty ||
+        password.isEmpty) {
       return false;
     }
 
@@ -47,36 +52,48 @@ class LoginController extends GetxController {
         },
       );
 
-      debugPrint('LOGIN STATUS: ${response.statusCode}');
+      debugPrint(
+        'LOGIN STATUS: ${response.statusCode}',
+      );
 
-      debugPrint('LOGIN RESPONSE: ${response.body}');
+      debugPrint(
+        'LOGIN RESPONSE: ${response.body}',
+      );
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
+      final Map<String, dynamic> data =
+          jsonDecode(response.body);
 
-        final token = data['Token'];
-        final status = data['Status'];
+      final token = data['Token'];
+      final status = data['Status'];
 
-        debugPrint('API STATUS: $status');
+      if (status == true &&
+          token != null &&
+          token.toString().isNotEmpty) {
+        await TokenStorage.saveTokens(
+          accessToken:
+              token.toString(),
+        );
 
-        if (status == true && token != null && token.toString().isNotEmpty) {
-          await TokenStorage.saveTokens(accessToken: token.toString());
+        debugPrint(
+          'TOKEN SAVED SUCCESSFULLY',
+        );
 
-          debugPrint('TOKEN SAVED SUCCESSFULLY');
-
-          return true;
-        }
-
-        debugPrint('TOKEN NOT FOUND');
-
-        return false;
+        return true;
       }
 
-      debugPrint('LOGIN FAILED: ${response.body}');
+      return false;
+    } on ApiException catch (e) {
+      debugPrint(
+        'LOGIN API ERROR: ${e.message}',
+      );
+
+      ApiErrorHandler.handle(e);
 
       return false;
     } catch (e) {
-      debugPrint('LOGIN ERROR: $e');
+      debugPrint(
+        'LOGIN ERROR: $e',
+      );
 
       return false;
     } finally {
@@ -89,49 +106,56 @@ class LoginController extends GetxController {
   // ============================================================
 
   Future<bool> loginWithGoogle() async {
+    if (isLoading.value) {
+      return false;
+    }
+
     isLoading.value = true;
 
     try {
-      debugPrint('🔵 Starting Google Login...');
+      debugPrint(
+        '🔵 GOOGLE LOGIN STARTED',
+      );
 
-      final account = await GoogleAuthService.signIn();
+      final account =
+          await GoogleAuthService.signIn();
 
       if (account == null) {
-        debugPrint('⚠️ Google Login Cancelled');
+        return false;
+      }
+
+      debugPrint(
+        '👤 GOOGLE USER: ${account.email}',
+      );
+
+      final authentication =
+          await account.authentication;
+
+      final idToken =
+          authentication.idToken;
+
+      if (idToken == null ||
+          idToken.isEmpty) {
+        debugPrint(
+          '❌ GOOGLE ID TOKEN NOT FOUND',
+        );
 
         return false;
       }
 
-      debugPrint('👤 Google Email: ${account.email}');
-
-      final authentication = await account.authentication;
-
-      final idToken = authentication.idToken;
-
-      if (idToken == null || idToken.isEmpty) {
-        debugPrint('❌ Google ID Token is null');
-
-        return false;
-      }
-
-      debugPrint('🔑 Google ID Token received');
-
-      final response = await ApiClient.googleAuth(idToken);
-
       debugPrint(
-        '📡 GOOGLE API STATUS: '
-        '${response.statusCode}',
+        '🔑 GOOGLE ID TOKEN RECEIVED',
       );
 
-      debugPrint(
-        '📦 GOOGLE API RESPONSE: '
-        '${response.body}',
+      final response =
+          await ApiClient.googleAuth(
+        idToken,
       );
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        final data = jsonDecode(response.body);
-
-        debugPrint('✅ Google Backend Login Successful');
+      if (response.statusCode >= 200 &&
+          response.statusCode < 300) {
+        final data =
+            jsonDecode(response.body);
 
         final token =
             data['Token'] ??
@@ -139,22 +163,34 @@ class LoginController extends GetxController {
             data['accessToken'] ??
             data['access_token'];
 
-        if (token != null && token.toString().isNotEmpty) {
-          await TokenStorage.saveTokens(accessToken: token.toString());
+        if (token != null &&
+            token.toString().isNotEmpty) {
+          await TokenStorage.saveTokens(
+            accessToken:
+                token.toString(),
+          );
 
-          debugPrint('💾 BACKEND TOKEN SAVED');
-        } else {
-          debugPrint('⚠️ No backend token found');
+          debugPrint(
+            '💾 BACKEND TOKEN SAVED',
+          );
+
+          return true;
         }
-
-        return true;
       }
 
-      debugPrint('❌ GOOGLE LOGIN FAILED');
+      return false;
+    } on ApiException catch (e) {
+      debugPrint(
+        'GOOGLE API ERROR: ${e.message}',
+      );
+
+      ApiErrorHandler.handle(e);
 
       return false;
     } catch (e) {
-      debugPrint('❌ GOOGLE LOGIN ERROR: $e');
+      debugPrint(
+        'GOOGLE LOGIN ERROR: $e',
+      );
 
       return false;
     } finally {
@@ -165,83 +201,91 @@ class LoginController extends GetxController {
   // ============================================================
   // LOGOUT
   // ============================================================
-  Future<void> logoutUser(BuildContext context) async {
+
+  Future<void> logoutUser(
+    BuildContext context,
+  ) async {
     try {
-      debugPrint('🚪 Logging out...');
+      debugPrint(
+        '🚪 LOGGING OUT',
+      );
 
-      // 1. Clear DashboardController
-      if (Get.isRegistered<DashboardController>()) {
-        Get.delete<DashboardController>(force: true);
-        debugPrint('🧹 DashboardController deleted');
+      // Dashboard
+      if (Get.isRegistered<
+          DashboardController>()) {
+        final dashboard =
+            Get.find<DashboardController>();
+
+        dashboard.clearDashboardData();
+
+        Get.delete<
+            DashboardController>(
+          force: true,
+        );
       }
 
-      // 2. Clear LocationController
-      if (Get.isRegistered<LocationController>()) {
-        Get.delete<LocationController>(force: true);
-        debugPrint('🧹 LocationController deleted');
+      // Location
+      if (Get.isRegistered<
+          LocationController>()) {
+        Get.delete<
+            LocationController>(
+          force: true,
+        );
       }
 
-      // 3. Clear BottomNavController
-      if (Get.isRegistered<BottomNavController>()) {
-        Get.delete<BottomNavController>(force: true);
-        debugPrint('🧹 BottomNavController deleted');
+      // Bottom navigation
+      if (Get.isRegistered<
+          BottomNavController>()) {
+        Get.delete<
+            BottomNavController>(
+          force: true,
+        );
       }
 
-      // ============================================================
-      // CLEAR DASHBOARD CONTROLLER
-      // ============================================================
-
-      if (Get.isRegistered<DashboardController>()) {
-        final dashboardController = Get.find<DashboardController>();
-
-        dashboardController.clearDashboardData();
-
-        Get.delete<DashboardController>(force: true);
-
-        debugPrint('🧹 DashboardController deleted');
-      }
-
-      // ============================================================
-      // CLEAR TOKEN
-      // ============================================================
-
+      // Clear token
       await TokenStorage.clearTokens();
 
-      // ============================================================
-      // GOOGLE LOGOUT
-      // ============================================================
-
+      // Google logout
       try {
         await GoogleAuthService.signOut();
-
-        debugPrint('✅ Google Sign Out Successful');
       } catch (e) {
-        debugPrint('⚠️ Google Sign Out Error: $e');
+        debugPrint(
+          'Google logout error: $e',
+        );
       }
 
-      debugPrint('✅ LOGOUT SUCCESSFUL');
+      if (!context.mounted) {
+        return;
+      }
 
-      // ============================================================
-      // LOGIN SCREEN
-      // ============================================================
-
-      if (!context.mounted) return;
-
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(
+        '/login',
+        (route) => false,
+      );
     } catch (e) {
-      debugPrint('❌ LOGOUT ERROR: $e');
+      debugPrint(
+        'LOGOUT ERROR: $e',
+      );
 
-      // Always clear token
       await TokenStorage.clearTokens();
 
-      if (!context.mounted) return;
+      if (!context.mounted) {
+        return;
+      }
 
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      Navigator.of(context)
+          .pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) =>
+              const LoginScreen(),
+        ),
         (route) => false,
       );
     }
-  } // ============================================================
+  }
+
+  // ============================================================
   // DISPOSE
   // ============================================================
 

@@ -14,7 +14,7 @@ class DashboardBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(BottomNavController());
- 
+
     return SafeArea(
       child: Scaffold(
         body: Obx(() {
@@ -25,7 +25,7 @@ class DashboardBottomNav extends StatelessWidget {
             case 1:
               return LeadsScreen(controller: controller);
             case 2:
-              return WhatsappScreen(controller: controller);
+              return whatsapp(controller: controller);
 
             case 3:
               return ProfileScreen(controller: controller);

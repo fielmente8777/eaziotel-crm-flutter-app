@@ -1,7 +1,6 @@
 import 'package:eazotel/features/auth/controllers/login_controller.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashbord_botum_nav.dart';
-import 'package:eazotel/features/dashboard_screen/screens/test_dashboard_main_screen.dart';
-import 'package:eazotel/main.dart';
+ import 'package:eazotel/main.dart';
 import 'package:eazotel/welcome.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
