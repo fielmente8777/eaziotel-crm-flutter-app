@@ -10,39 +10,26 @@ class WhatsappMessageMerger {
   }) {
     final Map<String, WhatsappMessageItem> uniqueMessages = {};
 
-    // ============================================================
     // API MESSAGES
-    // ============================================================
-
     for (final message in apiMessages) {
       final item = WhatsappMessageItem.fromApi(message);
-
       uniqueMessages[item.uniqueKey] = item;
     }
 
-    // ============================================================
     // SOCKET MESSAGES
-    // ============================================================
-
     for (final message in socketMessages) {
       final item = WhatsappMessageItem.fromSocket(message);
-
       uniqueMessages[item.uniqueKey] = item;
     }
 
-    // ============================================================
-    // SORT BY DATE
-    // ============================================================
-
+    // SORT BY DATE (newest first)
     final result = uniqueMessages.values.toList();
 
     result.sort((a, b) {
-      final aDate =
-          DateTime.tryParse(a.createdAt ?? '') ??
+      final aDate = DateTime.tryParse(a.createdAt ?? '') ??
           DateTime.fromMillisecondsSinceEpoch(0);
 
-      final bDate =
-          DateTime.tryParse(b.createdAt ?? '') ??
+      final bDate = DateTime.tryParse(b.createdAt ?? '') ??
           DateTime.fromMillisecondsSinceEpoch(0);
 
       return bDate.compareTo(aDate);

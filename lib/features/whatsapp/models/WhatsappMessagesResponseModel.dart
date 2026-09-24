@@ -100,7 +100,15 @@ class WhatsappMessagesResultModel {
 // ============================================================
 
 class WhatsappMessageModel {
+  // ============================================================
+  // TEMPLATE
+  // ============================================================
+
   final WhatsappTemplateWrapperModel? template;
+
+  // ============================================================
+  // BASIC
+  // ============================================================
 
   final String? id;
   final String? conversationId;
@@ -121,10 +129,29 @@ class WhatsappMessageModel {
 
   final int? version;
 
-  final dynamic media;
+  // ============================================================
+  // MEDIA
+  // ============================================================
 
+  final WhatsappMediaModel? media;
+
+  // ============================================================
   // INTERACTIVE
+  // ============================================================
+
   final WhatsappInteractiveModel? interactive;
+
+  // ============================================================
+  // LOCATION
+  // ============================================================
+
+  final WhatsappLocationModel? location;
+
+  // ============================================================
+  // CONTACTS
+  // ============================================================
+
+  final List<WhatsappContactModel> contacts;
 
   WhatsappMessageModel({
     this.template,
@@ -143,18 +170,24 @@ class WhatsappMessageModel {
     this.version,
     this.media,
     this.interactive,
+    this.location,
+    this.contacts = const [],
   });
 
   factory WhatsappMessageModel.fromJson(Map<String, dynamic> json) {
     return WhatsappMessageModel(
+      // ========================================================
       // TEMPLATE
+      // ========================================================
       template: json['template'] is Map<String, dynamic>
           ? WhatsappTemplateWrapperModel.fromJson(
               json['template'] as Map<String, dynamic>,
             )
           : null,
 
-      // BASIC DATA
+      // ========================================================
+      // BASIC
+      // ========================================================
       id: json['_id']?.toString(),
 
       conversationId: json['conversationId']?.toString(),
@@ -183,51 +216,186 @@ class WhatsappMessageModel {
           ? json['__v'] as int
           : int.tryParse(json['__v']?.toString() ?? ''),
 
+      // ========================================================
       // MEDIA
-      media: json['media'],
+      // ========================================================
+      media: json['media'] is Map<String, dynamic>
+          ? WhatsappMediaModel.fromJson(json['media'] as Map<String, dynamic>)
+          : null,
 
+      // ========================================================
       // INTERACTIVE
+      // ========================================================
       interactive: json['interactive'] is Map<String, dynamic>
           ? WhatsappInteractiveModel.fromJson(
               json['interactive'] as Map<String, dynamic>,
             )
           : null,
+
+      // ========================================================
+      // LOCATION
+      // ========================================================
+      location: json['location'] is Map<String, dynamic>
+          ? WhatsappLocationModel.fromJson(
+              json['location'] as Map<String, dynamic>,
+            )
+          : null,
+
+      // ========================================================
+      // CONTACTS
+      // ========================================================
+      contacts: (json['contacts'] as List<dynamic>? ?? [])
+          .whereType<Map<String, dynamic>>()
+          .map((e) => WhatsappContactModel.fromJson(e))
+          .toList(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      // TEMPLATE
       'template': template?.toJson(),
 
+      // BASIC
       '_id': id,
-
       'conversationId': conversationId,
-
       'messageId': messageId,
 
       'sender': sender,
-
       'from': from,
-
       'to': to,
 
       'direction': direction,
-
       'messageType': messageType,
 
       'body': body,
-
       'status': status,
 
       'createdAt': createdAt,
-
       'updatedAt': updatedAt,
 
       '__v': version,
 
-      'media': media,
+      // MEDIA
+      'media': media?.toJson(),
 
+      // INTERACTIVE
       'interactive': interactive?.toJson(),
+
+      // LOCATION
+      'location': location?.toJson(),
+
+      // CONTACTS
+      'contacts': contacts.map((e) => e.toJson()).toList(),
+    };
+  }
+}
+// ============================================================
+// CONTACT
+// ============================================================
+
+class WhatsappContactModel {
+  final String? name;
+  final String? phone;
+  final String? firstName;
+  final String? lastName;
+
+  const WhatsappContactModel({
+    this.name,
+    this.phone,
+    this.firstName,
+    this.lastName,
+  });
+
+  factory WhatsappContactModel.fromJson(Map<String, dynamic> json) {
+    final nameData = json['name'];
+
+    String? displayName;
+
+    String? firstName;
+    String? lastName;
+
+    if (nameData is Map<String, dynamic>) {
+      displayName = nameData['formatted_name']?.toString();
+
+      firstName = nameData['first_name']?.toString();
+
+      lastName = nameData['last_name']?.toString();
+    } else {
+      displayName = nameData?.toString();
+    }
+
+    return WhatsappContactModel(
+      name: displayName,
+      phone: json['phone']?.toString(),
+      firstName: firstName,
+      lastName: lastName,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'phone': phone,
+      'first_name': firstName,
+      'last_name': lastName,
+    };
+  }
+}
+
+class WhatsappMediaModel {
+  final String? id;
+  final String? mimeType;
+
+  const WhatsappMediaModel({this.id, this.mimeType});
+
+  factory WhatsappMediaModel.fromJson(Map<String, dynamic> json) {
+    return WhatsappMediaModel(
+      id: json['id']?.toString(),
+      mimeType: json['mimeType']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'mimeType': mimeType};
+  }
+}
+
+class WhatsappLocationModel {
+  final double? latitude;
+  final double? longitude;
+  final String? name;
+  final String? address;
+
+  const WhatsappLocationModel({
+    this.latitude,
+    this.longitude,
+    this.name,
+    this.address,
+  });
+
+  factory WhatsappLocationModel.fromJson(Map<String, dynamic> json) {
+    return WhatsappLocationModel(
+      latitude: json['latitude'] is num
+          ? (json['latitude'] as num).toDouble()
+          : double.tryParse(json['latitude']?.toString() ?? ''),
+
+      longitude: json['longitude'] is num
+          ? (json['longitude'] as num).toDouble()
+          : double.tryParse(json['longitude']?.toString() ?? ''),
+
+      name: json['name']?.toString(),
+
+      address: json['address']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'latitude': latitude,
+      'longitude': longitude,
+      'name': name,
+      'address': address,
     };
   }
 }

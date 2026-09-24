@@ -1,8 +1,14 @@
+import 'dart:convert';
+
+import 'package:eazotel/core/api/api_clint_servic.dart';
+import 'package:eazotel/features/dashboard_screen/models/leads_responce_modle.dart';
 import 'package:eazotel/features/whatsapp/models/WhatsappMessagesResponseModel.dart';
 import 'package:eazotel/features/whatsapp/models/WhatsappSocketMessageModel.dart';
 import 'package:eazotel/features/whatsapp/models/whatsappMessegesLeads.dart';
 import 'package:eazotel/features/whatsapp/services/whatsappConversation.dart';
+import 'package:eazotel/features/whatsapp/services/whatsapp_api.dart';
 import 'package:eazotel/features/whatsapp/services/whatsapp_socket_services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 class WhatsappController extends GetxController {
@@ -21,6 +27,26 @@ class WhatsappController extends GetxController {
 
   final RxString errorMessage = ''.obs;
 
+  final RxBool isIntegrationLoading = false.obs;
+
+  final RxString integrationErrorMessage = ''.obs;
+
+  /// API ka complete response yahan store hoga.
+  /// Iske liye koi model required nahi hai.
+  final Rxn<Map<String, dynamic>> whatsappIntegration =
+      Rxn<Map<String, dynamic>>();
+
+  // ============================================================
+  // LEAD RESPONSE
+  // ============================================================
+
+  final Rxn<LeadResponseModel> leadResponse = Rxn<LeadResponseModel>();
+
+  /// Lead response se nikale gaye saare NDID (cache).
+  Set<String> _leadNdids = <String>{};
+
+  Worker? _leadWorker;
+
   // ============================================================
   // SOCKET MESSAGES
   // ============================================================
@@ -31,7 +57,6 @@ class WhatsappController extends GetxController {
   final Rxn<WhatsappSocketMessageModel> latestSocketMessage =
       Rxn<WhatsappSocketMessageModel>();
 
-  // Latest socket message for every conversation
   final RxMap<String, WhatsappSocketMessageModel>
   latestSocketMessagesByConversation =
       <String, WhatsappSocketMessageModel>{}.obs;
@@ -54,13 +79,12 @@ class WhatsappController extends GetxController {
       Rxn<WhatsappMessagesResponseModel>();
 
   // ============================================================
-  // HID
+  // HID (dynamic - screen se pass hota hai)
   // ============================================================
 
-  static const String hid = '41913874';
+  final String hid;
 
-  // static const String hid = '40526487';
-  // static const String hid = '11974255';
+  WhatsappController({required this.hid});
 
   // ============================================================
   // LIFECYCLE
@@ -70,6 +94,14 @@ class WhatsappController extends GetxController {
   void onInit() {
     super.onInit();
 
+    // leadResponse kahin bhi set ho (setLeadResponse ya .value = ...),
+    // NDID cache apne aap update ho jayega.
+    _leadWorker = ever<LeadResponseModel?>(leadResponse, (_) {
+      _rebuildLeadNdids();
+    });
+    // WhatsApp integration API
+    getWhatsappIntegration();
+
     getConversations();
 
     WhatsappSocketService.connect(onMessage: handleSocketMessage);
@@ -77,9 +109,163 @@ class WhatsappController extends GetxController {
 
   @override
   void onClose() {
+    _leadWorker?.dispose();
+
     WhatsappSocketService.disconnect();
 
     super.onClose();
+  }
+
+  bool get whatsappIntegrationSuccess {
+    final data = whatsappIntegration.value;
+
+    if (data == null) {
+      return false;
+    }
+
+    final result = data['result'];
+
+    if (result is! Map) {
+      return false;
+    }
+
+    final docs = result['docs'];
+
+    if (docs is! Map) {
+      return false;
+    }
+
+    return docs.isNotEmpty;
+  }
+
+  Future<void> getWhatsappIntegration() async {
+    try {
+      isIntegrationLoading.value = true;
+      integrationErrorMessage.value = '';
+
+      final dynamic decoded = await WhatsappApiService.getWhatsappIntegration(
+        hid: hid,
+      );
+
+      if (decoded is Map) {
+        whatsappIntegration.value = Map<String, dynamic>.from(decoded);
+      } else {
+        debugPrint('❌ WHATSAPP INTEGRATION: Response Map nahi hai');
+      }
+    } catch (e, stackTrace) {
+      integrationErrorMessage.value = e.toString();
+
+      debugPrint('');
+      debugPrint('==================================================');
+      debugPrint('❌ WHATSAPP INTEGRATION API ERROR');
+      debugPrint('==================================================');
+      debugPrint('ERROR: $e');
+      debugPrint('STACK: $stackTrace');
+      debugPrint('==================================================');
+    } finally {
+      isIntegrationLoading.value = false;
+    }
+  }
+
+  // ============================================================
+  // LEAD NDIDS
+  // ============================================================
+
+  void setLeadResponse(LeadResponseModel response) {
+    leadResponse.value = response;
+
+    _rebuildLeadNdids();
+
+    debugPrint('LEAD RESPONSE UPDATED - NDID COUNT: ${_leadNdids.length}');
+  }
+
+  void _rebuildLeadNdids() {
+    final Set<String> ndids = <String>{};
+
+    final dynamic response = leadResponse.value;
+
+    if (response != null) {
+      try {
+        dynamic json;
+
+        try {
+          json = response.toJson();
+        } catch (_) {
+          json = response;
+        }
+
+        _collectNdids(json, ndids);
+      } catch (e) {
+        debugPrint('LEAD NDID EXTRACTION ERROR: $e');
+      }
+    }
+
+    _leadNdids = ndids;
+  }
+
+  /// JSON ke andar recursively "ndid" key dhoondta hai.
+  void _collectNdids(dynamic value, Set<String> result) {
+    if (value == null) return;
+
+    if (value is Map) {
+      for (final entry in value.entries) {
+        final key = entry.key?.toString().toLowerCase();
+
+        if (key == 'ndid') {
+          final text = entry.value?.toString().trim();
+
+          if (text != null && text.isNotEmpty && text != 'null') {
+            result.add(text);
+          }
+        }
+
+        _collectNdids(entry.value, result);
+      }
+
+      return;
+    }
+
+    if (value is Iterable) {
+      for (final item in value) {
+        _collectNdids(item, result);
+      }
+    }
+  }
+
+  /// Socket ka NDID allowed hai ya nahi.
+  ///
+  /// 1) leadResponse set hai  -> sirf lead NDID se match (strict).
+  /// 2) leadResponse set NAHI -> already load hui conversations ke NDID se
+  ///    match (fallback), taaki UI band na ho.
+  bool _isLeadNdid(String ndid) {
+    final String value = ndid.trim();
+
+    if (leadResponse.value != null) {
+      if (_leadNdids.isEmpty) _rebuildLeadNdids();
+
+      if (_leadNdids.isNotEmpty) {
+        return _leadNdids.contains(value);
+      }
+    }
+
+    debugPrint(
+      'WARNING: leadResponse set nahi hai -> fallback: '
+      'loaded conversations ke NDID se match',
+    );
+
+    return conversations.any(
+      (conversation) => conversation.ndid.trim() == value,
+    );
+  }
+
+  String? _getSocketNdid(Map<String, dynamic> data) {
+    final value = data['ndid']?.toString().trim();
+
+    if (value == null || value.isEmpty || value == 'null') {
+      return null;
+    }
+
+    return value;
   }
 
   // ============================================================
@@ -89,12 +275,7 @@ class WhatsappController extends GetxController {
   void setCurrentConversation(String conversationId) {
     currentConversationId.value = conversationId;
 
-    print('');
-    print('==============================================');
-    print('💬 CURRENT WHATSAPP CONVERSATION');
-    print('==============================================');
-    print('Conversation ID: $conversationId');
-    print('==============================================');
+    debugPrint('CURRENT WHATSAPP CONVERSATION: $conversationId');
   }
 
   void clearCurrentConversation() {
@@ -106,74 +287,96 @@ class WhatsappController extends GetxController {
   // ============================================================
 
   void handleSocketMessage(Map<String, dynamic> serverResponse) {
-    final event = serverResponse['event'];
+    try {
+      final event = serverResponse['event'];
 
-    final data = serverResponse['data'];
+      final data = serverResponse['data'];
 
-    if (data == null || data is! Map) {
-      return;
-    }
+      if (data == null || data is! Map) {
+        debugPrint('SOCKET DATA IS NULL OR INVALID');
+        return;
+      }
 
-    final dataMap = Map<String, dynamic>.from(data);
+      final dataMap = Map<String, dynamic>.from(data);
 
-    print('');
-    print('==============================================');
-    print('📡 SOCKET EVENT HANDLED');
-    print('==============================================');
-    print('EVENT: $event');
-    print('==============================================');
+      debugPrint('SOCKET EVENT RECEIVED: $event');
 
-    // ------------------------------------------------------------
-    // NEW MESSAGE
-    // ------------------------------------------------------------
+      if (event == 'WHATSAPP_NEW_MESSAGE') {
+        handleNewMessage(dataMap);
+        return;
+      }
 
-    if (event == 'WHATSAPP_NEW_MESSAGE') {
-      handleNewMessage(dataMap);
-      return;
-    }
+      if (event == 'WHATSAPP_NEW_CONVERSATION') {
+        handleNewConversation(dataMap);
+        return;
+      }
 
-    // ------------------------------------------------------------
-    // NEW CONVERSATION
-    // ------------------------------------------------------------
-
-    if (event == 'WHATSAPP_NEW_CONVERSATION') {
-      handleNewConversation(dataMap);
-      return;
-    }
-
-    // ------------------------------------------------------------
-    // MESSAGE STATUS
-    // ------------------------------------------------------------
-
-    if (event == 'WHATSAPP_MESSAGE_STATUS') {
-      handleMessageStatus(dataMap);
-      return;
+      if (event == 'WHATSAPP_MESSAGE_STATUS') {
+        handleMessageStatus(dataMap);
+        return;
+      }
+    } catch (e) {
+      debugPrint('SOCKET EVENT HANDLER ERROR: $e');
     }
   }
 
   // ============================================================
   // WHATSAPP_NEW_MESSAGE
+  //
+  // STEP 1  -> NDID lead list mein hai? Nahi to DISCARD.
+  // STEP 2  -> socket message save (dedupe).
+  // STEP 3  -> conversation id list mein hai?
+  //              haan  -> usi conversation ko update karke TOP par
+  //              nahi  -> nayi conversation banake TOP par
+  // STEP 4  -> conversation abhi open hai? To messages response
+  //            mein message add karo.
   // ============================================================
-  void handleNewMessage(Map<String, dynamic> data) {
+
+  void handleNewMessage(Map<String, dynamic> rawMessage) {
     try {
-      final message = WhatsappSocketMessageModel.fromJson(data);
+      final WhatsappSocketMessageModel message =
+          WhatsappSocketMessageModel.fromJson(rawMessage);
 
-      print('');
-      print('==============================================');
-      print('📩 NEW WHATSAPP MESSAGE');
-      print('==============================================');
-      print('Conversation ID: ${message.conversationId}');
-      print('Message ID: ${message.messageId}');
-      print('Sender: ${message.sender}');
-      print('Direction: ${message.direction}');
-      print('Body: ${message.body}');
-      print('Status: ${message.status}');
-      print('Name: ${message.name}');
-      print('==============================================');
+      final String? conversationId = message.conversationId;
 
-      // Socket message list
-      final alreadyExists = socketMessages.any(
-        (item) => item.messageId == message.messageId || item.id == message.id,
+      if (conversationId == null || conversationId.isEmpty) {
+        debugPrint('SOCKET MESSAGE DISCARDED: CONVERSATION ID EMPTY');
+        return;
+      }
+
+      // ==========================================================
+      // STEP 1: NDID CHECK (lead response se match)
+      // ==========================================================
+
+      final String? socketNdid = _getSocketNdid(rawMessage);
+
+      debugPrint(
+        'NEW MESSAGE -> conv: $conversationId | ndid: $socketNdid | '
+        'leadNdids: ${_leadNdids.length} | '
+        'loadedConversations: ${conversations.length}',
+      );
+
+      if (socketNdid == null) {
+        debugPrint('SOCKET MESSAGE DISCARDED: NDID EMPTY');
+        return;
+      }
+
+      if (!_isLeadNdid(socketNdid)) {
+        debugPrint('SOCKET MESSAGE DISCARDED: NDID NOT IN LEADS ($socketNdid)');
+        return;
+      }
+
+      debugPrint('NDID MATCHED -> processing message');
+
+      // ==========================================================
+      // STEP 2: SAVE SOCKET MESSAGE
+      // ==========================================================
+
+      final bool alreadyExists = socketMessages.any(
+        (item) =>
+            (message.messageId != null &&
+                item.messageId == message.messageId) ||
+            (message.id != null && item.id == message.id),
       );
 
       if (!alreadyExists) {
@@ -182,263 +385,468 @@ class WhatsappController extends GetxController {
 
       latestSocketMessage.value = message;
 
-      final conversationId = message.conversationId;
+      latestSocketMessagesByConversation[conversationId] = message;
+      latestSocketMessagesByConversation.refresh();
 
-      if (conversationId != null && conversationId.isNotEmpty) {
-        latestSocketMessagesByConversation[conversationId] = message;
-        latestSocketMessagesByConversation.refresh();
+      // ==========================================================
+      // STEP 3: CONVERSATION LIST (update ya new, dono TOP par)
+      // ==========================================================
 
-        // IMPORTANT:
-        // Agar ye wahi conversation hai jo currently open hai,
-        // to socket message ko API messages list me add karo.
-        if (currentConversationId.value == conversationId) {
-          _addSocketMessageToCurrentConversation(message);
-        }
+      _upsertConversationFromSocket(
+        rawMessage: rawMessage,
+        socketMessage: message,
+        socketNdid: socketNdid,
+      );
 
-        _updateConversationFromSocket(message);
+      // ==========================================================
+      // STEP 4: OPEN CONVERSATION KE MESSAGES RESPONSE MEIN ADD
+      // ==========================================================
+
+      if (currentConversationId.value == conversationId) {
+        _addSocketMessageToMessagesResponse(message);
       }
-    } catch (e) {
-      print('❌ NEW MESSAGE SOCKET ERROR: $e');
+
+      update();
+    } catch (e, stack) {
+      debugPrint('handleNewMessage ERROR: $e');
+      debugPrint('$stack');
     }
   }
 
-  void _addSocketMessageToCurrentConversation(
-    WhatsappSocketMessageModel socketMessage,
-  ) {
-    final response = messagesResponse.value;
+  // ============================================================
+  // UPDATE / INSERT CONVERSATION (socket message se)
+  // ============================================================
 
-    if (response == null) {
-      print('⚠️ messagesResponse is null');
-      return;
-    }
+  void _upsertConversationFromSocket({
+    required Map<String, dynamic> rawMessage,
+    required WhatsappSocketMessageModel socketMessage,
+    required String socketNdid,
+  }) {
+    final String conversationId = socketMessage.conversationId ?? '';
 
-    final result = response.result;
+    if (conversationId.isEmpty) return;
 
-    if (result == null) {
-      print('⚠️ messages result is null');
-      return;
-    }
+    final bool isOpen = currentConversationId.value == conversationId;
+    final bool isIncoming = _isIncomingSocket(socketMessage);
 
-    final messages = result.messages;
-
-    if (messages == null) {
-      print('⚠️ messages list is null');
-      return;
-    }
-
-    // Duplicate check
-    final exists = messages.any(
-      (message) =>
-          message.messageId == socketMessage.messageId ||
-          message.id == socketMessage.id,
+    final Map<String, dynamic> lastMessage = _buildLastMessage(
+      rawMessage,
+      socketMessage,
     );
 
-    if (exists) {
-      print('⚠️ Socket message already exists');
-      return;
-    }
-
-    // Yahan IMPORTANT hai:
-    // Aapke actual message model ka constructor use hoga.
-    //
-    // Agar API message model aur socket model same nahi hain,
-    // to yahan socket -> API message model conversion karna padega.
-  }
-  // ============================================================
-  // UPDATE CONVERSATION FROM SOCKET
-  // ============================================================
-
-  void _updateConversationFromSocket(WhatsappSocketMessageModel message) {
-    final conversationId = message.conversationId;
-
-    if (conversationId == null || conversationId.isEmpty) {
-      return;
-    }
-
-    final index = conversations.indexWhere(
+    final int index = conversations.indexWhere(
       (conversation) => conversation.id == conversationId,
     );
 
-    if (index == -1) {
-      print(
-        '⚠️ Conversation not found in current conversation list: '
-        '$conversationId',
-      );
+    // ----------------------------------------------------------
+    // EXISTING CONVERSATION -> UPDATE + MOVE TO TOP
+    // ----------------------------------------------------------
+
+    if (index != -1) {
+      final old = conversations[index];
+
+      final Map<String, dynamic> json = {
+        // Purani conversation ka saara data (notes, handling, status...)
+        ...old.toJson(),
+
+        // Sirf ye fields socket ke hisaab se update honge
+        'name': _cleanString(rawMessage['name']) ?? old.name,
+
+        'unread_count': _resolveUnreadCount(
+          oldCount: old.unreadCount,
+          raw: rawMessage,
+          isOpen: isOpen,
+          isIncoming: isIncoming,
+        ),
+
+        'last_message': lastMessage,
+
+        'updatedAt': lastMessage['updated_at'],
+      };
+
+      final updated = WhatsappConversationModel.fromJson(json);
+
+      conversations.removeAt(index);
+      conversations.insert(0, updated);
+      conversations.refresh();
+
+      debugPrint('CONVERSATION UPDATED -> TOP: $conversationId');
 
       return;
     }
 
-    /*
-     * IMPORTANT:
-     *
-     * WhatsappConversationModel ka exact constructor / copyWith
-     * current code me available nahi hai.
-     *
-     * Isliye yahan existing model ko blindly recreate nahi kar rahe.
-     *
-     * Latest socket message already:
-     *
-     * latestSocketMessagesByConversation[conversationId]
-     *
-     * me available hai.
-     *
-     * Conversation List UI is map ko use karke latest message
-     * immediately show kar sakti hai.
-     */
+    // ----------------------------------------------------------
+    // NEW CONVERSATION -> CREATE + TOP
+    // ----------------------------------------------------------
 
-    latestSocketMessagesByConversation[conversationId] = message;
+    final String now = DateTime.now().toIso8601String();
 
-    latestSocketMessagesByConversation.refresh();
+    final newConversation = WhatsappConversationModel.fromJson({
+      '_id': conversationId,
+      'hid': socketMessage.hid ?? hid,
+      'ndid': socketNdid,
 
-    print('');
-    print('==============================================');
-    print('🔄 CONVERSATION LIST SOCKET UPDATE');
-    print('==============================================');
-    print('Conversation ID: $conversationId');
-    print('Latest message: ${message.body}');
-    print('Unread count: ${message.unreadCount}');
-    print('Created at: ${message.createdAt}');
-    print('==============================================');
+      // Incoming message: customer = from. Outgoing: customer = to.
+      'phone': (isIncoming ? socketMessage.from : socketMessage.to) ?? '',
+      'phoneNumberId':
+          (isIncoming ? socketMessage.to : socketMessage.from) ?? '',
+
+      'name': _cleanString(rawMessage['name']),
+
+      'unread_count': _resolveUnreadCount(
+        oldCount: 0,
+        raw: rawMessage,
+        isOpen: isOpen,
+        isIncoming: isIncoming,
+      ),
+
+      'status': 'ACTIVE',
+      'markAsLead': false,
+      'notes': [],
+
+      'handling': {
+        'mode': 'AI',
+        'assignedTo': null,
+        'assignedAt': null,
+        'assignedBy': null,
+      },
+
+      'last_message': lastMessage,
+
+      'createdAt': socketMessage.createdAt ?? now,
+      'updatedAt': lastMessage['updated_at'],
+    });
+
+    conversations.insert(0, newConversation);
+    conversations.refresh();
+
+    debugPrint('NEW CONVERSATION INSERTED -> TOP: $conversationId');
+  }
+
+  // ============================================================
+  // ADD SOCKET MESSAGE TO OPEN CONVERSATION (messages response)
+  // ============================================================
+
+  void _addSocketMessageToMessagesResponse(
+    WhatsappSocketMessageModel socketMessage,
+  ) {
+    // API abhi load ho rahi hai -> response purani conversation ka ho
+    // sakta hai. Socket message merger se waise bhi dikh jayega.
+    if (isMessagesLoading.value) {
+      return;
+    }
+
+    final response = messagesResponse.value;
+
+    if (response == null) {
+      return;
+    }
+
+    final List<WhatsappMessageModel> oldMessages =
+        response.result?.messages ?? const <WhatsappMessageModel>[];
+
+    // Safety: response isi conversation ka hona chahiye.
+    final bool belongsToOtherConversation = oldMessages.any(
+      (m) =>
+          m.conversationId != null &&
+          m.conversationId!.isNotEmpty &&
+          m.conversationId != socketMessage.conversationId,
+    );
+
+    if (belongsToOtherConversation) {
+      return;
+    }
+
+    final bool exists = oldMessages.any(
+      (m) =>
+          (socketMessage.messageId != null &&
+              m.messageId == socketMessage.messageId) ||
+          (socketMessage.id != null && m.id == socketMessage.id),
+    );
+
+    if (exists) {
+      return;
+    }
+
+    final WhatsappMessageModel newMessage = _socketToApiMessage(socketMessage);
+
+    // Nayi list + nayi response banate hain (const list par add nahi
+    // karte) taaki Obx sahi se rebuild ho.
+    messagesResponse.value = WhatsappMessagesResponseModel(
+      success: response.success,
+      responseStatusCode: response.responseStatusCode,
+      responseMessage: response.responseMessage,
+      request: response.request,
+      result: WhatsappMessagesResultModel(
+        messages: [...oldMessages, newMessage],
+      ),
+    );
+
+    debugPrint('SOCKET MESSAGE ADDED TO MESSAGES RESPONSE');
+  }
+
+  WhatsappMessageModel _socketToApiMessage(WhatsappSocketMessageModel m) {
+    return WhatsappMessageModel(
+      id: m.id,
+      conversationId: m.conversationId,
+      messageId: m.messageId,
+      sender: m.sender,
+      from: m.from,
+      to: m.to,
+      direction: m.direction,
+      messageType: m.messageType,
+      body: m.body,
+      status: m.status,
+      createdAt: m.createdAt,
+      updatedAt: m.updatedAt,
+      media: _mediaFromSocket(m.media),
+      interactive: m.interactive,
+      location: m.location,
+      contacts: m.contacts,
+    );
+  }
+
+  WhatsappMediaModel? _mediaFromSocket(dynamic media) {
+    if (media is WhatsappMediaModel) return media;
+
+    if (media is Map) {
+      return WhatsappMediaModel.fromJson(Map<String, dynamic>.from(media));
+    }
+
+    return null;
+  }
+
+  // ============================================================
+  // HELPERS
+  // ============================================================
+
+  bool _isIncomingSocket(WhatsappSocketMessageModel message) {
+    return message.direction?.toLowerCase() == 'inbound' ||
+        message.sender?.toLowerCase() == 'contact';
+  }
+
+  String _socketSender(Map<String, dynamic> rawMessage) {
+    final sender = rawMessage['sender']?.toString();
+
+    if (sender == null || sender.isEmpty) {
+      return 'contact';
+    }
+
+    return sender;
+  }
+
+  String? _cleanString(dynamic value) {
+    final text = value?.toString().trim();
+
+    if (text == null || text.isEmpty || text == 'null') {
+      return null;
+    }
+
+    return text;
+  }
+
+  Map<String, dynamic>? _asMap(dynamic value) {
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
+    }
+
+    return null;
+  }
+
+  int _resolveUnreadCount({
+    required int oldCount,
+    required Map<String, dynamic> raw,
+    required bool isOpen,
+    required bool isIncoming,
+  }) {
+    // Server unread_count bheje to wahi sahi hai.
+    final fromServer = raw['unread_count'];
+
+    if (fromServer != null) {
+      final parsed = fromServer is int
+          ? fromServer
+          : int.tryParse(fromServer.toString());
+
+      if (parsed != null) return parsed;
+    }
+
+    // Chat abhi open hai -> unread nahi.
+    if (isOpen) return 0;
+
+    // Naya incoming message -> +1
+    if (isIncoming) return oldCount + 1;
+
+    return oldCount;
+  }
+
+  Map<String, dynamic> _buildLastMessage(
+    Map<String, dynamic> raw,
+    WhatsappSocketMessageModel m,
+  ) {
+    final String now = DateTime.now().toIso8601String();
+
+    return {
+      'sender': _socketSender(raw),
+      'text': _lastMessageText(m),
+      'type': m.messageType ?? 'text',
+      'created_at': m.createdAt ?? now,
+      'updated_at': m.updatedAt ?? m.createdAt ?? now,
+    };
+  }
+
+  String _lastMessageText(WhatsappSocketMessageModel m) {
+    final body = m.body?.trim() ?? '';
+
+    if (body.isNotEmpty) return body;
+
+    switch ((m.messageType ?? '').toLowerCase()) {
+      case 'image':
+        return '📷 Photo';
+      case 'video':
+        return '🎥 Video';
+      case 'audio':
+      case 'voice':
+        return '🎵 Audio';
+      case 'document':
+        return '📄 Document';
+      case 'sticker':
+        return 'Sticker';
+      case 'location':
+        return '📍 Location';
+      case 'contacts':
+        return '👤 Contact';
+      case 'interactive':
+        return 'Interactive message';
+      default:
+        return '';
+    }
   }
 
   // ============================================================
   // WHATSAPP_NEW_CONVERSATION
+  //
+  // NDID lead list mein na ho -> discard.
+  // Conversation id list mein ho -> update + top. Warna new + top.
   // ============================================================
 
   void handleNewConversation(Map<String, dynamic> data) {
     try {
-      final conversationId = data['_id']?.toString();
+      final String? socketNdid = _getSocketNdid(data);
+
+      final String? conversationId = data['_id']?.toString();
+
+      // --------------------------------------------------------
+      // NDID CHECK FIRST
+      // --------------------------------------------------------
+
+      if (socketNdid == null) {
+        debugPrint('NEW CONVERSATION DISCARDED: NDID EMPTY');
+        return;
+      }
+
+      if (!_isLeadNdid(socketNdid)) {
+        debugPrint('NEW CONVERSATION DISCARDED: NDID NOT IN LEADS');
+        return;
+      }
 
       if (conversationId == null || conversationId.isEmpty) {
         return;
       }
 
-      // ----------------------------------------------------------
-      // DUPLICATE CHECK
-      // ----------------------------------------------------------
+      final Map<String, dynamic>? lastMessage = _asMap(data['last_message']);
 
-      final exists = conversations.any(
+      final int index = conversations.indexWhere(
         (conversation) => conversation.id == conversationId,
       );
 
-      if (exists) {
+      // --------------------------------------------------------
+      // EXISTING -> UPDATE + TOP
+      // --------------------------------------------------------
+
+      if (index != -1) {
+        final old = conversations[index];
+
+        final Map<String, dynamic> json = {
+          ...old.toJson(),
+          'ndid': socketNdid,
+          'phone': _cleanString(data['phone']) ?? old.phone,
+          'phoneNumberId':
+              _cleanString(data['phoneNumberId']) ?? old.phoneNumberId,
+          'name': _cleanString(data['name']) ?? old.name,
+          'status': _cleanString(data['status']) ?? old.status,
+          if (data['unread_count'] != null)
+            'unread_count': data['unread_count'],
+          if (lastMessage != null) 'last_message': lastMessage,
+          'updatedAt':
+              _cleanString(data['updatedAt']) ??
+              DateTime.now().toIso8601String(),
+        };
+
+        conversations.removeAt(index);
+        conversations.insert(0, WhatsappConversationModel.fromJson(json));
+        conversations.refresh();
+
         return;
       }
 
-      // ----------------------------------------------------------
-      // CREATE CONVERSATION
-      // ----------------------------------------------------------
+      // --------------------------------------------------------
+      // NEW -> CREATE + TOP
+      // --------------------------------------------------------
+
+      final String now = DateTime.now().toIso8601String();
 
       final newConversation = WhatsappConversationModel.fromJson({
-        '_id': data['_id'],
+        '_id': conversationId,
+        'hid': _cleanString(data['hid']) ?? hid,
+        'ndid': socketNdid,
         'phone': data['phone'],
+        'phoneNumberId': data['phoneNumberId'],
         'name': data['name'],
-        'profile_image': data['profile_image'],
-        'last_message': data['last_message'],
-        'status': data['status'] ?? 'open',
+        'last_message': lastMessage,
+        'status': data['status'] ?? 'ACTIVE',
         'unread_count': data['unread_count'] ?? 1,
-        'updatedAt': data['createdAt'] ?? DateTime.now().toIso8601String(),
-        'createdAt': data['createdAt'],
+        'markAsLead': data['markAsLead'] ?? false,
+        'notes': data['notes'] ?? [],
+        'handling': _asMap(data['handling']),
+        'createdAt': data['createdAt'] ?? now,
+        'updatedAt': data['updatedAt'] ?? now,
       });
 
-      // ----------------------------------------------------------
-      // INSERT AT TOP
-      // ----------------------------------------------------------
-
       conversations.insert(0, newConversation);
-
-      print('');
-      print('==============================================');
-      print('🆕 NEW WHATSAPP CONVERSATION');
-      print('==============================================');
-      print('Conversation ID: $conversationId');
-      print('Phone: ${data['phone']}');
-      print('Name: ${data['name']}');
-      print('==============================================');
+      conversations.refresh();
     } catch (e) {
-      print('');
-      print('==============================================');
-      print('❌ NEW CONVERSATION ERROR');
-      print('==============================================');
-      print(e);
-      print('==============================================');
+      debugPrint('NEW CONVERSATION ERROR: $e');
     }
   }
 
   // ============================================================
-  // WHATSAPP_MESSAGE_STATUS
+  // MESSAGE STATUS
   // ============================================================
 
   void handleMessageStatus(Map<String, dynamic> data) {
     try {
-      final messageId = data['messageId']?.toString();
+      final String? messageId = data['messageId']?.toString();
 
-      final status = data['status']?.toString();
+      final String? status = data['status']?.toString();
 
-      final phoneNumberId = data['phoneNumberId']?.toString();
-
-      if (messageId == null || messageId.isEmpty) {
+      if (messageId == null ||
+          messageId.isEmpty ||
+          status == null ||
+          status.isEmpty) {
         return;
       }
 
-      if (status == null || status.isEmpty) {
-        return;
-      }
-
-      print('');
-      print('==============================================');
-      print('📨 WHATSAPP MESSAGE STATUS');
-      print('==============================================');
-      print('Message ID: $messageId');
-      print('Status: $status');
-      print('Phone Number ID: $phoneNumberId');
-      print('==============================================');
-
-      // ----------------------------------------------------------
-      // UPDATE SOCKET MESSAGE
-      // ----------------------------------------------------------
-
-      final index = socketMessages.indexWhere(
+      final int index = socketMessages.indexWhere(
         (message) => message.messageId == messageId || message.id == messageId,
       );
 
       if (index == -1) {
-        print('⚠️ Socket message not found for status update');
-
         return;
       }
 
-      final oldMessage = socketMessages[index];
-
-      /*
-       * Agar WhatsappSocketMessageModel immutable hai,
-       * to status update ke liye copyWith hona chahiye.
-       *
-       * Neeche temporary model recreation nahi ki gayi hai,
-       * kyunki exact model constructor already available nahi hai.
-       */
-
-      print('Old status: ${oldMessage.status}');
-
-      print('New status: $status');
-
-      // ----------------------------------------------------------
-      // CURRENT OPEN CHAT
-      // ----------------------------------------------------------
-
-      if (currentConversationId.value.isNotEmpty) {
-        print(
-          'Current conversation: '
-          '${currentConversationId.value}',
-        );
-      }
+      debugPrint('MESSAGE STATUS: $messageId -> $status');
     } catch (e) {
-      print('');
-      print('==============================================');
-      print('❌ MESSAGE STATUS ERROR');
-      print('==============================================');
-      print(e);
-      print('==============================================');
+      debugPrint('MESSAGE STATUS ERROR: $e');
     }
   }
 
@@ -477,10 +885,42 @@ class WhatsappController extends GetxController {
             )
             .toList(),
       );
+
+      _restoreSocketConversationOrder();
     } catch (e) {
       errorMessage.value = e.toString();
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  // ============================================================
+  // RESTORE SOCKET ORDER
+  // ============================================================
+
+  void _restoreSocketConversationOrder() {
+    if (latestSocketMessagesByConversation.isEmpty) {
+      return;
+    }
+
+    final List<WhatsappConversationModel> matched = [];
+
+    for (final entry in latestSocketMessagesByConversation.entries) {
+      final conversationId = entry.key;
+
+      final index = conversations.indexWhere(
+        (conversation) => conversation.id == conversationId,
+      );
+
+      if (index != -1) {
+        matched.add(conversations.removeAt(index));
+      }
+    }
+
+    if (matched.isNotEmpty) {
+      conversations.insertAll(0, matched);
+
+      conversations.refresh();
     }
   }
 
@@ -494,26 +934,15 @@ class WhatsappController extends GetxController {
 
       messagesErrorMessage.value = '';
 
-      // Current conversation remember karo
       setCurrentConversation(conversationId);
 
-      final WhatsappMessagesResponseModel response =
-          await WhatsappService.getConversationMessages(
-            conversationId: conversationId,
-          );
+      final response = await WhatsappService.getConversationMessages(
+        conversationId: conversationId,
+      );
 
       messagesResponse.value = response;
 
-      // ----------------------------------------------------------
-      // API MESSAGES LOAD HO GAYE
-      // ----------------------------------------------------------
-
-      print('');
-      print('==============================================');
-      print('💬 WHATSAPP MESSAGES LOADED');
-      print('==============================================');
-      print('Conversation ID: $conversationId');
-      print('==============================================');
+      debugPrint('MESSAGES LOADED: $conversationId');
     } catch (e) {
       messagesErrorMessage.value = e.toString();
     } finally {
@@ -522,7 +951,7 @@ class WhatsappController extends GetxController {
   }
 
   // ============================================================
-  // GET SOCKET MESSAGES FOR CURRENT CONVERSATION
+  // CURRENT SOCKET MESSAGES
   // ============================================================
 
   List<WhatsappSocketMessageModel> get currentSocketMessages {
@@ -538,7 +967,7 @@ class WhatsappController extends GetxController {
   }
 
   // ============================================================
-  // GET LATEST SOCKET MESSAGE FOR CONVERSATION
+  // LATEST MESSAGE
   // ============================================================
 
   WhatsappSocketMessageModel? latestMessageForConversation(
@@ -564,22 +993,24 @@ class WhatsappController extends GetxController {
   }
 
   // ============================================================
-  // ACTIVE COUNT
+  // COUNTS
   // ============================================================
 
   int get activeCount {
-    return conversations
-        .where((item) => item.status.toUpperCase() == 'ACTIVE')
-        .length;
+    return conversations.where((conversation) {
+      return !is24HoursCompleted(conversation);
+    }).length;
   }
 
-  // ============================================================
-  // INACTIVE COUNT
-  // ============================================================
-
   int get inactiveCount {
+    return conversations.where((conversation) {
+      return is24HoursCompleted(conversation);
+    }).length;
+  }
+
+  int get convertedCount {
     return conversations
-        .where((item) => item.status.toUpperCase() != 'ACTIVE')
+        .where((item) => item.status.toUpperCase() == 'CONVERTED')
         .length;
   }
 
@@ -591,16 +1022,23 @@ class WhatsappController extends GetxController {
     List<WhatsappConversationModel> list;
 
     if (selectedTab.value == 0) {
-      list = conversations
-          .where((item) => item.status.toUpperCase() == 'ACTIVE')
-          .toList();
+      // ACTIVE
+      list = conversations.where((conversation) {
+        return !is24HoursCompleted(conversation);
+      }).toList();
+    } else if (selectedTab.value == 1) {
+      // INACTIVE
+      list = conversations.where((conversation) {
+        return is24HoursCompleted(conversation);
+      }).toList();
     } else {
-      list = conversations
-          .where((item) => item.status.toUpperCase() != 'ACTIVE')
-          .toList();
+      // CONVERTED
+      list = conversations.where((conversation) {
+        return conversation.status.toUpperCase() == 'CONVERTED';
+      }).toList();
     }
 
-    final searchValue = searchText.value.trim().toLowerCase();
+    final String searchValue = searchText.value.trim().toLowerCase();
 
     if (searchValue.isEmpty) {
       return list;
@@ -619,5 +1057,32 @@ class WhatsappController extends GetxController {
 
   int get totalUnreadCount {
     return conversations.fold(0, (total, item) => total + item.unreadCount);
+  }
+
+  // ============================================================
+  // 24 HOURS CHECK
+  // Active   = last message 24 ghante ke andar
+  // Inactive = last message 24 ghante se purana
+  // ============================================================
+
+  bool is24HoursCompleted(WhatsappConversationModel conversation) {
+    final String? dateString =
+        conversation.lastMessage?.updatedAt ??
+        conversation.updatedAt ??
+        conversation.createdAt;
+
+    if (dateString == null || dateString.isEmpty) {
+      return true;
+    }
+
+    final DateTime? date = DateTime.tryParse(dateString);
+
+    if (date == null) {
+      return true;
+    }
+
+    final Duration difference = DateTime.now().difference(date.toLocal());
+
+    return difference > const Duration(hours: 24);
   }
 }

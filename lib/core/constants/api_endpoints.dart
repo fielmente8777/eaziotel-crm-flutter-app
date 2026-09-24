@@ -87,4 +87,10 @@ class WhatsappApiEndpoint {
   static String getMessages(String conversationId) {
     return '/api/v1/whatsapp/conversations/$conversationId/messages';
   }
+
+   static const String getIntegration =
+      '/api/v1/integration/get';
 }
+
+
+

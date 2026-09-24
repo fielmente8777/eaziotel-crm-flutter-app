@@ -1,12 +1,11 @@
 import 'dart:io';
 
+import 'package:eazotel/features/whatsapp/controller/WhatsappImageController.dart.dart';
+ import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappFullScreenImage.dart';
+import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappMediaPreview.dart';
+import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappMessageTime.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import 'package:eazotel/features/whatsapp/controller/WhatsappImageController.dart.dart';
-import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappFullScreenImage.dart';
-import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappMessageTime.dart';
-import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappUndownloadedImage.dart';
 
 class WhatsappImageMessage extends StatelessWidget {
   final String messageId;
@@ -15,6 +14,7 @@ class WhatsappImageMessage extends StatelessWidget {
   final String? createdAt;
   final bool isIncoming;
   final String? ndid;
+  final WhatsappMediaType type; // image ya sticker
 
   const WhatsappImageMessage({
     super.key,
@@ -24,26 +24,26 @@ class WhatsappImageMessage extends StatelessWidget {
     required this.createdAt,
     required this.isIncoming,
     required this.ndid,
+    this.type = WhatsappMediaType.image,
   });
 
-  String get tag => 'whatsapp_image_$messageId';
+  String get tag => 'whatsapp_${type.name}_$messageId';
 
   @override
   Widget build(BuildContext context) {
-    return GetX<WhatsappImageController>(
+    return GetX<WhatsappMediaController>(
       tag: tag,
-
-      init: WhatsappImageController(
+      init: WhatsappMediaController(
         messageId: messageId,
         media: media,
         ndid: ndid,
+        type: type,
       ),
-
       builder: (controller) {
         final path = controller.localPath.value;
+        final downloading = controller.isDownloading.value;
 
         final maxWidth = MediaQuery.of(context).size.width * 0.78;
-
         const maxHeight = 420.0;
 
         return Align(
@@ -90,14 +90,13 @@ class WhatsappImageMessage extends StatelessWidget {
                     ),
                   )
                 else
-                  WhatsappUndownloadedImage(
+                  WhatsappMediaPreview(
                     controller: controller,
-                    maxWidth: maxWidth,
-                    maxHeight: maxHeight,
+                    width: maxWidth,
+                    height: type == WhatsappMediaType.sticker ? 170 : 220,
+                    onTap: downloading ? null : controller.download,
                   ),
-
                 const SizedBox(height: 2),
-
                 WhatsappMessageTime(
                   createdAt: createdAt,
                   status: null,

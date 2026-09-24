@@ -1,12 +1,12 @@
 import 'package:eazotel/core/api/apiexception/api_error_handler.dart';
 import 'package:eazotel/core/api/apiexception/api_exception.dart';
 import 'package:eazotel/core/local_storage/token_storage.dart';
-import 'package:eazotel/features/dashboard_screen/dashboard_api_servic/dashboard_api_service.dart';
 import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
 import 'package:eazotel/features/dashboard_screen/models/analytics_responce_modle.dart';
 import 'package:eazotel/features/dashboard_screen/models/leads_responce_modle.dart';
- import 'package:get/get.dart';
+import 'package:eazotel/features/dashboard_screen/services/dashboard_api_service.dart';
+import 'package:get/get.dart';
 
 class DashboardController extends GetxController {
   // API service
@@ -109,12 +109,9 @@ class DashboardController extends GetxController {
 
       selectedHotelId.value = hotelId;
 
-      await getLeads(
-        hotelId,
-        reset: true,
-      );
+      await getLeads(hotelId, reset: true);
 
-      await getAnalytics(hotelId);
+      getAnalytics(hotelId);
     } on ApiException catch (e) {
       ApiErrorHandler.handle(e);
     } catch (e) {
@@ -150,10 +147,7 @@ class DashboardController extends GetxController {
   // GET LEADS
   // ============================================================
 
-  Future<void> getLeads(
-    String hotelId, {
-    bool reset = false,
-  }) async {
+  Future<void> getLeads(String hotelId, {bool reset = false}) async {
     if (hotelId.isEmpty) {
       return;
     }
@@ -196,14 +190,12 @@ class DashboardController extends GetxController {
 
       leadResponse.value = result;
 
-      final loadedLeads =
-          result.result?.docs?.leads ?? [];
+      final loadedLeads = result.result?.docs?.leads ?? [];
 
       // First page
       if (isFirstPage) {
         leads.assignAll(loadedLeads);
       }
-
       // Next pages
       else {
         leads.addAll(loadedLeads);
@@ -232,10 +224,12 @@ class DashboardController extends GetxController {
   // GET ANALYTICS
   // ============================================================
 
+  // ============================================================
+  // GET ANALYTICS
+  // ============================================================
+
   Future<void> getAnalytics(String hotelId) async {
-    if (hotelId.isEmpty) {
-      return;
-    }
+    if (hotelId.isEmpty) return;
 
     try {
       isAnalyticsLoading.value = true;
@@ -246,13 +240,12 @@ class DashboardController extends GetxController {
     } on ApiException catch (e) {
       ApiErrorHandler.handle(e);
     } catch (e) {
-      // Handle unexpected error
+      print('getAnalytics error: $e');
     } finally {
       isAnalyticsLoading.value = false;
     }
   }
 
-  // ============================================================
   // LOAD MORE LEADS
   // ============================================================
 
@@ -265,14 +258,11 @@ class DashboardController extends GetxController {
       return;
     }
 
-    if (isLeadsLoading.value ||
-        isLoadingMoreLeads.value) {
+    if (isLeadsLoading.value || isLoadingMoreLeads.value) {
       return;
     }
 
-    await getLeads(
-      selectedHotelId.value,
-    );
+    await getLeads(selectedHotelId.value);
   }
 
   // ============================================================
@@ -282,10 +272,7 @@ class DashboardController extends GetxController {
   Future<void> searchLeads(String value) async {
     leadsSearch.value = value.trim();
 
-    await getLeads(
-      selectedHotelId.value,
-      reset: true,
-    );
+    await getLeads(selectedHotelId.value, reset: true);
   }
 
   // ============================================================
@@ -295,10 +282,7 @@ class DashboardController extends GetxController {
   Future<void> clearLeadsSearch() async {
     leadsSearch.value = '';
 
-    await getLeads(
-      selectedHotelId.value,
-      reset: true,
-    );
+    await getLeads(selectedHotelId.value, reset: true);
   }
 
   // ============================================================
@@ -317,10 +301,7 @@ class DashboardController extends GetxController {
     leadsStartDate.value = startDate;
     leadsEndDate.value = endDate;
 
-    await getLeads(
-      selectedHotelId.value,
-      reset: true,
-    );
+    await getLeads(selectedHotelId.value, reset: true);
   }
 
   // ============================================================
@@ -335,10 +316,7 @@ class DashboardController extends GetxController {
     leadsEndDate.value = null;
 
     // Search remains active
-    await getLeads(
-      selectedHotelId.value,
-      reset: true,
-    );
+    await getLeads(selectedHotelId.value, reset: true);
   }
 
   // ============================================================
@@ -361,44 +339,32 @@ class DashboardController extends GetxController {
       return;
     }
 
-    await getLeads(
-      selectedHotelId.value,
-      reset: true,
-    );
+    await getLeads(selectedHotelId.value, reset: true);
   }
 
   // ============================================================
   // CHANGE HOTEL
   // ============================================================
-
   Future<void> changeHotel(String hotelId) async {
-    if (hotelId.isEmpty ||
-        selectedHotelId.value == hotelId) {
-      return;
-    }
+    if (hotelId.isEmpty) return;
 
     selectedHotelId.value = hotelId;
 
-    // Reset search
-    leadsSearch.value = '';
+    // old analytics hata do
+    analyticsResponse.value = null;
 
-    // Reset filters
+    // UI ko loading state dikhao
+    isAnalyticsLoading.value = true;
+
+    // Leads bhi reset karo
+    leadsSearch.value = '';
     leadsSources.clear();
     leadsStages.clear();
-
     leadsStartDate.value = null;
     leadsEndDate.value = null;
 
-    // Get new hotel data
-    await getLeads(
-      hotelId,
-      reset: true,
-    );
-
-    await getAnalytics(hotelId);
-  }
-
-  // ============================================================
+    await Future.wait([getLeads(hotelId, reset: true), getAnalytics(hotelId)]);
+  } // ============================================================
   // CLEAR DASHBOARD DATA
   // ============================================================
 
