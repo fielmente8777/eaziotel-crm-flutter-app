@@ -75,10 +75,10 @@ class BookingApiEndpoint {
 
   static const String createBooking = '/bookings';
 }
-
 // ============================================================
 // WHATSAPP
 // ============================================================
+
 class WhatsappApiEndpoint {
   WhatsappApiEndpoint._();
 
@@ -88,9 +88,11 @@ class WhatsappApiEndpoint {
     return '/api/v1/whatsapp/conversations/$conversationId/messages';
   }
 
-   static const String getIntegration =
-      '/api/v1/integration/get';
+   static String markAsRead(String conversationId) {
+    return '/api/v1/whatsapp/conversations/$conversationId/read';
+  }
+
+  static const String getIntegration = '/api/v1/integration/get';
+  static const String sandmessages = '/api/v1/whatsapp/messages/send?hid=';
+  static const String template = '/api/v1/whatsapp/message/template/get?hid=';
 }
-
-
-

@@ -5,7 +5,7 @@ import 'package:eazotel/utils/theme/theme.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(DevicePreview(enabled: true, builder: (context) => const MyApp()));
+  runApp(DevicePreview(enabled: false, builder: (context) => const MyApp()));
 }
 
 // ============================================================

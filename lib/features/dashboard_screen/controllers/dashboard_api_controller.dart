@@ -7,6 +7,7 @@ import 'package:eazotel/features/dashboard_screen/models/analytics_responce_modl
 import 'package:eazotel/features/dashboard_screen/models/leads_responce_modle.dart';
 import 'package:eazotel/features/dashboard_screen/services/dashboard_api_service.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardController extends GetxController {
   // API service
@@ -33,6 +34,8 @@ class DashboardController extends GetxController {
   // ============================================================
 
   final selectedHotelId = ''.obs;
+
+  static const String hotelIdKey = 'selected_hotel_id';
 
   // ============================================================
   // LEADS
@@ -105,13 +108,19 @@ class DashboardController extends GetxController {
         return;
       }
 
-      final hotelId = hotels.first.hotelId;
 
-      selectedHotelId.value = hotelId;
+        final prefs = await SharedPreferences.getInstance();
 
-      await getLeads(hotelId, reset: true);
+      final savedHotelId = prefs.getString(hotelIdKey);
 
-      getAnalytics(hotelId);
+
+      // final hotelId = hotels.first.hotelId;
+
+      selectedHotelId.value = savedHotelId.toString();
+
+      await getLeads(savedHotelId.toString(), reset: true);
+
+      getAnalytics(savedHotelId.toString());
     } on ApiException catch (e) {
       ApiErrorHandler.handle(e);
     } catch (e) {

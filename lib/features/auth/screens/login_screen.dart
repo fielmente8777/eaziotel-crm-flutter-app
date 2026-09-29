@@ -1,6 +1,6 @@
 import 'package:eazotel/features/auth/controllers/login_controller.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashbord_botum_nav.dart';
- import 'package:eazotel/main.dart';
+import 'package:eazotel/main.dart';
 import 'package:eazotel/welcome.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -12,6 +12,7 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(LoginController());
+    final pasword = controller.showPassword;
 
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -116,12 +117,24 @@ class LoginScreen extends StatelessWidget {
 
               const SizedBox(height: 7),
 
-              TextFormField(
-                controller: controller.passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  hintText: '••••••••',
-                  suffixIcon: Icon(Icons.visibility_off_outlined),
+              Obx(
+                () => TextFormField(
+                  controller: controller.passwordController,
+                  obscureText: !controller.showPassword.value,
+                  enableInteractiveSelection: true,
+
+                  decoration: InputDecoration(
+                    hintText: '••••••••',
+
+                    suffixIcon: IconButton(
+                      onPressed: controller.toggleShowPassword,
+                      icon: Icon(
+                        controller.showPassword.value
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                    ),
+                  ),
                 ),
               ),
 

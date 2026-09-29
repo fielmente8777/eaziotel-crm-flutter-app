@@ -43,6 +43,9 @@ class _WhatsappScreenState extends State<WhatsappScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // final whatsappTemplateResponse2 = controller
+    //     .templateController
+    //     .whatsappTemplateResponse;
     final theme = Theme.of(context);
 
     return Obx(() {
@@ -67,7 +70,187 @@ class _WhatsappScreenState extends State<WhatsappScreen> {
       // ============================================================
 
       if (!integ) {
-        return Text('heloeojdfkjafkjakfjlkajflkajlk');
+        return Scaffold(
+          body: Center(
+            child: FractionallySizedBox(
+              widthFactor: 0.82,
+              child: AspectRatio(
+                aspectRatio: 1.15,
+                child: Builder(
+                  builder: (context) {
+                    final theme = Theme.of(context);
+                    final isDark = theme.brightness == Brightness.dark;
+
+                    // ==================================================
+                    // LIGHT THEME COLORS
+                    // ==================================================
+
+                    final lightBackground = const Color(0xFFE8F7EF);
+
+                    final lightBorder = const Color(0xFFB7E4C7);
+
+                    final lightIconBackground = const Color(0xFFD2F1DF);
+
+                    final lightText = const Color(0xFF163A2A);
+
+                    final lightSubText = const Color(0xFF527064);
+
+                    // ==================================================
+                    // DARK THEME COLORS
+                    // ==================================================
+
+                    final darkBackground = const Color(0xFF17251F);
+
+                    final darkBorder = const Color(0xFF28553F);
+
+                    final darkIconBackground = const Color(0xFF203F30);
+
+                    final darkText = const Color(0xFFE8F5EE);
+
+                    final darkSubText = const Color(0xFFA9C5B6);
+
+                    // ==================================================
+                    // SELECT THEME
+                    // ==================================================
+
+                    final backgroundColor = isDark
+                        ? darkBackground
+                        : lightBackground;
+
+                    final borderColor = isDark ? darkBorder : lightBorder;
+
+                    final iconBackgroundColor = isDark
+                        ? darkIconBackground
+                        : lightIconBackground;
+
+                    final titleColor = isDark ? darkText : lightText;
+
+                    final subTextColor = isDark ? darkSubText : lightSubText;
+
+                    return Container(
+                      padding: const EdgeInsets.all(28),
+
+                      decoration: BoxDecoration(
+                        color: backgroundColor,
+
+                        borderRadius: BorderRadius.circular(28),
+
+                        border: Border.all(color: borderColor, width: 1.2),
+
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(
+                              isDark ? 0.20 : 0.08,
+                            ),
+                            blurRadius: 25,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+
+                        children: [
+                          // ==================================================
+                          // WHATSAPP ICON
+                          // ==================================================
+                          Container(
+                            height: 35,
+                            width: 55,
+
+                            decoration: BoxDecoration(
+                              color: iconBackgroundColor,
+                              shape: BoxShape.circle,
+                            ),
+
+                            child: Icon(
+                              Icons.chat_rounded,
+                              size: 36,
+                              color: TAppColors.success,
+                            ),
+                          ),
+
+                          const SizedBox(height: 22),
+
+                          // ==================================================
+                          // TITLE
+                          // ==================================================
+                          Text(
+                            'Connect WhatsApp',
+                            textAlign: TextAlign.center,
+
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              color: titleColor,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          // ==================================================
+                          // DESCRIPTION
+                          // ==================================================
+                          Text(
+                            'Connect with our team to connect '
+                            'your WhatsApp account and start '
+                            'managing conversations.',
+                            textAlign: TextAlign.center,
+
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: subTextColor,
+                              height: 1.5,
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // ==================================================
+                          // BUTTON
+                          // ==================================================
+                          SizedBox(
+                            width: double.infinity,
+                            // height: 48,
+
+                            // child: ElevatedButton.icon(
+                            //   onPressed: () {
+                            //     // Connect WhatsApp
+                            //   },
+
+                            //   icon: const Icon(
+                            //     Icons.arrow_forward_rounded,
+                            //     size: 19,
+                            //   ),
+
+                            //   label: const Text('Connect with our team'),
+
+                            //   style: ElevatedButton.styleFrom(
+                            //     backgroundColor: TAppColors.success,
+
+                            //     foregroundColor: Colors.white,
+
+                            //     elevation: 0,
+
+                            //     shape: RoundedRectangleBorder(
+                            //       borderRadius: BorderRadius.circular(14),
+                            //     ),
+
+                            //     textStyle: const TextStyle(
+                            //       fontWeight: FontWeight.w600,
+                            //     ),
+                            //   ),
+                            // ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
       }
 
       // ============================================================
@@ -102,6 +285,7 @@ class _WhatsappScreenState extends State<WhatsappScreen> {
         floatingActionButton: FloatingActionButton(
           onPressed: () {
             debugPrint('FAB clicked');
+            // debugPrint(whatsappTemplateResponse2.toString());
           },
           backgroundColor: theme.colorScheme.primary,
           foregroundColor: theme.colorScheme.onPrimary,
@@ -260,6 +444,8 @@ class ConversationList extends StatelessWidget {
           final socketMessage =
               controller.latestSocketMessagesByConversation[chat.id];
 
+          final whatsapptemplate = controller.templateController;
+
           // ======================================================
           // MESSAGE
           // ======================================================
@@ -281,21 +467,23 @@ class ConversationList extends StatelessWidget {
 
           String time = '';
 
-          if (socketMessage != null && socketMessage.createdAt != null) {
-            final socketDate = DateTime.tryParse(socketMessage.createdAt!);
+          final createdAt =
+              socketMessage?.updatedAt ?? chat.lastMessage?.updatedAt;
+          final createdDate = DateTime.tryParse(createdAt.toString());
 
-            if (socketDate != null) {
-              time = TimeOfDay.fromDateTime(
-                socketDate.toLocal(),
-              ).format(context);
-            }
-          } else {
-            final createdDate = DateTime.tryParse(chat.createdAt);
+          if (createdDate != null) {
+            final localDate = createdDate.toLocal();
+            final now = DateTime.now();
 
-            if (createdDate != null) {
-              time = TimeOfDay.fromDateTime(
-                createdDate.toLocal(),
-              ).format(context);
+            final difference = now.difference(localDate);
+
+            if (difference.inHours >= 24) {
+              time =
+                  '${localDate.day.toString().padLeft(2, '0')}/'
+                  '${localDate.month.toString().padLeft(2, '0')}/'
+                  '${localDate.year}';
+            } else {
+              time = TimeOfDay.fromDateTime(localDate).format(context);
             }
           }
 
@@ -317,11 +505,18 @@ class ConversationList extends StatelessWidget {
               onTap: () {
                 controller.getConversationMessages(conversationId: chat.id);
 
+                // ✅ Conversation open hote hi local + API dono me
+                // unread count 0 mark kar do
+                controller.markConversationAsReadLocally(chat.id);
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        WhatsappConversationMesseg(chat: chat),
+                    builder: (context) => WhatsappConversationMesseg(
+                      chat: chat,
+                      whatsapptemplate: whatsapptemplate,
+                    ),
+                    // ✅ list wali same value pass ki
                   ),
                 );
               },

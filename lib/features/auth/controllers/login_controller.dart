@@ -20,7 +20,14 @@ class LoginController extends GetxController {
   final passwordController =
       TextEditingController();
 
+final RxBool showPassword = false.obs;
   final isLoading = false.obs;
+
+
+
+  void toggleShowPassword() {
+  showPassword.value = !showPassword.value;
+}
 
   // ============================================================
   // EMAIL LOGIN

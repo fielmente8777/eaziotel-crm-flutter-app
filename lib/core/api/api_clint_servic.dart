@@ -13,7 +13,10 @@ class ApiClient {
 
   static final http.Client _client = http.Client();
 
+  // ============================================================
   // GET
+  // ============================================================
+
   static Future<http.Response> get(
     String endpoint, {
     bool authenticated = true,
@@ -27,7 +30,10 @@ class ApiClient {
     );
   }
 
+  // ============================================================
   // POST
+  // ============================================================
+
   static Future<http.Response> post(
     String endpoint, {
     Map<String, dynamic>? body,
@@ -43,7 +49,10 @@ class ApiClient {
     );
   }
 
+  // ============================================================
   // PUT
+  // ============================================================
+
   static Future<http.Response> put(
     String endpoint, {
     Map<String, dynamic>? body,
@@ -59,7 +68,29 @@ class ApiClient {
     );
   }
 
+  // ============================================================
+  // PATCH
+  // ============================================================
+
+  static Future<http.Response> patch(
+    String endpoint, {
+    Map<String, dynamic>? body,
+    bool authenticated = true,
+    String? baseUrl,
+  }) {
+    return _request(
+      method: 'PATCH',
+      endpoint: endpoint,
+      body: body,
+      authenticated: authenticated,
+      baseUrl: baseUrl,
+    );
+  }
+
+  // ============================================================
   // DELETE
+  // ============================================================
+
   static Future<http.Response> delete(
     String endpoint, {
     Map<String, dynamic>? body,
@@ -75,6 +106,10 @@ class ApiClient {
     );
   }
 
+  // ============================================================
+  // MAIN REQUEST
+  // ============================================================
+
   static Future<http.Response> _request({
     required String method,
     required String endpoint,
@@ -84,23 +119,48 @@ class ApiClient {
     String? baseUrl,
   }) async {
     try {
+      // ----------------------------------------------------------
+      // Get Access Token
+      // ----------------------------------------------------------
+
       final token = authenticated ? await TokenStorage.getAccessToken() : null;
 
-      final headers = {
+      // ----------------------------------------------------------
+      // Headers
+      // ----------------------------------------------------------
+
+      final headers = <String, String>{
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+
         if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
       };
 
+      // ----------------------------------------------------------
+      // Base URL
+      // ----------------------------------------------------------
+
       final server = baseUrl ?? BaseUrl.production;
+
       final url = Uri.parse('$server$endpoint');
 
-      // 🚀 API REQUEST
-      print('🚀 $method $url');
+      // ----------------------------------------------------------
+      // Request Logs
+      // ----------------------------------------------------------
+
+      print('');
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('🚀 API REQUEST');
+      print('Method : $method');
+      print('URL    : $url');
 
       if (body != null) {
-        print('📦 Body: $body');
+        print('Body   : $body');
       }
+
+      // ----------------------------------------------------------
+      // Send Request
+      // ----------------------------------------------------------
 
       final response = await _sendRequest(
         method: method,
@@ -109,18 +169,28 @@ class ApiClient {
         body: body,
       );
 
-      // 📡 API RESPONSE
-      print('📡 Status: ${response.statusCode}');
+      // ----------------------------------------------------------
+      // Response Logs
+      // ----------------------------------------------------------
 
-      // 🔄 Access token expired
+      print('📡 STATUS : ${response.statusCode}');
+      print('📥 RESPONSE : ${response.body}');
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('');
+
+      // ==========================================================
+      // TOKEN EXPIRED
+      // ==========================================================
+
       if (response.statusCode == 401 && authenticated && retry) {
-        print('🔄 Token expired, refreshing...');
+        print('🔄 Access token expired. Refreshing token...');
 
         final refreshed = await _refreshToken();
 
         if (refreshed) {
-          print('✅ Token refreshed');
+          print('✅ Token refreshed successfully');
 
+          // Retry original request only once
           return _request(
             method: method,
             endpoint: endpoint,
@@ -130,6 +200,10 @@ class ApiClient {
             baseUrl: baseUrl,
           );
         }
+
+        // --------------------------------------------------------
+        // Refresh Failed
+        // --------------------------------------------------------
 
         print('❌ Token refresh failed');
 
@@ -142,37 +216,65 @@ class ApiClient {
         );
       }
 
-      // ❌ HTTP error
+      // ==========================================================
+      // HTTP ERROR
+      // ==========================================================
+
       if (response.statusCode >= 400) {
-        print('❌ API Error: ${response.statusCode}');
+        print('❌ API ERROR: ${response.statusCode}');
+
         throw _handleHttpError(response);
       }
 
+      // ==========================================================
+      // SUCCESS
+      // ==========================================================
+
       return response;
-    } on SocketException {
+    }
+    // ============================================================
+    // NO INTERNET
+    // ============================================================
+    on SocketException {
       print('🌐 No internet connection');
 
       throw ApiException(
         message: 'No internet connection. Please check your network.',
         type: ApiExceptionType.noInternet,
       );
-    } on TimeoutException {
+    }
+    // ============================================================
+    // TIMEOUT
+    // ============================================================
+    on TimeoutException {
       print('⏰ Request timeout');
 
       throw ApiException(
         message: 'Request timed out. Please try again.',
         type: ApiExceptionType.timeout,
       );
-    } on http.ClientException {
+    }
+    // ============================================================
+    // CONNECTION ERROR
+    // ============================================================
+    on http.ClientException {
       print('❌ Connection error');
 
       throw ApiException(
         message: 'Unable to connect to server.',
         type: ApiExceptionType.connection,
       );
-    } on ApiException {
+    }
+    // ============================================================
+    // API EXCEPTION
+    // ============================================================
+    on ApiException {
       rethrow;
-    } catch (e) {
+    }
+    // ============================================================
+    // UNKNOWN ERROR
+    // ============================================================
+    catch (e) {
       print('❌ API Error: $e');
 
       throw ApiException(
@@ -181,6 +283,10 @@ class ApiClient {
       );
     }
   }
+
+  // ============================================================
+  // SEND REQUEST
+  // ============================================================
 
   static Future<http.Response> _sendRequest({
     required String method,
@@ -191,25 +297,54 @@ class ApiClient {
     final encodedBody = body == null ? null : jsonEncode(body);
 
     switch (method) {
+      // ----------------------------------------------------------
+      // GET
+      // ----------------------------------------------------------
+
       case 'GET':
         return _client
             .get(url, headers: headers)
             .timeout(const Duration(seconds: 30));
+
+      // ----------------------------------------------------------
+      // POST
+      // ----------------------------------------------------------
 
       case 'POST':
         return _client
             .post(url, headers: headers, body: encodedBody)
             .timeout(const Duration(seconds: 30));
 
+      // ----------------------------------------------------------
+      // PUT
+      // ----------------------------------------------------------
+
       case 'PUT':
         return _client
             .put(url, headers: headers, body: encodedBody)
             .timeout(const Duration(seconds: 30));
 
+      // ----------------------------------------------------------
+      // PATCH
+      // ----------------------------------------------------------
+
+      case 'PATCH':
+        return _client
+            .patch(url, headers: headers, body: encodedBody)
+            .timeout(const Duration(seconds: 30));
+
+      // ----------------------------------------------------------
+      // DELETE
+      // ----------------------------------------------------------
+
       case 'DELETE':
         return _client
             .delete(url, headers: headers, body: encodedBody)
             .timeout(const Duration(seconds: 30));
+
+      // ----------------------------------------------------------
+      // Unsupported
+      // ----------------------------------------------------------
 
       default:
         throw ApiException(
@@ -219,14 +354,26 @@ class ApiClient {
     }
   }
 
+  // ============================================================
+  // HTTP ERROR HANDLER
+  // ============================================================
+
   static ApiException _handleHttpError(http.Response response) {
     switch (response.statusCode) {
+      // --------------------------------------------------------
+      // 400
+      // --------------------------------------------------------
+
       case 400:
         return ApiException(
           message: 'Bad request. Please check your data.',
           statusCode: 400,
           type: ApiExceptionType.badRequest,
         );
+
+      // --------------------------------------------------------
+      // 401
+      // --------------------------------------------------------
 
       case 401:
         return ApiException(
@@ -235,12 +382,20 @@ class ApiClient {
           type: ApiExceptionType.unauthorized,
         );
 
+      // --------------------------------------------------------
+      // 403
+      // --------------------------------------------------------
+
       case 403:
         return ApiException(
           message: 'You do not have permission to perform this action.',
           statusCode: 403,
           type: ApiExceptionType.forbidden,
         );
+
+      // --------------------------------------------------------
+      // 404
+      // --------------------------------------------------------
 
       case 404:
         return ApiException(
@@ -249,12 +404,20 @@ class ApiClient {
           type: ApiExceptionType.notFound,
         );
 
+      // --------------------------------------------------------
+      // 408
+      // --------------------------------------------------------
+
       case 408:
         return ApiException(
           message: 'Request timeout. Please try again.',
           statusCode: 408,
           type: ApiExceptionType.timeout,
         );
+
+      // --------------------------------------------------------
+      // 429
+      // --------------------------------------------------------
 
       case 429:
         return ApiException(
@@ -263,12 +426,20 @@ class ApiClient {
           type: ApiExceptionType.tooManyRequests,
         );
 
+      // --------------------------------------------------------
+      // 500
+      // --------------------------------------------------------
+
       case 500:
         return ApiException(
           message: 'Internal server error.',
           statusCode: 500,
           type: ApiExceptionType.serverError,
         );
+
+      // --------------------------------------------------------
+      // 502 / 503 / 504
+      // --------------------------------------------------------
 
       case 502:
       case 503:
@@ -279,6 +450,10 @@ class ApiClient {
           type: ApiExceptionType.serverError,
         );
 
+      // --------------------------------------------------------
+      // OTHER
+      // --------------------------------------------------------
+
       default:
         return ApiException(
           message: 'Something went wrong. Please try again.',
@@ -287,6 +462,10 @@ class ApiClient {
         );
     }
   }
+
+  // ============================================================
+  // GOOGLE AUTH
+  // ============================================================
 
   static Future<http.Response> googleAuth(String idToken) async {
     try {
@@ -302,30 +481,54 @@ class ApiClient {
           )
           .timeout(const Duration(seconds: 30));
 
+      print('🚀 Google Auth');
+      print('📡 Status: ${response.statusCode}');
+      print('📥 Response: ${response.body}');
+
       if (response.statusCode >= 400) {
         throw _handleHttpError(response);
       }
 
       return response;
-    } on SocketException {
+    }
+    // ----------------------------------------------------------
+    // NO INTERNET
+    // ----------------------------------------------------------
+    on SocketException {
       throw ApiException(
         message: 'No internet connection. Please check your network.',
         type: ApiExceptionType.noInternet,
       );
-    } on TimeoutException {
+    }
+    // ----------------------------------------------------------
+    // TIMEOUT
+    // ----------------------------------------------------------
+    on TimeoutException {
       throw ApiException(
         message: 'Request timed out. Please try again.',
         type: ApiExceptionType.timeout,
       );
-    } on http.ClientException {
+    }
+    // ----------------------------------------------------------
+    // CONNECTION
+    // ----------------------------------------------------------
+    on http.ClientException {
       throw ApiException(
         message: 'Unable to connect to server.',
         type: ApiExceptionType.connection,
       );
-    } on ApiException {
+    }
+    // ----------------------------------------------------------
+    // API EXCEPTION
+    // ----------------------------------------------------------
+    on ApiException {
       rethrow;
-    } catch (e) {
-      print('Google Login Error: $e');
+    }
+    // ----------------------------------------------------------
+    // UNKNOWN
+    // ----------------------------------------------------------
+    catch (e) {
+      print('❌ Google Login Error: $e');
 
       throw ApiException(
         message: 'Google login failed. Please try again.',
@@ -334,17 +537,38 @@ class ApiClient {
     }
   }
 
+  // ============================================================
+  // REFRESH TOKEN
+  // ============================================================
+
   static Future<bool> _refreshToken() async {
     try {
+      // ----------------------------------------------------------
+      // Get Refresh Token
+      // ----------------------------------------------------------
+
       final refreshToken = await TokenStorage.getRefreshToken();
 
       if (refreshToken == null || refreshToken.isEmpty) {
+        print('❌ Refresh token not available');
         return false;
       }
 
+      // ----------------------------------------------------------
+      // Refresh URL
+      // ----------------------------------------------------------
+
       final url = Uri.parse(
-        '${BaseUrl.production}${AuthApiEndpoint.refreshToken}',
+        '${BaseUrl.production}'
+        '${AuthApiEndpoint.refreshToken}',
       );
+
+      print('🔄 Refresh Token API');
+      print('URL: $url');
+
+      // ----------------------------------------------------------
+      // Request
+      // ----------------------------------------------------------
 
       final response = await _client
           .post(
@@ -357,29 +581,59 @@ class ApiClient {
           )
           .timeout(const Duration(seconds: 30));
 
+      print('🔄 Refresh Status: ${response.statusCode}');
+      print('🔄 Refresh Response: ${response.body}');
+
+      // ----------------------------------------------------------
+      // Refresh Failed
+      // ----------------------------------------------------------
+
       if (response.statusCode < 200 || response.statusCode >= 300) {
         return false;
       }
 
+      // ----------------------------------------------------------
+      // Parse Response
+      // ----------------------------------------------------------
+
       final data = jsonDecode(response.body);
+
+      // ----------------------------------------------------------
+      // Support Multiple Token Names
+      // ----------------------------------------------------------
 
       final newAccessToken =
           data['accessToken'] ?? data['access_token'] ?? data['token'];
 
       final newRefreshToken = data['refreshToken'] ?? data['refresh_token'];
 
+      // ----------------------------------------------------------
+      // Access Token Missing
+      // ----------------------------------------------------------
+
       if (newAccessToken == null || newAccessToken.toString().isEmpty) {
+        print('❌ New access token missing');
         return false;
       }
+
+      // ----------------------------------------------------------
+      // Save New Tokens
+      // ----------------------------------------------------------
 
       await TokenStorage.saveTokens(
         accessToken: newAccessToken.toString(),
         refreshToken: newRefreshToken?.toString() ?? refreshToken,
       );
 
+      print('✅ New access token saved');
+
       return true;
-    } catch (e) {
-      print('Refresh Token Error: $e');
+    }
+    // ----------------------------------------------------------
+    // Refresh Error
+    // ----------------------------------------------------------
+    catch (e) {
+      print('❌ Refresh Token Error: $e');
       return false;
     }
   }

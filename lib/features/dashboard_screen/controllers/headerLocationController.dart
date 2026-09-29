@@ -1,17 +1,21 @@
- import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
+import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LocationController extends GetxController {
   final DashboardController dashboardController =
       Get.find<DashboardController>();
 
+  // ============================================================
+  // STORAGE KEY
+  // ============================================================
+
+  static const String hotelIdKey = 'selected_hotel_id';
+
   final hotels = <HotelModel>[].obs;
-
   final filteredHotels = <HotelModel>[].obs;
-
   final selectedHotel = Rxn<HotelModel>();
-
   final showHotels = false.obs;
 
   @override
@@ -20,40 +24,93 @@ class LocationController extends GetxController {
 
     loadHotels();
 
-    ever(
-      dashboardController.user,
-      (_) => loadHotels(),
-    );
+    ever(dashboardController.user, (_) => loadHotels());
   }
 
   // ============================================================
-  // LOAD HOTELS FROM API MODEL
+  // LOAD HOTELS
   // ============================================================
 
-  void loadHotels() {
-    final apiHotels =
-        dashboardController.user.value?.profile.hotels ?? [];
+  Future<void> loadHotels() async {
+    final apiHotels = dashboardController.user.value?.profile.hotels ?? [];
+
+    if (apiHotels.isEmpty) {
+      return;
+    }
 
     hotels.assignAll(apiHotels);
     filteredHotels.assignAll(apiHotels);
 
-    if (apiHotels.isNotEmpty) {
-      selectedHotel.value = apiHotels.first;
+    // Saved hotel ID storage se nikalo
+    final prefs = await SharedPreferences.getInstance();
+
+    final savedHotelId = prefs.getString(hotelIdKey);
+
+    HotelModel? hotelToSelect;
+
+    // ============================================================
+    // SAVED HOTEL FIND KARO
+    // ============================================================
+
+    if (savedHotelId != null && savedHotelId.isNotEmpty) {
+      hotelToSelect = apiHotels.firstWhereOrNull(
+        (hotel) => hotel.hotelId == savedHotelId,
+      );
     }
+
+    // ============================================================
+    // AGAR SAVED ID NAHI MILI TO FIRST HOTEL
+    // ============================================================
+
+    hotelToSelect ??= apiHotels.first;
+
+    // ============================================================
+    // SELECT HOTEL
+    // ============================================================
+
+    selectedHotel.value = hotelToSelect;
+
+    // Storage mein bhi ensure karo
+    await prefs.setString(hotelIdKey, hotelToSelect.hotelId);
+
+    // Dashboard data load
+    await dashboardController.changeHotel(hotelToSelect.hotelId);
   }
 
   // ============================================================
-  // OPEN
+  // SELECT HOTEL
+  // ============================================================
+
+  Future<void> selectHotel(HotelModel hotel) async {
+    selectedHotel.value = hotel;
+    showHotels.value = false;
+
+    // ============================================================
+    // SAVE HOTEL ID
+    // ============================================================
+
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString(hotelIdKey, hotel.hotelId);
+
+    // ============================================================
+    // LOAD DASHBOARD DATA
+    // ============================================================
+
+    await dashboardController.changeHotel(hotel.hotelId);
+  }
+
+  // ============================================================
+  // OPEN SELECTOR
   // ============================================================
 
   void openHotelSelector() {
     filteredHotels.assignAll(hotels);
     showHotels.value = true;
-    
   }
 
   // ============================================================
-  // CLOSE
+  // CLOSE SELECTOR
   // ============================================================
 
   void closeHotelSelector() {
@@ -79,24 +136,8 @@ class LocationController extends GetxController {
             hotel.city.toLowerCase().contains(query) ||
             hotel.state.toLowerCase().contains(query) ||
             hotel.country.toLowerCase().contains(query) ||
-            hotel.hotelId.contains(query),
+            hotel.hotelId.toLowerCase().contains(query),
       ),
-    );
-  }
-
-  // ============================================================
-  // SELECT HOTEL
-  // ============================================================
-
-  Future<void> selectHotel(HotelModel hotel) async {
-    selectedHotel.value = hotel;
-
-    showHotels.value = false;
-
-    // DashboardController ko new hotel ID
-    // aur leads API call
-    await dashboardController.changeHotel(
-      hotel.hotelId,
     );
   }
 }

@@ -403,23 +403,46 @@ class WhatsappLocationModel {
 // ============================================================
 // INTERACTIVE
 // ============================================================
-
 class WhatsappInteractiveModel {
   final String? type;
 
+  final WhatsappInteractiveBodyModel? header;
   final WhatsappInteractiveBodyModel? body;
+  final WhatsappInteractiveBodyModel? footer;
 
   final WhatsappInteractiveActionModel? action;
 
-  const WhatsappInteractiveModel({this.type, this.body, this.action});
+  /// flow_response ka data (Name, Date, ...)
+  final Map<String, dynamic>? data;
+
+  const WhatsappInteractiveModel({
+    this.type,
+    this.header,
+    this.body,
+    this.footer,
+    this.action,
+    this.data,
+  });
 
   factory WhatsappInteractiveModel.fromJson(Map<String, dynamic> json) {
     return WhatsappInteractiveModel(
       type: json['type']?.toString(),
 
+      header: json['header'] is Map<String, dynamic>
+          ? WhatsappInteractiveBodyModel.fromJson(
+              json['header'] as Map<String, dynamic>,
+            )
+          : null,
+
       body: json['body'] is Map<String, dynamic>
           ? WhatsappInteractiveBodyModel.fromJson(
               json['body'] as Map<String, dynamic>,
+            )
+          : null,
+
+      footer: json['footer'] is Map<String, dynamic>
+          ? WhatsappInteractiveBodyModel.fromJson(
+              json['footer'] as Map<String, dynamic>,
             )
           : null,
 
@@ -428,14 +451,24 @@ class WhatsappInteractiveModel {
               json['action'] as Map<String, dynamic>,
             )
           : null,
+
+      data: json['data'] is Map
+          ? Map<String, dynamic>.from(json['data'] as Map)
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'type': type, 'body': body?.toJson(), 'action': action?.toJson()};
+    return {
+      'type': type,
+      'header': header?.toJson(),
+      'body': body?.toJson(),
+      'footer': footer?.toJson(),
+      'action': action?.toJson(),
+      'data': data,
+    };
   }
 }
-
 // ============================================================
 // INTERACTIVE BODY
 // ============================================================
@@ -464,36 +497,37 @@ class WhatsappInteractiveBodyModel {
 // 4. cards
 // ============================================================
 
+
+
 class WhatsappInteractiveActionModel {
   final String? button;
-
+  final String? flowCta; // flow ke liye
   final List<WhatsappInteractiveButtonModel> buttons;
-
   final List<WhatsappInteractiveSectionModel> sections;
-
   final List<WhatsappInteractiveCardModel> cards;
 
   const WhatsappInteractiveActionModel({
     this.button,
+    this.flowCta,
     this.buttons = const [],
     this.sections = const [],
     this.cards = const [],
   });
 
   factory WhatsappInteractiveActionModel.fromJson(Map<String, dynamic> json) {
+    final params = json['parameters'];
+
     return WhatsappInteractiveActionModel(
       button: json['button']?.toString(),
-
+      flowCta: params is Map ? params['flow_cta']?.toString() : null,
       buttons: (json['buttons'] as List<dynamic>? ?? [])
           .whereType<Map<String, dynamic>>()
           .map((e) => WhatsappInteractiveButtonModel.fromJson(e))
           .toList(),
-
       sections: (json['sections'] as List<dynamic>? ?? [])
           .whereType<Map<String, dynamic>>()
           .map((e) => WhatsappInteractiveSectionModel.fromJson(e))
           .toList(),
-
       cards: (json['cards'] as List<dynamic>? ?? [])
           .whereType<Map<String, dynamic>>()
           .map((e) => WhatsappInteractiveCardModel.fromJson(e))
@@ -504,15 +538,15 @@ class WhatsappInteractiveActionModel {
   Map<String, dynamic> toJson() {
     return {
       'button': button,
-
+      'flow_cta': flowCta,
       'buttons': buttons.map((e) => e.toJson()).toList(),
-
       'sections': sections.map((e) => e.toJson()).toList(),
-
       'cards': cards.map((e) => e.toJson()).toList(),
     };
   }
 }
+
+
 
 // ============================================================
 // INTERACTIVE BUTTON

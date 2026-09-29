@@ -7,6 +7,7 @@ import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappMe
 import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappMessageTime.dart';
 import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappTextBubble.dart';
 import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappVideoMessage.dart';
+import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class WhatsappMessageBubble extends StatelessWidget {
@@ -142,7 +143,6 @@ class WhatsappMessageBubble extends StatelessWidget {
 // ================================================================
 // UNKNOWN MESSAGE
 // ================================================================
-
 class _WhatsappUnknownMessage extends StatelessWidget {
   final WhatsappMessageItem message;
 
@@ -152,27 +152,58 @@ class _WhatsappUnknownMessage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isIncoming = message.isIncoming;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final bubbleColor = isIncoming
+        ? (isDark ? TAppColors.darkCard : Colors.white)
+        : (isDark ? const Color(0xff005c4b) : const Color(0xffd9fdd3));
+
+    final textColor = isDark ? Colors.white : Colors.black87;
+
     return Align(
       alignment: isIncoming ? Alignment.centerLeft : Alignment.centerRight,
-      child: Container(
-        margin: EdgeInsets.only(
-          left: isIncoming ? 0 : 40,
-          right: isIncoming ? 40 : 0,
-          top: 3,
-          bottom: 3,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.78,
         ),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.help_outline, size: 18),
-            const SizedBox(width: 8),
-            Text(message.body ?? 'Unsupported message'),
-          ],
+        child: Container(
+          margin: EdgeInsets.only(
+            left: isIncoming ? 0 : 40,
+            right: isIncoming ? 40 : 0,
+            top: 2,
+            bottom: 2,
+          ),
+          padding: const EdgeInsets.fromLTRB(10, 7, 8, 6),
+          decoration: BoxDecoration(
+            color: bubbleColor,
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(9),
+              topRight: const Radius.circular(9),
+              bottomLeft: Radius.circular(isIncoming ? 2 : 9),
+              bottomRight: Radius.circular(isIncoming ? 9 : 2),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.help_outline, size: 18, color: textColor),
+
+              const SizedBox(width: 8),
+
+              Flexible(
+                child: Text(
+                  message.body ?? 'Unsupported message',
+                  softWrap: true,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.35,
+                    color: textColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
