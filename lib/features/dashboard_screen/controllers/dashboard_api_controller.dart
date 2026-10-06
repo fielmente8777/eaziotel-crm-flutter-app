@@ -4,8 +4,10 @@ import 'package:eazotel/core/local_storage/token_storage.dart';
 import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
 import 'package:eazotel/features/dashboard_screen/models/analytics_responce_modle.dart';
+import 'package:eazotel/features/dashboard_screen/models/callAnalytisResponceModel.dart';
 import 'package:eazotel/features/dashboard_screen/models/leads_responce_modle.dart';
 import 'package:eazotel/features/dashboard_screen/services/dashboard_api_service.dart';
+import 'package:eazotel/features/googleAnalytis/controller/analytisController.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -20,7 +22,7 @@ class DashboardController extends GetxController {
   final isLoading = false.obs;
   final isLeadsLoading = false.obs;
   final isLoadingMoreLeads = false.obs;
-  final isAnalyticsLoading = false.obs;
+  final isAnalyticsLoading = true.obs;
 
   // ============================================================
   // USER
@@ -76,8 +78,60 @@ class DashboardController extends GetxController {
   void onInit() {
     super.onInit();
 
+    // getUser() loads the hotel id, then starts leads, analytics
+    // AND call analytics automatically.
+    // (Calling getCallAnalytics() here directly does nothing,
+    // because selectedHotelId is still empty at this point.)
     getUser();
     getUserDetails();
+  }
+
+  // ============================================================
+  // CALL ANALYTICS
+  // ============================================================
+
+  final callAnalytics = Rxn<CallAnalyticsResponse>();
+  final isCallAnalyticsLoading = false.obs;
+  final callRangeDays = 30.obs; // 1 / 7 / 30 / 90
+
+  Future<void> getCallAnalytics([String? hotelId]) async {
+    final hid = (hotelId ?? selectedHotelId.value).trim();
+
+    // savedHotelId.toString() gives "null" when nothing is saved
+    if (hid.isEmpty || hid == 'null') return;
+
+    // Local day boundaries → UTC (IST midnight = 18:30Z previous day)
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final from = today.subtract(Duration(days: callRangeDays.value - 1));
+    final to = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
+
+    try {
+      isCallAnalyticsLoading.value = true;
+
+      final result = await apiService.getCallAnalytics(
+        hotelId: hid,
+        from: from,
+        to: to,
+      );
+
+      // Hotel changed while this request was running → ignore old result
+      if (hid != selectedHotelId.value) return;
+
+      callAnalytics.value = result;
+    } on ApiException catch (e) {
+      ApiErrorHandler.handle(e);
+    } catch (e) {
+      print('getCallAnalytics error: $e');
+    } finally {
+      isCallAnalyticsLoading.value = false;
+    }
+  }
+
+  Future<void> changeCallRange(int days) async {
+    if (callRangeDays.value == days) return;
+    callRangeDays.value = days;
+    await getCallAnalytics();
   }
 
   // ============================================================
@@ -108,15 +162,17 @@ class DashboardController extends GetxController {
         return;
       }
 
-
-        final prefs = await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
 
       final savedHotelId = prefs.getString(hotelIdKey);
-
 
       // final hotelId = hotels.first.hotelId;
 
       selectedHotelId.value = savedHotelId.toString();
+
+      // Call analytics starts automatically, in parallel with leads
+      // (not awaited, so a slow leads API does not delay it)
+      getCallAnalytics(savedHotelId.toString());
 
       await getLeads(savedHotelId.toString(), reset: true);
 
@@ -233,15 +289,11 @@ class DashboardController extends GetxController {
   // GET ANALYTICS
   // ============================================================
 
-  // ============================================================
-  // GET ANALYTICS
-  // ============================================================
-
   Future<void> getAnalytics(String hotelId) async {
     if (hotelId.isEmpty) return;
 
     try {
-      isAnalyticsLoading.value = true;
+      // isAnalyticsLoading.value = true;
 
       final result = await apiService.getAnalytics(hotelId);
 
@@ -362,6 +414,9 @@ class DashboardController extends GetxController {
     // old analytics hata do
     analyticsResponse.value = null;
 
+    // old call analytics bhi hata do
+    callAnalytics.value = null;
+
     // UI ko loading state dikhao
     isAnalyticsLoading.value = true;
 
@@ -371,8 +426,14 @@ class DashboardController extends GetxController {
     leadsStages.clear();
     leadsStartDate.value = null;
     leadsEndDate.value = null;
+    // final AnalytisController analytisService = Get.put(AnalytisController());
+    // await analytisService.loadAll();
 
-    await Future.wait([getLeads(hotelId, reset: true), getAnalytics(hotelId)]);
+    await Future.wait([
+      getLeads(hotelId, reset: true),
+      getAnalytics(hotelId),
+      getCallAnalytics(hotelId),
+    ]);
   } // ============================================================
   // CLEAR DASHBOARD DATA
   // ============================================================
@@ -385,6 +446,9 @@ class DashboardController extends GetxController {
 
     // Analytics
     analyticsResponse.value = null;
+
+    // Call analytics
+    callAnalytics.value = null;
 
     // Hotel
     selectedHotelId.value = '';
@@ -412,5 +476,6 @@ class DashboardController extends GetxController {
     isLeadsLoading.value = false;
     isLoadingMoreLeads.value = false;
     isAnalyticsLoading.value = false;
+    isCallAnalyticsLoading.value = false;
   }
 }

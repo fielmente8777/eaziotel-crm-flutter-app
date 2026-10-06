@@ -6,6 +6,7 @@ import 'package:eazotel/core/constants/api_endpoints.dart';
 import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
 import 'package:eazotel/features/dashboard_screen/models/analytics_responce_modle.dart';
+import 'package:eazotel/features/dashboard_screen/models/callAnalytisResponceModel.dart';
 import 'package:eazotel/features/dashboard_screen/models/leads_responce_modle.dart';
 
 class DashboardApiService {
@@ -97,6 +98,29 @@ class DashboardApiService {
 
     return AnalyticsResponse.fromJson(data);
   }
+
+
+
+ 
+// Get call analytics
+Future<CallAnalyticsResponse> getCallAnalytics({
+  required String hotelId,
+  required DateTime from,
+  required DateTime to,
+}) async {
+  final url = '${CallApiEndpoint.analytics}'
+      '?hid=$hotelId'
+      '&from=${Uri.encodeQueryComponent(from.toUtc().toIso8601String())}'
+      '&to=${Uri.encodeQueryComponent(to.toUtc().toIso8601String())}';
+
+  final response = await ApiClient.get(
+    url,
+    authenticated: true,
+    baseUrl: BaseUrl.production2,
+  );
+
+  return CallAnalyticsResponse.fromJson(jsonDecode(response.body));
+}
 
   // Format date for API
   String _formatApiDate(DateTime date) {

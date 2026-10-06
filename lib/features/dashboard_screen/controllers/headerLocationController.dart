@@ -1,11 +1,17 @@
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
+import 'package:eazotel/features/googleAnalytis/controller/analytisController.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocationController extends GetxController {
-  final DashboardController dashboardController =
-      Get.find<DashboardController>();
+  late final DashboardController dashboardController;
+
+  LocationController() {
+    Get.lazyPut<DashboardController>(() => DashboardController());
+    dashboardController = Get.find<DashboardController>();
+  }
 
   // ============================================================
   // STORAGE KEY
@@ -98,6 +104,7 @@ class LocationController extends GetxController {
     // ============================================================
 
     await dashboardController.changeHotel(hotel.hotelId);
+   
   }
 
   // ============================================================

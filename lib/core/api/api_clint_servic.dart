@@ -32,6 +32,8 @@ class ApiClient {
 
   // ============================================================
   // POST
+  // (fileField + filePath dene par multipart/form-data bhejta hai,
+  //  body ke fields form fields ban jaate hain)
   // ============================================================
 
   static Future<http.Response> post(
@@ -39,6 +41,8 @@ class ApiClient {
     Map<String, dynamic>? body,
     bool authenticated = true,
     String? baseUrl,
+    String? fileField,
+    String? filePath,
   }) {
     return _request(
       method: 'POST',
@@ -46,6 +50,8 @@ class ApiClient {
       body: body,
       authenticated: authenticated,
       baseUrl: baseUrl,
+      fileField: fileField,
+      filePath: filePath,
     );
   }
 
@@ -117,6 +123,8 @@ class ApiClient {
     bool authenticated = true,
     bool retry = true,
     String? baseUrl,
+    String? fileField,
+    String? filePath,
   }) async {
     try {
       // ----------------------------------------------------------
@@ -158,6 +166,10 @@ class ApiClient {
         print('Body   : $body');
       }
 
+      if (filePath != null) {
+        print('File   : $fileField -> $filePath');
+      }
+
       // ----------------------------------------------------------
       // Send Request
       // ----------------------------------------------------------
@@ -167,6 +179,8 @@ class ApiClient {
         url: url,
         headers: headers,
         body: body,
+        fileField: fileField,
+        filePath: filePath,
       );
 
       // ----------------------------------------------------------
@@ -198,6 +212,8 @@ class ApiClient {
             authenticated: true,
             retry: false,
             baseUrl: baseUrl,
+            fileField: fileField,
+            filePath: filePath,
           );
         }
 
@@ -293,7 +309,60 @@ class ApiClient {
     required Uri url,
     required Map<String, String> headers,
     Map<String, dynamic>? body,
-  }) {
+    String? fileField,
+    String? filePath,
+  }) async {
+    // ----------------------------------------------------------
+    // MULTIPART (file upload) - sirf POST par
+    // ----------------------------------------------------------
+
+    if (method == 'POST' && fileField != null && filePath != null) {
+      final request = http.MultipartRequest('POST', url);
+
+      // Content-Type hatao, multipart ka boundary http package khud lagata hai
+      final multipartHeaders = Map<String, String>.from(headers)
+        ..removeWhere((key, _) => key.toLowerCase() == 'content-type');
+
+      request.headers.addAll(multipartHeaders);
+
+      body?.forEach((key, value) {
+        if (value != null) {
+          request.fields[key] = value.toString();
+        }
+      });
+
+      final lowerPath = filePath.toLowerCase();
+
+      final String mimeType;
+      final String extension;
+
+      if (lowerPath.endsWith('.png')) {
+        mimeType = 'image/png';
+        extension = 'png';
+      } else if (lowerPath.endsWith('.webp')) {
+        mimeType = 'image/webp';
+        extension = 'webp';
+      } else {
+        // .jpg, .jpeg ya extension na ho, teeno case me image/jpeg
+        mimeType = 'image/jpeg';
+        extension = 'jpg';
+      }
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          fileField,
+          filePath,
+          filename: 'image_${DateTime.now().millisecondsSinceEpoch}.$extension',
+          contentType: http.MediaType.parse(mimeType),
+        ),
+      );
+      final streamed = await _client
+          .send(request)
+          .timeout(const Duration(seconds: 60));
+
+      return http.Response.fromStream(streamed);
+    }
+
     final encodedBody = body == null ? null : jsonEncode(body);
 
     switch (method) {

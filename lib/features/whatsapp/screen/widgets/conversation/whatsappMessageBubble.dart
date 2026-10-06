@@ -44,6 +44,7 @@ class WhatsappMessageBubble extends StatelessWidget {
         createdAt: message.createdAt,
         isIncoming: message.isIncoming,
         ndid: ndid,
+        status: message.status,
       );
     }
 

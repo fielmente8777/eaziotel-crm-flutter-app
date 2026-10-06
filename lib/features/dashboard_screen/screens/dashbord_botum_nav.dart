@@ -11,6 +11,37 @@ import 'package:get/get.dart';
 class DashboardBottomNav extends StatelessWidget {
   const DashboardBottomNav({super.key});
 
+  // Abhi sabhi icons ke liye pehli image use ho rahi hai.
+  // Baad mein har icon ka apna path yahan badal dena.
+  static const String _dashboardIcon =
+      'assets/bottomNavigationIcon/Dashboard.svg';
+  static const String _leadsIcon =
+      'assets/bottomNavigationIcon/profile-circle-svgrepo-com.svg';
+  static const String _whatsappIcon =
+      'assets/bottomNavigationIcon/whatsapp.svg';
+  static const String _profileIcon =
+      'assets/bottomNavigationIcon/setting-svgrepo-com.svg';
+
+  // WhatsApp green (light aur dark dono theme mein same)
+  // static const Color _whatsappGreen = Color(0xFF25D366);
+
+  Widget _navIcon(BuildContext context, String assetPath, {Color? fixedColor}) {
+    return Builder(
+      builder: (iconContext) {
+        // fixedColor diya ho to wahi use hoga, warna theme ka color
+        final color = fixedColor ?? IconTheme.of(iconContext).color;
+        return SvgPicture.asset(
+          assetPath,
+          width: 24,
+          height: 24,
+          colorFilter: color == null
+              ? null
+              : ColorFilter.mode(color, BlendMode.srcIn),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(BottomNavController());
@@ -24,6 +55,7 @@ class DashboardBottomNav extends StatelessWidget {
 
             case 1:
               return LeadsScreen(controller: controller);
+
             case 2:
               return whatsapp(controller: controller);
 
@@ -39,7 +71,6 @@ class DashboardBottomNav extends StatelessWidget {
           height: 65,
           child: Obx(
             () => BottomNavigationBar(
-              // Theme se colors automatically aayenge
               backgroundColor: Theme.of(
                 context,
               ).bottomNavigationBarTheme.backgroundColor,
@@ -59,6 +90,7 @@ class DashboardBottomNav extends StatelessWidget {
               unselectedLabelStyle: Theme.of(
                 context,
               ).bottomNavigationBarTheme.unselectedLabelStyle,
+
               selectedIconTheme: Theme.of(
                 context,
               ).bottomNavigationBarTheme.selectedIconTheme,
@@ -82,30 +114,24 @@ class DashboardBottomNav extends StatelessWidget {
 
               items: [
                 BottomNavigationBarItem(
-                  icon: SvgPicture.asset(
-                    'assets/bottomNavigationIcon/Dashboard.svg',
-                    width: 24,
-                    height: 24,
-                    colorFilter: const ColorFilter.mode(
-                      Colors.white,
-                      BlendMode.srcIn,
-                    ),
-                  ),
+                  icon: _navIcon(context, _dashboardIcon),
                   label: "Dashboard",
                 ),
-
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.percent_outlined),
+                  // icon: _navIcon(context, _leadsIcon),
+                  icon: Icon(Icons.people_outline),
                   label: "Leads",
                 ),
-
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.person),
+                  icon: _navIcon(
+                    context,
+                    _whatsappIcon,
+                    // fixedColor: _whatsappGreen,
+                  ),
                   label: "Whatsapp",
                 ),
-
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.person_4),
+                  icon: Icon(Icons.person),
                   label: "Profile",
                 ),
               ],

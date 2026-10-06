@@ -88,11 +88,30 @@ class WhatsappApiEndpoint {
     return '/api/v1/whatsapp/conversations/$conversationId/messages';
   }
 
-   static String markAsRead(String conversationId) {
+  static String markAsRead(String conversationId) {
     return '/api/v1/whatsapp/conversations/$conversationId/read';
   }
 
   static const String getIntegration = '/api/v1/integration/get';
   static const String sandmessages = '/api/v1/whatsapp/messages/send?hid=';
   static const String template = '/api/v1/whatsapp/message/template/get?hid=';
+  static const String deltechat = '/api/v1/whatsapp/messages/delete';
+  static const String deletWhatsappLeads =
+      '/api/v1/whatsapp/conversations?hid=';
+  static const String flow = '/api/v1/whatsapp/flow/get?hid=';
+}
+
+class AnalytisApiEndpoint {
+  static const String analytics_data = '/google/analytics-data/';
+  static const String traffic_sources = 'google/analytics-traffic-sources/';
+  static const analytics_pages = 'google/analytics-pages/';
+  static const analytics_conversions = 'google/analytics-conversions/';
+  static const analytics_devices = 'google/analytics-devices/';
+  static const analytics_geo = 'google/analytics-geo/';
+static const analytics_audience = 'google/analytics-audience/';
+}
+
+
+class CallApiEndpoint {
+  static const analytics = '/api/v1/call/analytics';
 }

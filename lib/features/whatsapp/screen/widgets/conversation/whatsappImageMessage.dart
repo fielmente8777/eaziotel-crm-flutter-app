@@ -1,9 +1,8 @@
 import 'dart:io';
 
 import 'package:eazotel/features/whatsapp/controller/WhatsappImageController.dart.dart';
- import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappFullScreenImage.dart';
+import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappFullScreenImage.dart';
 import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappMediaPreview.dart';
-import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappMessageTime.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -12,6 +11,7 @@ class WhatsappImageMessage extends StatelessWidget {
   final dynamic media;
   final String? body;
   final String? createdAt;
+  final String? status;
   final bool isIncoming;
   final String? ndid;
   final WhatsappMediaType type; // image ya sticker
@@ -24,6 +24,7 @@ class WhatsappImageMessage extends StatelessWidget {
     required this.createdAt,
     required this.isIncoming,
     required this.ndid,
+    this.status,
     this.type = WhatsappMediaType.image,
   });
 
@@ -45,6 +46,8 @@ class WhatsappImageMessage extends StatelessWidget {
 
         final maxWidth = MediaQuery.of(context).size.width * 0.78;
         const maxHeight = 420.0;
+
+        final caption = (body ?? '').trim();
 
         return Align(
           alignment: isIncoming ? Alignment.centerLeft : Alignment.centerRight,
@@ -74,7 +77,6 @@ class WhatsappImageMessage extends StatelessWidget {
                         constraints: const BoxConstraints(maxHeight: maxHeight),
                         child: Image.file(
                           File(path),
-                          width: maxWidth,
                           fit: BoxFit.contain,
                           filterQuality: FilterQuality.medium,
                           gaplessPlayback: true,
@@ -96,11 +98,29 @@ class WhatsappImageMessage extends StatelessWidget {
                     height: type == WhatsappMediaType.sticker ? 170 : 220,
                     onTap: downloading ? null : controller.download,
                   ),
+
+                // CAPTION (agar image ke saath text bheja ho)
+                if (caption.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxWidth),
+                      child: Text(
+                        caption,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  ),
+
                 const SizedBox(height: 2),
-                WhatsappMessageTime(
+
+                // TIME + STATUS (sent / delivered / read ticks)
+                _ImageMessageMeta(
                   createdAt: createdAt,
-                  status: null,
+                  status: status,
                   isIncoming: isIncoming,
+                  // temp id = abhi upload ho rahi hai -> ghadi ka icon
+                  isPending: messageId.startsWith('temp_'),
                 ),
               ],
             ),
@@ -109,4 +129,95 @@ class WhatsappImageMessage extends StatelessWidget {
       },
     );
   }
+}
+
+// ============================================================
+// MESSAGE META (time + status tick)
+// ============================================================
+
+class _ImageMessageMeta extends StatelessWidget {
+  final String? createdAt;
+  final String? status;
+  final bool isIncoming;
+  final bool isPending;
+
+  const _ImageMessageMeta({
+    required this.createdAt,
+    required this.status,
+    required this.isIncoming,
+    this.isPending = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          _formatTime(createdAt),
+          style: TextStyle(
+            fontSize: 10,
+            color: isDark ? Colors.white54 : Colors.black45,
+          ),
+        ),
+        if (!isIncoming)
+          Padding(
+            padding: const EdgeInsets.only(left: 3),
+            child: _ImageStatusIcon(status: status, isPending: isPending),
+          ),
+      ],
+    );
+  }
+}
+
+class _ImageStatusIcon extends StatelessWidget {
+  final String? status;
+  final bool isPending;
+
+  const _ImageStatusIcon({required this.status, this.isPending = false});
+
+  @override
+  Widget build(BuildContext context) {
+    // Upload chal raha hai -> ghadi
+    if (isPending) {
+      return const Icon(Icons.access_time, size: 14, color: Colors.grey);
+    }
+
+    final value = status?.toLowerCase();
+
+    if (value == 'read') {
+      return const Icon(Icons.done_all, size: 15, color: Color(0xff53bdeb));
+    }
+
+    if (value == 'delivered') {
+      return const Icon(Icons.done_all, size: 15, color: Colors.grey);
+    }
+
+    if (value == 'sent') {
+      return const Icon(Icons.done, size: 15, color: Colors.grey);
+    }
+
+    if (value == 'failed') {
+      return const Icon(Icons.error_outline, size: 15, color: Colors.red);
+    }
+
+    return const SizedBox.shrink();
+  }
+}
+
+String _formatTime(String? value) {
+  if (value == null || value.isEmpty) return '';
+
+  final date = DateTime.tryParse(value);
+  if (date == null) return '';
+
+  final localDate = date.toLocal();
+  final hour = localDate.hour;
+  final minute = localDate.minute.toString().padLeft(2, '0');
+  final period = hour >= 12 ? 'PM' : 'AM';
+  final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+
+  return '$displayHour:$minute $period';
 }

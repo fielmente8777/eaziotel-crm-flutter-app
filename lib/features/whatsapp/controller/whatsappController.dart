@@ -1,12 +1,20 @@
+import 'dart:convert';
+
 import 'package:eazotel/features/dashboard_screen/models/leads_responce_modle.dart';
 import 'package:eazotel/features/whatsapp/controller/whatsappTemplateController.dart';
+import 'package:eazotel/features/whatsapp/models/FlowResponseModel.dart';
 import 'package:eazotel/features/whatsapp/models/WhatsappMessagesResponseModel.dart';
 import 'package:eazotel/features/whatsapp/models/WhatsappSocketMessageModel.dart';
 import 'package:eazotel/features/whatsapp/models/whatsappMessegesLeads.dart';
 import 'package:eazotel/features/whatsapp/services/markConversationAsRead.dart';
 import 'package:eazotel/features/whatsapp/services/whatsappConversation.dart';
+import 'package:eazotel/features/whatsapp/services/whatsappFlow.dart'
+    hide FlowResponseModel;
+import 'package:eazotel/features/whatsapp/services/whatsappLeadsDelete.dart';
+import 'package:eazotel/features/whatsapp/services/whatsappMessegSand.dart';
 import 'package:eazotel/features/whatsapp/services/whatsapp_Integration_api.dart';
 import 'package:eazotel/features/whatsapp/services/whatsapp_socket_services.dart';
+import 'package:eazotel/features/whatsapp/services/whatsappdelete.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
@@ -14,6 +22,7 @@ class WhatsappController extends GetxController {
   final Whatsapptemplatecontroller templateController = Get.put(
     Whatsapptemplatecontroller(),
   );
+
   // ============================================================
   // CONVERSATIONS
   // ============================================================
@@ -34,7 +43,6 @@ class WhatsappController extends GetxController {
   final RxString integrationErrorMessage = ''.obs;
 
   /// API ka complete response yahan store hoga.
-  /// Iske liye koi model required nahi hai.
   final Rxn<Map<String, dynamic>> whatsappIntegration =
       Rxn<Map<String, dynamic>>();
 
@@ -43,6 +51,29 @@ class WhatsappController extends GetxController {
   // ============================================================
 
   final Rxn<LeadResponseModel> leadResponse = Rxn<LeadResponseModel>();
+
+  // ============================================================
+  // FLOW
+  // ============================================================
+
+  final Rxn<FlowResponseModel> flow = Rxn<FlowResponseModel>();
+
+  final RxBool isFlowLoading = false.obs;
+  final RxString flowErrorMessage = ''.obs;
+  final RxString selectedFlowId = ''.obs;
+
+  /// Flow bhejte waqt true rehta hai
+  final RxBool isFlowSending = false.obs;
+
+  /// All flows from the API (empty list if nothing loaded)
+  List<FlowItemModel> get flows => flow.value?.result?.docs?.flows ?? [];
+
+  /// The flow picked in the dropdown (null if none)
+  FlowItemModel? get selectedFlow {
+    final id = selectedFlowId.value;
+    if (id.isEmpty) return null;
+    return flows.firstWhereOrNull((f) => f.flowId == id);
+  }
 
   /// Lead response se nikale gaye saare NDID (cache).
   Set<String> _leadNdids = <String>{};
@@ -96,18 +127,19 @@ class WhatsappController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // leadResponse kahin bhi set ho (setLeadResponse ya .value = ...),
-    // NDID cache apne aap update ho jayega.
+    getflow();
+
+    debugPrint('>>> WhatsappController onInit, hid = $hid');
+
+    // leadResponse kahin bhi set ho, NDID cache apne aap update ho jayega.
     _leadWorker = ever<LeadResponseModel?>(leadResponse, (_) {
       _rebuildLeadNdids();
     });
 
-    // wthatsapp tempalte
-
     if (!Get.isRegistered<Whatsapptemplatecontroller>()) {
       Get.put(Whatsapptemplatecontroller());
     }
-    // WhatsApp integration API
+
     getWhatsappIntegration();
 
     getConversations();
@@ -119,17 +151,12 @@ class WhatsappController extends GetxController {
   void onClose() {
     _leadWorker?.dispose();
 
-    // ============================================================
-    // DISPOSE TEMPLATE CONTROLLER
-    // ============================================================
-
     if (Get.isRegistered<Whatsapptemplatecontroller>()) {
       Get.delete<Whatsapptemplatecontroller>();
     }
 
+    flow.value = null;
     WhatsappSocketService.disconnect();
-
-    // Dispose child controller when WhatsappController is disposed
 
     super.onClose();
   }
@@ -156,9 +183,178 @@ class WhatsappController extends GetxController {
     return docs.isNotEmpty;
   }
 
-  // ================================================================
+  // ============================================================
+  // CONVERSATION SELECTION + DELETE
+  // ============================================================
+
+  final RxSet<String> selectedConversationIds = <String>{}.obs;
+  final RxBool isConversationSelectMode = false.obs;
+  final RxBool isDeletingConversations = false.obs;
+
+  void startConversationSelection() {
+    isConversationSelectMode.value = true;
+  }
+
+  void toggleConversationSelection(String id) {
+    if (id.isEmpty) return;
+
+    isConversationSelectMode.value = true;
+
+    if (!selectedConversationIds.remove(id)) {
+      selectedConversationIds.add(id);
+    }
+
+    // Aakhri selection hataya to selection mode band
+    if (selectedConversationIds.isEmpty) {
+      isConversationSelectMode.value = false;
+    }
+  }
+
+  void clearConversationSelection() {
+    selectedConversationIds.clear();
+    isConversationSelectMode.value = false;
+  }
+
+  /// Current tab me jo chats dikh rahi hain, sab select karo.
+  void selectAllConversations() {
+    isConversationSelectMode.value = true;
+    selectedConversationIds.assignAll(filteredChats.map((c) => c.id));
+  }
+
+  Future<bool> deleteSelectedConversations() async {
+    if (selectedConversationIds.isEmpty || isDeletingConversations.value) {
+      return false;
+    }
+
+    final List<String> ids = selectedConversationIds.toList();
+
+    try {
+      isDeletingConversations.value = true;
+
+      await Whatsappleade.deleteLeads(hid: hid, conversationIds: ids);
+
+      // ---- Local cleanup ----
+      final idSet = ids.toSet();
+
+      conversations.removeWhere((c) => idSet.contains(c.id));
+      conversations.refresh();
+
+      socketMessages.removeWhere((m) => idSet.contains(m.conversationId));
+
+      latestSocketMessagesByConversation.removeWhere(
+        (key, _) => idSet.contains(key),
+      );
+      latestSocketMessagesByConversation.refresh();
+
+      if (idSet.contains(currentConversationId.value)) {
+        clearCurrentConversation();
+      }
+
+      clearConversationSelection();
+      update();
+
+      return true;
+    } catch (e, stack) {
+      debugPrint('DELETE CONVERSATIONS ERROR: $e');
+      debugPrint('$stack');
+      return false;
+    } finally {
+      isDeletingConversations.value = false;
+    }
+  }
+
+  // ============================================================
+  // MESSAGE SELECTION + DELETE
+  // ============================================================
+
+  final RxSet<String> selectedMessageIds = <String>{}.obs;
+  final RxBool isDeleting = false.obs;
+
+  bool get isSelectionMode => selectedMessageIds.isNotEmpty;
+
+  void toggleMessageSelection(String id) {
+    if (id.isEmpty) return;
+
+    if (!selectedMessageIds.remove(id)) {
+      selectedMessageIds.add(id);
+    }
+  }
+
+  void clearSelection() => selectedMessageIds.clear();
+
+  /// Selected messages delete karta hai. Success par true return karta hai.
+  Future<bool> deleteSelectedMessages() =>
+      deleteMessages(selectedMessageIds.toList());
+
+  Future<bool> deleteMessages(List<String> allIds) async {
+    if (allIds.isEmpty || isDeleting.value) return false;
+
+    // "temp_" wale messages server par nahi hote, sirf local se hatao.
+    final List<String> apiIds = allIds
+        .where((id) => !id.startsWith('temp_'))
+        .toList();
+
+    try {
+      isDeleting.value = true;
+
+      if (apiIds.isNotEmpty) {
+        await WhatsappDeleteChat.deleteChats(ids: apiIds);
+      }
+
+      _removeMessagesLocally(allIds.toSet());
+      selectedMessageIds.removeAll(allIds);
+
+      return true;
+    } catch (e, stack) {
+      debugPrint('DELETE MESSAGES ERROR: $e');
+      debugPrint('$stack');
+      return false;
+    } finally {
+      isDeleting.value = false;
+    }
+  }
+
+  void _removeMessagesLocally(Set<String> ids) {
+    // 1) API messages
+    final response = messagesResponse.value;
+
+    if (response != null) {
+      final old = response.result?.messages ?? const <WhatsappMessageModel>[];
+
+      final remaining = old
+          .where((m) => !ids.contains(m.messageId) && !ids.contains(m.id))
+          .toList();
+
+      messagesResponse.value = WhatsappMessagesResponseModel(
+        success: response.success,
+        responseStatusCode: response.responseStatusCode,
+        responseMessage: response.responseMessage,
+        request: response.request,
+        result: WhatsappMessagesResultModel(messages: remaining),
+      );
+    }
+
+    // 2) Socket messages
+    socketMessages.removeWhere(
+      (m) => ids.contains(m.messageId) || ids.contains(m.id),
+    );
+
+    latestSocketMessagesByConversation.removeWhere(
+      (_, m) => ids.contains(m.messageId) || ids.contains(m.id),
+    );
+    latestSocketMessagesByConversation.refresh();
+
+    if (ids.contains(latestSocketMessage.value?.messageId) ||
+        ids.contains(latestSocketMessage.value?.id)) {
+      latestSocketMessage.value = null;
+    }
+
+    update();
+  }
+
+  // ============================================================
   // MARK CONVERSATION AS READ (LOCAL + API)
-  // ================================================================
+  // ============================================================
 
   Future<void> markConversationAsReadLocally(String conversationId) async {
     try {
@@ -216,6 +412,131 @@ class WhatsappController extends GetxController {
       debugPrint('MARK AS READ (local update) ERROR: $error');
     }
   }
+
+  // ============================================================
+  // GET FLOW
+  // ============================================================
+
+  Future<void> getflow() async {
+    try {
+      isFlowLoading.value = true;
+      flowErrorMessage.value = '';
+
+      final dynamic decoded = await WhatsappFlowService.getWhatsappflow(
+        hid: hid,
+      );
+
+      flow.value = FlowResponseModel.fromJson(
+        Map<String, dynamic>.from(decoded as Map),
+      );
+
+      // If the picked flow no longer exists, clear the selection
+      if (selectedFlow == null) selectedFlowId.value = '';
+
+      debugPrint('Total flows: ${flows.length}');
+    } catch (e, stackTrace) {
+      flowErrorMessage.value = e.toString();
+      debugPrint('Error while getting flow: $e');
+      debugPrint('StackTrace: $stackTrace');
+    } finally {
+      isFlowLoading.value = false;
+    }
+  }
+
+  // ============================================================
+  // SEND FLOW
+  // 1) local list/chat update (template/text jaisa)
+  // 2) API call
+  // 3) temp id -> real id
+  // ============================================================
+
+  Future<bool> sendFlowMessage({
+    required String conversationId,
+    required String phone,
+    required String flowId,
+    required String body,
+    String header = '',
+    String footer = '',
+    String ctaText = 'Fill Details',
+  }) async {
+    if (isFlowSending.value) return false;
+
+    final String cleanPhone = phone.trim();
+
+    if (conversationId.isEmpty || cleanPhone.isEmpty) {
+      debugPrint('FLOW SEND: conversationId/phone empty');
+      return false;
+    }
+
+    if (flowId.trim().isEmpty || body.trim().isEmpty) {
+      debugPrint('FLOW SEND: flowId/body empty');
+      return false;
+    }
+
+    isFlowSending.value = true;
+
+    final String tempMessageId =
+        'temp_flow_${DateTime.now().microsecondsSinceEpoch}';
+
+    final String localText = [
+      if (header.trim().isNotEmpty) header.trim(),
+      body.trim(),
+      if (footer.trim().isNotEmpty) footer.trim(),
+    ].join('\n');
+
+    // 1) LOCAL LIST UPDATE
+    addSentMessageToCurrentConversation(
+      phone: cleanPhone,
+      text: localText,
+      messageId: tempMessageId,
+      conversationId: conversationId,
+    );
+
+    // 2) API
+    try {
+      final response = await WhatsappMessageSand.sendWhatsappFlow(
+        hid: hid,
+        phone: cleanPhone,
+        flowId: flowId,
+        body: body,
+        header: header,
+        footer: footer,
+        ctaText: ctaText,
+      );
+
+      debugPrint('FLOW SEND SUCCESS: ${response.body}');
+
+      // 3) TEMP ID -> REAL ID
+      try {
+        final decoded = jsonDecode(response.body);
+
+        final realMessageId = decoded['result']?['docs']?['messageId']
+            ?.toString();
+
+        if (realMessageId != null && realMessageId.isNotEmpty) {
+          updateMessageId(tempId: tempMessageId, realId: realMessageId);
+        }
+      } catch (e) {
+        debugPrint('FLOW RESPONSE PARSE ERROR: $e');
+      }
+
+      return true;
+    } catch (e, st) {
+      debugPrint('FLOW SEND ERROR: $e');
+      debugPrint('$st');
+
+      // Fail hua -> local message hata do
+      await deleteMessages([tempMessageId]);
+
+      return false;
+    } finally {
+      isFlowSending.value = false;
+    }
+  }
+
+  // ============================================================
+  // WHATSAPP INTEGRATION
+  // ============================================================
 
   Future<void> getWhatsappIntegration() async {
     try {
@@ -347,20 +668,38 @@ class WhatsappController extends GetxController {
     return value;
   }
 
-  ///ass sand mesege in convertation
+  // ============================================================
+  // ADD SENT MESSAGE (text / image / template / flow)
+  //
+  // conversationId pass karo to wahi chat update hogi, warna
+  // currentConversationId use hoga.
+  // ============================================================
+
   void addSentMessageToCurrentConversation({
     required String phone,
     required String text,
     String? messageId,
+    String messageType = 'text', // 'text' ya 'image'
+    String? caption, // image ke saath bheja gaya text
+    Map<String, dynamic>? media, // {'id': ..., 'mimeType': ...}
+    String? conversationId,
   }) {
-    final conversationId = currentConversationId.value;
+    final String convId = (conversationId != null && conversationId.isNotEmpty)
+        ? conversationId
+        : currentConversationId.value;
 
-    if (conversationId.isEmpty) {
+    if (convId.isEmpty) {
       debugPrint('SEND MESSAGE: current conversation empty');
       return;
     }
 
     final now = DateTime.now().toIso8601String();
+
+    final bool isText = messageType == 'text';
+
+    final String? bodyText = isText
+        ? text
+        : ((caption ?? '').trim().isEmpty ? null : caption!.trim());
 
     // ------------------------------------------------------------
     // 1. WhatsappMessageModel banao
@@ -368,30 +707,29 @@ class WhatsappController extends GetxController {
 
     final sentMessage = WhatsappMessageModel(
       id: messageId,
-      conversationId: conversationId,
+      conversationId: convId,
       messageId: messageId,
       sender: 'business',
       from: phone,
       to: phone,
       direction: 'outbound',
-      messageType: 'text',
-      body: text,
+      messageType: messageType,
+      body: bodyText,
       status: 'sent',
       createdAt: now,
       updatedAt: now,
-      media: null,
+      media: media == null ? null : WhatsappMediaModel.fromJson(media),
       interactive: null,
       location: null,
-      // contacts: null,
     );
 
     // ------------------------------------------------------------
-    // 2. messagesResponse mein add karo
+    // 2. messagesResponse mein add karo (sirf open conversation ke liye)
     // ------------------------------------------------------------
 
     final response = messagesResponse.value;
 
-    if (response != null) {
+    if (response != null && convId == currentConversationId.value) {
       final oldMessages =
           response.result?.messages ?? const <WhatsappMessageModel>[];
 
@@ -420,7 +758,7 @@ class WhatsappController extends GetxController {
     // ------------------------------------------------------------
 
     final index = conversations.indexWhere(
-      (conversation) => conversation.id == conversationId,
+      (conversation) => conversation.id == convId,
     );
 
     if (index != -1) {
@@ -432,7 +770,7 @@ class WhatsappController extends GetxController {
         'last_message': {
           'sender': 'business',
           'text': text,
-          'type': 'text',
+          'type': messageType,
           'created_at': now,
           'updated_at': now,
         },
@@ -452,7 +790,7 @@ class WhatsappController extends GetxController {
       conversations.refresh();
     }
 
-    debugPrint('SENT MESSAGE ADDED LOCALLY: $conversationId');
+    debugPrint('SENT MESSAGE ADDED LOCALLY: $convId');
   }
 
   // ============================================================
@@ -512,11 +850,8 @@ class WhatsappController extends GetxController {
   //
   // STEP 1  -> NDID lead list mein hai? Nahi to DISCARD.
   // STEP 2  -> socket message save (dedupe).
-  // STEP 3  -> conversation id list mein hai?
-  //              haan  -> usi conversation ko update karke TOP par
-  //              nahi  -> nayi conversation banake TOP par
-  // STEP 4  -> conversation abhi open hai? To messages response
-  //            mein message add karo.
+  // STEP 3  -> conversation update/new, dono TOP par.
+  // STEP 4  -> conversation open hai to messages response mein add.
   // ============================================================
 
   void handleNewMessage(Map<String, dynamic> rawMessage) {
@@ -531,10 +866,7 @@ class WhatsappController extends GetxController {
         return;
       }
 
-      // ==========================================================
-      // STEP 1: NDID CHECK (lead response se match)
-      // ==========================================================
-
+      // STEP 1: NDID CHECK
       final String? socketNdid = _getSocketNdid(rawMessage);
 
       debugPrint(
@@ -555,10 +887,7 @@ class WhatsappController extends GetxController {
 
       debugPrint('NDID MATCHED -> processing message');
 
-      // ==========================================================
       // STEP 2: SAVE SOCKET MESSAGE
-      // ==========================================================
-
       final bool alreadyExists = socketMessages.any(
         (item) =>
             (message.messageId != null &&
@@ -575,20 +904,14 @@ class WhatsappController extends GetxController {
       latestSocketMessagesByConversation[conversationId] = message;
       latestSocketMessagesByConversation.refresh();
 
-      // ==========================================================
-      // STEP 3: CONVERSATION LIST (update ya new, dono TOP par)
-      // ==========================================================
-
+      // STEP 3: CONVERSATION LIST
       _upsertConversationFromSocket(
         rawMessage: rawMessage,
         socketMessage: message,
         socketNdid: socketNdid,
       );
 
-      // ==========================================================
       // STEP 4: OPEN CONVERSATION KE MESSAGES RESPONSE MEIN ADD
-      // ==========================================================
-
       if (currentConversationId.value == conversationId) {
         _addSocketMessageToMessagesResponse(message);
       }
@@ -625,18 +948,13 @@ class WhatsappController extends GetxController {
       (conversation) => conversation.id == conversationId,
     );
 
-    // ----------------------------------------------------------
     // EXISTING CONVERSATION -> UPDATE + MOVE TO TOP
-    // ----------------------------------------------------------
-
     if (index != -1) {
       final old = conversations[index];
 
       final Map<String, dynamic> json = {
-        // Purani conversation ka saara data (notes, handling, status...)
         ...old.toJson(),
 
-        // Sirf ye fields socket ke hisaab se update honge
         'name': _cleanString(rawMessage['name']) ?? old.name,
 
         'unread_count': _resolveUnreadCount(
@@ -662,10 +980,7 @@ class WhatsappController extends GetxController {
       return;
     }
 
-    // ----------------------------------------------------------
     // NEW CONVERSATION -> CREATE + TOP
-    // ----------------------------------------------------------
-
     final String now = DateTime.now().toIso8601String();
 
     final newConversation = WhatsappConversationModel.fromJson({
@@ -717,8 +1032,6 @@ class WhatsappController extends GetxController {
   void _addSocketMessageToMessagesResponse(
     WhatsappSocketMessageModel socketMessage,
   ) {
-    // API abhi load ho rahi hai -> response purani conversation ka ho
-    // sakta hai. Socket message merger se waise bhi dikh jayega.
     if (isMessagesLoading.value) {
       return;
     }
@@ -757,8 +1070,6 @@ class WhatsappController extends GetxController {
 
     final WhatsappMessageModel newMessage = _socketToApiMessage(socketMessage);
 
-    // Nayi list + nayi response banate hain (const list par add nahi
-    // karte) taaki Obx sahi se rebuild ho.
     messagesResponse.value = WhatsappMessagesResponseModel(
       success: response.success,
       responseStatusCode: response.responseStatusCode,
@@ -922,10 +1233,6 @@ class WhatsappController extends GetxController {
 
       final String? conversationId = data['_id']?.toString();
 
-      // --------------------------------------------------------
-      // NDID CHECK FIRST
-      // --------------------------------------------------------
-
       if (socketNdid == null) {
         debugPrint('NEW CONVERSATION DISCARDED: NDID EMPTY');
         return;
@@ -946,10 +1253,7 @@ class WhatsappController extends GetxController {
         (conversation) => conversation.id == conversationId,
       );
 
-      // --------------------------------------------------------
       // EXISTING -> UPDATE + TOP
-      // --------------------------------------------------------
-
       if (index != -1) {
         final old = conversations[index];
 
@@ -976,10 +1280,7 @@ class WhatsappController extends GetxController {
         return;
       }
 
-      // --------------------------------------------------------
       // NEW -> CREATE + TOP
-      // --------------------------------------------------------
-
       final String now = DateTime.now().toIso8601String();
 
       final newConversation = WhatsappConversationModel.fromJson({
@@ -1007,30 +1308,12 @@ class WhatsappController extends GetxController {
   }
 
   // ============================================================
-  // MESSAGE STATUS
-  // ============================================================
-  // ============================================================
-  // WHATSAPP_MESSAGE_STATUS
-  //
-  // STEP 1 -> messageId nikaalo
-  // STEP 2 -> open conversation ke messagesResponse mein dhoondo,
-  //           mile to status update karke naya object banao
-  // STEP 3 -> socketMessages list mein bhi dhoondo aur update karo
-  // STEP 4 -> conversations list ki last_message.status bhi
-  //           update karo agar last_message ka messageId match kare
-  // ============================================================
-  // ============================================================
   // REPLACE TEMP MESSAGE ID WITH REAL WHATSAPP MESSAGE ID
+  //
+  // Local message ka id "temp_xxxxx" hota hai. API se real messageId
+  // milne par isse replace karte hain, taaki WHATSAPP_MESSAGE_STATUS
+  // event sahi message ka tick update kar sake.
   // ============================================================
-  //
-  // Jab locally message add hota hai (addSentMessageToCurrentConversation),
-  // uska id/messageId = "temp_xxxxx" hota hai. Jab API se real WhatsApp
-  // messageId (wamid...) milta hai, isse call karo taaki baad mein
-  // WHATSAPP_MESSAGE_STATUS event (jo real messageId ke saath aata hai)
-  // sahi message ko dhoond kar tick update kar sake.
-  //
-  // Ye WhatsappController class ke andar, handleMessageStatus() ke
-  // paas kahin bhi paste kar do.
 
   void updateMessageId({required String tempId, required String realId}) {
     if (tempId.isEmpty || realId.isEmpty || tempId == realId) {
@@ -1039,10 +1322,7 @@ class WhatsappController extends GetxController {
 
     bool foundAnywhere = false;
 
-    // --------------------------------------------------------
     // 1) messagesResponse (open conversation ke messages)
-    // --------------------------------------------------------
-
     final response = messagesResponse.value;
 
     if (response != null) {
@@ -1094,10 +1374,7 @@ class WhatsappController extends GetxController {
       }
     }
 
-    // --------------------------------------------------------
     // 2) conversations list (last_message ka message_id, agar store ho)
-    // --------------------------------------------------------
-
     final convIndex = conversations.indexWhere((conversation) {
       final lastMsgJson = conversation.lastMessage?.toJson();
       final lastMsgId = lastMsgJson?['message_id']?.toString();
@@ -1131,6 +1408,15 @@ class WhatsappController extends GetxController {
     update();
   }
 
+  // ============================================================
+  // WHATSAPP_MESSAGE_STATUS
+  //
+  // STEP 1 -> messageId nikaalo
+  // STEP 2 -> open conversation ke messagesResponse me status update
+  // STEP 3 -> socketMessages list me bhi update
+  // STEP 4 -> conversations list ki last_message.status bhi update
+  // ============================================================
+
   void handleMessageStatus(Map<String, dynamic> data) {
     try {
       final String? messageId = data['messageId']?.toString();
@@ -1148,10 +1434,7 @@ class WhatsappController extends GetxController {
 
       bool foundAnywhere = false;
 
-      // --------------------------------------------------------
       // STEP 2: OPEN CONVERSATION MESSAGES (messagesResponse)
-      // --------------------------------------------------------
-
       final response = messagesResponse.value;
 
       if (response != null) {
@@ -1203,10 +1486,7 @@ class WhatsappController extends GetxController {
         }
       }
 
-      // --------------------------------------------------------
       // STEP 3: socketMessages LIST
-      // --------------------------------------------------------
-
       final socketIndex = socketMessages.indexWhere(
         (m) => m.messageId == messageId || m.id == messageId,
       );
@@ -1262,13 +1542,8 @@ class WhatsappController extends GetxController {
         );
       }
 
-      // --------------------------------------------------------
       // STEP 4: conversations LIST (last_message.status)
-      // --------------------------------------------------------
-      // Sirf tab update hoga jab last_message ka apna messageId
-      // stored ho. Agar aapke last_message JSON mein "message_id"
-      // key nahi hai to ye block silently skip ho jayega.
-
+      // Sirf tab update hoga jab last_message JSON me "message_id" stored ho.
       final convIndex = conversations.indexWhere((conversation) {
         final lastMsgJson = conversation.lastMessage?.toJson();
         final lastMsgId = lastMsgJson?['message_id']?.toString();
@@ -1307,6 +1582,7 @@ class WhatsappController extends GetxController {
       debugPrint('$stack');
     }
   }
+
   // ============================================================
   // GET CONVERSATIONS
   // ============================================================

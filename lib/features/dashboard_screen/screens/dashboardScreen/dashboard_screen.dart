@@ -3,13 +3,20 @@ import 'package:eazotel/features/dashboard_screen/controllers/bottom_nav_control
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/headerLocationController.dart';
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
+import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/leads_insights_section.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/LeadsScreenWidget/lead_card.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/LeadsScreenWidget/leads_empty_state.dart';
-import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/dashboardwidget/DashboardStatCard.dart';
+import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/dashboardwidget/callAnalytis.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/dashboardwidget/dashboard_card.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/dashboardwidget/greeting_text.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/dashboardwidget/hotle_name.dart';
-import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
+import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/drawerScreen/drawerScreen.dart';
+import 'package:eazotel/features/googleAnalytis/controller/analytisController.dart';
+import 'package:eazotel/features/googleAnalytis/screen/analytics_line_chart.dart';
+import 'package:eazotel/features/googleAnalytis/screen/widgets/analytics_layout.dart';
+import 'package:eazotel/features/googleAnalytis/screen/widgets/metric_tabs.dart';
+import 'package:eazotel/features/googleAnalytis/screen/widgets/traffic_channels_card.dart';
+import 'package:eazotel/utils/res/t_responsive_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -25,6 +32,8 @@ class DashboardScreen extends StatelessWidget {
   final DashboardController dashboardController = Get.put(
     DashboardController(),
   );
+  final analysicController = Get.put(AnalytisController());
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final LocationController locationController = Get.put(LocationController());
 
@@ -36,6 +45,11 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        key: _scaffoldKey,
+        endDrawer: DashboardDrawer(
+          controller: controller,
+          locationController: locationController,
+        ),
         // ======================================================
         // APP BAR - FIXED
         // ======================================================
@@ -52,6 +66,65 @@ class DashboardScreen extends StatelessWidget {
           return _dashboardBody(context);
         }),
       ),
+    );
+  }
+
+  Widget _analyticsSection(BuildContext context) {
+    return TResponsiveBuilder(
+      builder: (context, r) {
+        final layout = AnalyticsLayout(r);
+
+        return Obx(() {
+          if (analysicController.isLoading.value) {
+            return const Padding(
+              padding: EdgeInsets.all(30),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          final points =
+              analysicController.analyticsData.value?.chartData ?? [];
+
+          final metric = analysicController.selectedMetric.value;
+
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: r.pagePadding),
+            child: Column(
+              children: [
+                MetricTabs(
+                  points: points,
+                  selected: metric,
+                  onSelected: analysicController.changeMetric,
+                  layout: layout,
+                ),
+
+                SizedBox(height: r.gap + 4),
+
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: r.pagePadding),
+                  child: AnalyticsLineChart(
+                    // points: points,
+                    // metric: metric,
+                    // rangeLabel:
+                    //     analysicController.selectedRange.value.label,
+                  ),
+                ),
+
+                SizedBox(height: r.gap + 4),
+
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: r.pagePadding),
+                  child: TrafficChannelsCard(
+                    channels:
+                        analysicController.trafficData.value?.channels ?? [],
+                    layout: layout,
+                  ),
+                ),
+              ],
+            ),
+          );
+        });
+      },
     );
   }
 
@@ -82,7 +155,14 @@ class DashboardScreen extends StatelessWidget {
         ),
 
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-          return [SliverToBoxAdapter(child: dashboardBody())];
+          return [
+            SliverToBoxAdapter(child: dashboardBody()),
+            // SliverToBoxAdapter(child: _analyticsSection(context)),
+            // SliverToBoxAdapter(child: CallInsightsSection()),
+            const SliverToBoxAdapter(child: CallAnalyticsSection()),
+
+            SliverToBoxAdapter(child: LeadsInsightsSection()),
+          ];
         },
 
         body: _leadsList(context, leadsController: dashboardController),
@@ -114,25 +194,27 @@ class DashboardScreen extends StatelessWidget {
 
           VSpace(height: 8),
 
-          locationSelector(context),
+          // Reusable widget (defined at the bottom of this file)
+          const LocationSelector(),
         ],
       ),
 
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 30),
+
           child: InkWell(
             onTap: () {
-              controller.changeTab(3);
+              // controller.changeTab(3);
+
+              _scaffoldKey.currentState?.openEndDrawer();
             },
             borderRadius: BorderRadius.circular(22),
             child: Obx(() {
               final hotelName =
                   locationController.selectedHotel.value?.local.trim() ?? '';
 
-              final lastWord = hotelName.isNotEmpty
-                  ? hotelName.split(RegExp(r'\s+')).first
-                  : 'E';
+              final lastWord = hotelName.split(RegExp(r'\s+')).first;
 
               final profileName = lastWord.isNotEmpty
                   ? lastWord[0].toUpperCase()
@@ -148,78 +230,37 @@ class DashboardScreen extends StatelessWidget {
                       : Color(0xFF3B82F6),
                   borderRadius: BorderRadius.circular(22),
                 ),
-                child: Text(
-                  profileName,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: profileName.trim().isEmpty
+                    ? const Icon(Icons.person, color: Colors.white, size: 20)
+                    : Text(
+                        profileName,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               );
             }),
           ),
+          // child: IconButton(
+          //   icon: const Icon(Icons.menu),
+          //   onPressed: () {
+          //     Scaffold.of(context).openDrawer();
+          //   },
+          // ),
         ),
       ],
-    );
-  }
-
-  // ============================================================
-  // LOCATION SELECTOR
-  // ============================================================
-
-  Widget locationSelector(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return GestureDetector(
-      onTap: () {
-        if (locationController.showHotels.value) {
-          locationController.closeHotelSelector();
-        } else {
-          locationController.openHotelSelector();
-        }
-      },
-      child: Obx(() {
-        final hotel = locationController.selectedHotel.value;
-
-        final isOpen = locationController.showHotels.value;
-
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            border: Border.all(color: theme.colorScheme.primary),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isOpen ? Icons.location_on : Icons.location_on_outlined,
-                size: 18,
-                color: theme.colorScheme.primary,
-              ),
-
-              HSpace(width: 6),
-
-              Text(
-                hotel?.city.isNotEmpty == true
-                    ? hotel!.city
-                    : 'Select location',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-
-              HSpace(width: 4),
-
-              Icon(
-                isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                size: 18,
-                color: theme.colorScheme.primary,
-              ),
-            ],
-          ),
-        );
-      }),
+      // actions: [
+      //   Padding(
+      //     padding: const EdgeInsets.only(right: 30),
+      //     child: IconButton(
+      //       icon: const Icon(Icons.menu, size: 28),
+      //       onPressed: () {
+      //         _scaffoldKey.currentState?.openEndDrawer();
+      //       },
+      //     ),
+      //   ),
+      // ],
     );
   }
 
@@ -345,8 +386,8 @@ class DashboardScreen extends StatelessWidget {
       // LAST 24 HOURS
       // ============================================================
 
-      final twentyFourHoursAgo = now.subtract(const Duration(days: 424));
-
+      final twentyFourHoursAgo = now.subtract(const Duration(hours: 24));
+      // final twentyFourHoursAgo = now.subtract(const Duration(days: 424));
       // ============================================================
       // FILTER LEADS
       // ============================================================
@@ -421,7 +462,7 @@ class DashboardScreen extends StatelessWidget {
       // INITIAL LOADING
       // ============================================================
 
-      if (leadsController.isLeadsLoading.value && leads.isEmpty) {
+      if (leadsController.isLeadsLoading.value) {
         return CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
@@ -545,5 +586,78 @@ class DashboardScreen extends StatelessWidget {
         ),
       );
     });
+  }
+}
+
+// ==============================================================
+// REUSABLE LOCATION SELECTOR
+// Use anywhere: `const LocationSelector()`
+// Requires LocationController to be registered with Get.put()
+// ==============================================================
+
+class LocationSelector extends StatelessWidget {
+  const LocationSelector({super.key, this.onTap});
+
+  /// Optional: override the default open/close hotel selector behaviour.
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final locationController = Get.find<LocationController>();
+
+    return GestureDetector(
+      onTap:
+          onTap ??
+          () {
+            if (locationController.showHotels.value) {
+              locationController.closeHotelSelector();
+            } else {
+              locationController.openHotelSelector();
+            }
+          },
+      child: Obx(() {
+        final hotel = locationController.selectedHotel.value;
+
+        final isOpen = locationController.showHotels.value;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            border: Border.all(color: theme.colorScheme.primary),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isOpen ? Icons.location_on : Icons.location_on_outlined,
+                size: 18,
+                color: theme.colorScheme.primary,
+              ),
+
+              HSpace(width: 6),
+
+              Text(
+                hotel?.city.isNotEmpty == true
+                    ? hotel!.city
+                    : 'Select location',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+
+              HSpace(width: 4),
+
+              Icon(
+                isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                size: 18,
+                color: theme.colorScheme.primary,
+              ),
+            ],
+          ),
+        );
+      }),
+    );
   }
 }

@@ -11,10 +11,6 @@ import 'package:get/get.dart';
 // ==================================================================
 // LIST ITEM TYPES
 // ==================================================================
-//
-// Poori message list ab ek hi flat list hai jisme teen tarah ke
-// items ho sakte hain: date header, unread divider, aur actual
-// message. Koi Sliver/CustomScrollView nahi — simple ListView.
 
 abstract class _ListEntry {}
 
@@ -37,12 +33,7 @@ class WhatsappMessageList extends StatelessWidget {
   final WhatsappConversationDetailController controller;
   final WhatsappConversationModel chatdetail;
 
-  // Ye flag track karta hai ki unread-divider ek baar dikh chuka hai
-  // ya nahi. Screen ke pehle build (mount) pe false hota hai, isliye
-  // divider dikhta hai; uske baad har Obx rebuild pe true ho jaata
-  // hai, isliye dobara kabhi nahi dikhta — chahe Obx kitni bhi baar
-  // rebuild ho. (const constructor hata di gayi hai kyunki ab field
-  // mutable hai.)
+  // Unread divider sirf pehli build par dikhega.
   bool _hasShownUnreadDivider = false;
 
   WhatsappMessageList({
@@ -53,16 +44,15 @@ class WhatsappMessageList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(
-      'print: kdkjkjsfkjskfjskjfksjkfjskljfkjakfjlkajflkjakfjlkajflkajlkfjalkjfkaj',
-    );
-    print(
-      'kdkjkjsfkjskfjskjfksjkjjhkfjskljfkjakfjlkajflkjakfjlkajflkajlkfjalkjfkaj',
-    );
     return Obx(() {
-      print('print: WhatsappMessageList BUILD');
-
       final whatsappController = controller.whatsappController;
+
+      // ------------------------------------------------------------
+      // SELECTION STATE (Obx ke andar read karna zaroori hai)
+      // ------------------------------------------------------------
+      final bool selectionMode = whatsappController.isSelectionMode;
+      final Set<String> selectedIds = whatsappController.selectedMessageIds
+          .toSet();
 
       // ------------------------------------------------------------
       // LOADING
@@ -94,7 +84,7 @@ class WhatsappMessageList extends StatelessWidget {
       }
 
       // ------------------------------------------------------------
-      // MESSAGES (newest first, jaisa merger deta hai)
+      // MESSAGES (newest first)
       // ------------------------------------------------------------
       final messages = WhatsappMessageMerger.merge(
         apiMessages:
@@ -116,15 +106,9 @@ class WhatsappMessageList extends StatelessWidget {
       }
 
       // ------------------------------------------------------------
-      // BUILD DISPLAY LIST (date headers + unread divider + messages)
+      // BUILD DISPLAY LIST
       // ------------------------------------------------------------
-
       final unread = controller.totalUnreadCount;
-
-      // Sirf pehli baar (screen mount, jab _hasShownUnreadDivider
-      // false hai) hi divider entry dikhayenge. Uske baad, chahe
-      // Obx kitni bhi baar rebuild ho, showDivider hamesha false
-      // rahega.
       final showDivider = !_hasShownUnreadDivider;
 
       final displayItems = _buildDisplayItems(
@@ -133,31 +117,35 @@ class WhatsappMessageList extends StatelessWidget {
         showDivider: showDivider,
       );
 
-      // Is build ke baad flag lock kar do — ab kabhi dobara divider
-      // is widget-instance ke liye nahi banega.
       _hasShownUnreadDivider = true;
 
       // ------------------------------------------------------------
       // LIST
       // ------------------------------------------------------------
-      //
-      // reverse:true -> index 0 sabse neeche (newest) render hota hai.
-      // displayItems already newest-first order mein hai (jaisa
-      // messages the), isliye direct render kar sakte hain.
-      //
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ListView.builder(
-          controller: controller.scrollController,
-          reverse: true,
-          padding: const EdgeInsets.fromLTRB(8, 16, 8, 10),
-          itemCount: displayItems.length,
-          itemBuilder: (context, index) {
-            // Ye ab sirf ek call hai — actual entry-type check aur
-            // widget banane ka logic _buildEntryWidget() me hai,
-            // jo is Obx(() {...}) closure ke BAHAR define hai.
-            return _buildEntryWidget(displayItems[index]);
-          },
+      return PopScope(
+        // Selection mode me back dabane par pehle selection clear hoga.
+        canPop: !selectionMode,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop) {
+            whatsappController.clearSelection();
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ListView.builder(
+            controller: controller.scrollController,
+            reverse: true,
+            padding: const EdgeInsets.fromLTRB(8, 16, 8, 10),
+            itemCount: displayItems.length,
+            itemBuilder: (context, index) {
+              return _buildEntryWidget(
+                context,
+                displayItems[index],
+                selectionMode: selectionMode,
+                selectedIds: selectedIds,
+              );
+            },
+          ),
         ),
       );
     });
@@ -166,12 +154,13 @@ class WhatsappMessageList extends StatelessWidget {
   // ==================================================================
   // BUILD SINGLE LIST ITEM WIDGET
   // ==================================================================
-  //
-  // Ye method Obx() ke closure ke bahar (class level pe) defined hai.
-  // itemBuilder sirf ise call karta hai — entry-type check aur
-  // _NewMessageDivider banane wala part yahan, Obx ke bahar, rehta hai.
 
-  Widget _buildEntryWidget(_ListEntry entry) {
+  Widget _buildEntryWidget(
+    BuildContext context,
+    _ListEntry entry, {
+    required bool selectionMode,
+    required Set<String> selectedIds,
+  }) {
     if (entry is _DateHeaderEntry) {
       return _DateHeader(label: entry.label);
     }
@@ -188,19 +177,37 @@ class WhatsappMessageList extends StatelessWidget {
 
     final message = (entry as _MessageEntry).message;
 
-    return WhatsappMessageBubble(message: message, ndid: controller.chat.ndid);
+    // NOTE: API ko wamid... wali ID chahiye. Agar WhatsappMessageItem me
+    // field ka naam alag hai (jaise id), to yahan wahi use karo.
+    final String id = message.messageId ?? '';
+    final bool isSelected = selectedIds.contains(id);
+    final wc = controller.whatsappController;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onLongPress: id.isEmpty ? null : () => wc.toggleMessageSelection(id),
+      onTap: selectionMode && id.isNotEmpty
+          ? () => wc.toggleMessageSelection(id)
+          : null,
+      child: Container(
+        color: isSelected
+            ? TAppColors.success.withOpacity(0.40)
+            : Colors.transparent,
+        // Selection mode me bubble ke andar ke taps (image, link etc.) band.
+        child: IgnorePointer(
+          ignoring: selectionMode,
+          child: WhatsappMessageBubble(
+            message: message,
+            ndid: controller.chat.ndid,
+          ),
+        ),
+      ),
+    );
   }
 
   // ==================================================================
   // BUILD DISPLAY ITEMS
   // ==================================================================
-  //
-  // messagesNewestFirst: index 0 = sabse naya message.
-  //
-  // Chronological (oldest -> newest) order mein process karte hain
-  // taaki date change aur unread boundary sahi se detect ho, phir
-  // result ko wapas newest-first mein reverse kar dete hain taaki
-  // reverse:true ListView mein sahi jagah render ho.
 
   List<_ListEntry> _buildDisplayItems({
     required List<WhatsappMessageItem> messagesNewestFirst,
@@ -209,14 +216,10 @@ class WhatsappMessageList extends StatelessWidget {
   }) {
     final chronological = messagesNewestFirst.reversed.toList();
 
-    // Agar showDivider false hai (matlab ye pehla build nahi hai),
-    // to newCount 0 maan lo taaki divider entry kabhi add na ho.
     final int newCount = showDivider
         ? unreadCount.clamp(0, chronological.length)
         : 0;
 
-    // Chronological order mein wahi index jahan se NEW/unread
-    // messages shuru hote hain.
     final int unreadStartIndex = chronological.length - newCount;
 
     final List<_ListEntry> items = [];
@@ -240,12 +243,11 @@ class WhatsappMessageList extends StatelessWidget {
       items.add(_MessageEntry(message));
     }
 
-    // Wapas newest-first order mein (reverse:true ListView ke liye)
     return items.reversed.toList();
   }
 
   // ==================================================================
-  // DATE LABEL (Today / Yesterday / 12 September / 12 September 2025)
+  // DATE LABEL
   // ==================================================================
 
   static const List<String> _monthNames = [
@@ -300,7 +302,7 @@ class WhatsappMessageList extends StatelessWidget {
 }
 
 // ==================================================================
-// DATE HEADER (Today / Yesterday / date pill)
+// DATE HEADER
 // ==================================================================
 
 class _DateHeader extends StatelessWidget {
@@ -342,10 +344,6 @@ class _DateHeader extends StatelessWidget {
 // ==================================================================
 // NEW / UNREAD MESSAGE DIVIDER
 // ==================================================================
-//
-// ✅ Ab yahan text ("X unread messages") ki jagah sirf list screen
-// jaisa hi round badge dikhta hai (number ke saath), same style:
-// Container + padding(7,3) + borderRadius(20) + primary color.
 
 class _NewMessageDivider extends StatelessWidget {
   final int count;
@@ -376,16 +374,12 @@ class _NewMessageDivider extends StatelessWidget {
 
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary,
-
                   borderRadius: BorderRadius.circular(20),
                 ),
-
                 child: Text(
                   count > 99 ? '99+' : '$count  unread Message',
-
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onPrimary,
                     fontWeight: FontWeight.w600,

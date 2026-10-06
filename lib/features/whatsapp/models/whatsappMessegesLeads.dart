@@ -18,12 +18,8 @@ class WhatsappResponseModel {
       success: json['success'] ?? false,
       responseStatusCode: json['responseStatusCode'] ?? 0,
       responseMessage: json['responseMessage'] ?? '',
-      request: WhatsappRequestModel.fromJson(
-        json['request'] ?? {},
-      ),
-      result: WhatsappResultModel.fromJson(
-        json['result'] ?? {},
-      ),
+      request: WhatsappRequestModel.fromJson(json['request'] ?? {}),
+      result: WhatsappResultModel.fromJson(json['result'] ?? {}),
     );
   }
 
@@ -53,9 +49,7 @@ class WhatsappRequestModel {
     required this.endpoint,
   });
 
-  factory WhatsappRequestModel.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory WhatsappRequestModel.fromJson(Map<String, dynamic> json) {
     return WhatsappRequestModel(
       method: json['method'] ?? '',
       basesurl: json['basesurl'] ?? '',
@@ -64,11 +58,7 @@ class WhatsappRequestModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'method': method,
-      'basesurl': basesurl,
-      'endpoint': endpoint,
-    };
+    return {'method': method, 'basesurl': basesurl, 'endpoint': endpoint};
   }
 }
 
@@ -79,29 +69,21 @@ class WhatsappRequestModel {
 class WhatsappResultModel {
   final List<WhatsappConversationModel> conversations;
 
-  WhatsappResultModel({
-    required this.conversations,
-  });
+  WhatsappResultModel({required this.conversations});
 
-  factory WhatsappResultModel.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory WhatsappResultModel.fromJson(Map<String, dynamic> json) {
     return WhatsappResultModel(
       conversations: (json['conversations'] as List? ?? [])
           .map(
-            (e) => WhatsappConversationModel.fromJson(
-              e as Map<String, dynamic>,
-            ),
+            (e) =>
+                WhatsappConversationModel.fromJson(e as Map<String, dynamic>),
           )
           .toList(),
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'conversations':
-          conversations.map((e) => e.toJson()).toList(),
-    };
+    return {'conversations': conversations.map((e) => e.toJson()).toList()};
   }
 }
 
@@ -154,48 +136,34 @@ class WhatsappConversationModel {
     this.assignedTo,
   });
 
-  factory WhatsappConversationModel.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory WhatsappConversationModel.fromJson(Map<String, dynamic> json) {
     return WhatsappConversationModel(
       lastMessage: json['last_message'] != null
-          ? WhatsappLastMessageModel.fromJson(
-              json['last_message'],
-            )
+          ? WhatsappLastMessageModel.fromJson(json['last_message'])
           : null,
 
       handling: json['handling'] != null
-          ? WhatsappHandlingModel.fromJson(
-              json['handling'],
-            )
+          ? WhatsappHandlingModel.fromJson(json['handling'])
           : null,
 
       id: json['_id']?.toString() ?? '',
       hid: json['hid']?.toString() ?? '',
       ndid: json['ndid']?.toString() ?? '',
       phone: json['phone']?.toString() ?? '',
-      phoneNumberId:
-          json['phoneNumberId']?.toString() ?? '',
+      phoneNumberId: json['phoneNumberId']?.toString() ?? '',
 
       name: json['name']?.toString(),
 
       unreadCount: json['unread_count'] is int
           ? json['unread_count']
-          : int.tryParse(
-                json['unread_count']?.toString() ?? '0',
-              ) ??
-              0,
+          : int.tryParse(json['unread_count']?.toString() ?? '0') ?? 0,
 
       status: json['status']?.toString() ?? '',
 
       markAsLead: json['markAsLead'] ?? false,
 
       notes: (json['notes'] as List? ?? [])
-          .map(
-            (e) => WhatsappNoteModel.fromJson(
-              e as Map<String, dynamic>,
-            ),
-          )
+          .map((e) => WhatsappNoteModel.fromJson(e as Map<String, dynamic>))
           .toList(),
 
       createdAt: json['createdAt']?.toString() ?? '',
@@ -203,12 +171,9 @@ class WhatsappConversationModel {
 
       version: json['__v'] is int
           ? json['__v']
-          : int.tryParse(
-                json['__v']?.toString() ?? '0',
-              ) ??
-              0,
+          : int.tryParse(json['__v']?.toString() ?? '0') ?? 0,
 
-      assignedTo: json['assignedTo']?.toString(),
+      assignedTo: json['assignedTo']?.toString() ?? 'select',
     );
   }
 
@@ -234,8 +199,6 @@ class WhatsappConversationModel {
   }
 }
 
-
-
 // ======================================================
 // LAST MESSAGE
 // ======================================================
@@ -255,9 +218,7 @@ class WhatsappLastMessageModel {
     this.updatedAt,
   });
 
-  factory WhatsappLastMessageModel.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory WhatsappLastMessageModel.fromJson(Map<String, dynamic> json) {
     return WhatsappLastMessageModel(
       sender: json['sender']?.toString(),
       text: json['text']?.toString(),
@@ -295,9 +256,7 @@ class WhatsappHandlingModel {
     this.assignedBy,
   });
 
-  factory WhatsappHandlingModel.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory WhatsappHandlingModel.fromJson(Map<String, dynamic> json) {
     return WhatsappHandlingModel(
       mode: json['mode']?.toString(),
       assignedTo: json['assignedTo']?.toString(),
@@ -333,18 +292,12 @@ class WhatsappNoteModel {
     this.id,
   });
 
-  factory WhatsappNoteModel.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory WhatsappNoteModel.fromJson(Map<String, dynamic> json) {
     return WhatsappNoteModel(
-      activitySource:
-          json['activitySource']?.toString(),
-      createdAt:
-          json['createdAt']?.toString(),
-      message:
-          json['message']?.toString(),
-      id:
-          json['_id']?.toString(),
+      activitySource: json['activitySource']?.toString(),
+      createdAt: json['createdAt']?.toString(),
+      message: json['message']?.toString(),
+      id: json['_id']?.toString(),
     );
   }
 

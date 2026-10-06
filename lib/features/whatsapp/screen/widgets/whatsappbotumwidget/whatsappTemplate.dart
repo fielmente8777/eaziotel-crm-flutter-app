@@ -8,8 +8,10 @@ class WhatsappTemplateScreen extends StatefulWidget {
     this.onTemplateSelected,
     this.onSend,
     this.controller,
+    this.sendLabel = 'Send', // <-- NEW
   });
 
+  final String sendLabel; // <-- NEW
   final ValueChanged<dynamic>? onTemplateSelected;
 
   /// Send dabane par selected template ke saath call hoga.

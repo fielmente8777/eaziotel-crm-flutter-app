@@ -5,6 +5,7 @@ import 'package:eazotel/features/dashboard_screen/screens/dashbord_botum_nav.dar
 import 'package:get/get.dart';
 
 class SplashController extends GetxController {
+  
   Future<void> startSplash(BuildContext context) async {
     await Future.delayed(const Duration(seconds: 2));
 

@@ -57,7 +57,11 @@ class LeadsScreen extends StatelessWidget {
 
       leading: IconButton(
         onPressed: () => controller.changeTab(0),
-        icon: Icon(Icons.menu, color: textColor, size: 20),
+        icon: Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: textColor,
+          size: 20,
+        ),
       ),
 
       title: Text(

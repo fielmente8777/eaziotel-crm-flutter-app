@@ -38,3 +38,19 @@ class TAppColors {
   static const whatsappLight = Color(0xFF25D366);
   static const whatsappDark = Color(0xFF20B858);
 }
+
+
+class AnalyticsColors {
+  final bool isDark;
+  const AnalyticsColors._(this.isDark);
+
+  factory AnalyticsColors.of(BuildContext context) =>
+      AnalyticsColors._(Theme.of(context).brightness == Brightness.dark);
+
+  Color get primary => TAppColors.primary;
+  Color get card => isDark ? TAppColors.darkCard : TAppColors.lightCard;
+  Color get border => isDark ? TAppColors.darkBorder : TAppColors.lightBorder;
+  Color get text => isDark ? TAppColors.darkText : TAppColors.lightText;
+  Color get subText => text.withOpacity(0.6);
+  Color get grid => border.withOpacity(isDark ? 0.8 : 1);
+}

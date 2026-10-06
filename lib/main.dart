@@ -3,48 +3,36 @@ import 'package:eazotel/core/api/apiexception/api_error_handler.dart';
 import 'package:eazotel/routs/app_routs.dart';
 import 'package:eazotel/utils/theme/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import 'theme_controller.dart';
 
 void main() {
-  runApp(DevicePreview(enabled: false, builder: (context) => const MyApp()));
+  Get.put(ThemeController());
+
+  runApp(DevicePreview(enabled: true, builder: (context) => const MyApp()));
 }
 
-// ============================================================
-// MY APP
-// ============================================================
-
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  ThemeMode themeMode = ThemeMode.system;
-
-  // them change krne ke liya use krne ha  using button
-  void changeTheme(ThemeMode mode) {
-    setState(() {
-      themeMode = mode;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: ApiErrorHandler.navigatorKey,
-      themeAnimationDuration: const Duration(seconds: 0),
-      themeAnimationCurve: Curves.easeInOut,
-      debugShowCheckedModeBanner: false,
+    final ThemeController themeController = Get.find<ThemeController>();
 
-      themeMode: themeMode,
+    return Obx(
+      () => GetMaterialApp(
+        navigatorKey: ApiErrorHandler.navigatorKey,
+        debugShowCheckedModeBanner: false,
 
-      theme: TAppTheme.lightTheme,
-      darkTheme: TAppTheme.darkTheme,
+        theme: TAppTheme.lightTheme,
+        darkTheme: TAppTheme.darkTheme,
 
-      initialRoute: '/',
-      routes: AppRoutes.routes,
-      // home: const SplashScreen(),
+        themeMode: themeController.themeMode.value,
+
+        initialRoute: '/',
+        routes: AppRoutes.routes,
+      ),
     );
   }
 }

@@ -6,6 +6,7 @@ class TBottomNavigationTheme {
 
   // =====================================================
   // LIGHT BOTTOM NAVIGATION
+  // Selected: primary | Unselected: black
   // =====================================================
 
   static const BottomNavigationBarThemeData lightBottomNavigationTheme =
@@ -14,7 +15,7 @@ class TBottomNavigationTheme {
 
         selectedItemColor: TAppColors.primary,
 
-        unselectedItemColor: TAppColors.lightText,
+        unselectedItemColor: Colors.black,
 
         selectedLabelStyle: TextStyle(
           fontFamily: 'Poppins',
@@ -28,9 +29,10 @@ class TBottomNavigationTheme {
           fontWeight: FontWeight.w500,
         ),
 
-        selectedIconTheme: IconThemeData(size: 26),
+        selectedIconTheme: IconThemeData(size: 26, color: TAppColors.primary),
 
-        unselectedIconTheme: IconThemeData(size: 26),
+        unselectedIconTheme: IconThemeData(size: 26, color: Colors.black),
+
         type: BottomNavigationBarType.fixed,
 
         elevation: 0,
@@ -42,6 +44,7 @@ class TBottomNavigationTheme {
 
   // =====================================================
   // DARK BOTTOM NAVIGATION
+  // Selected: primary | Unselected: white
   // =====================================================
 
   static const BottomNavigationBarThemeData darkBottomNavigationTheme =
@@ -50,7 +53,7 @@ class TBottomNavigationTheme {
 
         selectedItemColor: TAppColors.primary,
 
-        unselectedItemColor: TAppColors.darkText,
+        unselectedItemColor: Colors.white,
 
         selectedLabelStyle: TextStyle(
           fontFamily: 'Poppins',
@@ -64,9 +67,9 @@ class TBottomNavigationTheme {
           fontWeight: FontWeight.w500,
         ),
 
-        selectedIconTheme: IconThemeData(size: 26),
+        selectedIconTheme: IconThemeData(size: 26, color: TAppColors.primary),
 
-        unselectedIconTheme: IconThemeData(size: 26),
+        unselectedIconTheme: IconThemeData(size: 26, color: Colors.white),
 
         type: BottomNavigationBarType.fixed,
 

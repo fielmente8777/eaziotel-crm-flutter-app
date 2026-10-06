@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:eazotel/core/api/api_clint_servic.dart';
 import 'package:eazotel/core/constants/api_base_url.dart';
 import 'package:eazotel/core/constants/api_endpoints.dart';
@@ -85,6 +87,134 @@ class WhatsappMessageSand {
       return response;
     } catch (error, stackTrace) {
       debugPrint('WHATSAPP TEMPLATE SEND ERROR: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      rethrow;
+    }
+  }
+
+  // ============================================================
+  // SEND WHATSAPP FLOW MESSAGE (interactive flow)
+  //
+  // Payload:
+  // {
+  //   "phone": "+91...",
+  //   "interactive": {
+  //     "type": "flow",
+  //     "header": {"type": "text", "text": "..."},      (optional)
+  //     "body":   {"text": "..."},
+  //     "footer": {"text": "..."},                      (optional)
+  //     "action": {
+  //       "name": "flow",
+  //       "parameters": {
+  //         "flow_message_version": "3",
+  //         "flow_token": "flow_<timestamp>",
+  //         "flow_id": "<flowId>",
+  //         "flow_cta": "Fill Details"
+  //       }
+  //     }
+  //   }
+  // }
+  // ============================================================
+
+  static Future<dynamic> sendWhatsappFlow({
+    required String hid,
+    required String phone,
+    required String flowId,
+    required String body,
+    String header = '',
+    String footer = '',
+    String ctaText = 'Fill Details',
+  }) async {
+    try {
+      final endpoint = '${WhatsappApiEndpoint.sandmessages}$hid';
+
+      final payload = <String, dynamic>{
+        'phone': phone,
+        'interactive': {
+          'type': 'flow',
+          if (header.trim().isNotEmpty)
+            'header': {'type': 'text', 'text': header.trim()},
+          'body': {'text': body.trim()},
+          if (footer.trim().isNotEmpty) 'footer': {'text': footer.trim()},
+          'action': {
+            'name': 'flow',
+            'parameters': {
+              'flow_message_version': '3',
+              'flow_token': 'flow_${DateTime.now().millisecondsSinceEpoch}',
+              'flow_id': flowId,
+              'flow_cta': ctaText.trim().isEmpty
+                  ? 'Fill Details'
+                  : ctaText.trim(),
+            },
+          },
+        },
+      };
+
+      debugPrint('==================================================');
+      debugPrint('WHATSAPP FLOW SEND');
+      debugPrint('URL: ${BaseUrl.production2}$endpoint');
+      debugPrint('PAYLOAD: $payload');
+
+      final response = await ApiClient.post(
+        endpoint,
+        authenticated: true,
+        baseUrl: BaseUrl.production2,
+        body: payload,
+      );
+
+      debugPrint('STATUS: ${response.statusCode}');
+      debugPrint('RESPONSE: ${response.body}');
+      debugPrint('==================================================');
+
+      return response;
+    } catch (error, stackTrace) {
+      debugPrint('WHATSAPP FLOW SEND ERROR: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      rethrow;
+    }
+  }
+
+  // ============================================================
+  // SEND IMAGE (file multipart, baaki sab text/template jaisa)
+  // ============================================================
+
+  static Future<dynamic> sendWhatsappImage({
+    required String hid,
+    required String phone,
+    required File file,
+    String caption = '',
+  }) async {
+    try {
+      final endpoint = '${WhatsappApiEndpoint.sandmessages}$hid';
+
+      final body = <String, dynamic>{
+        'phone': phone,
+        'text': 'this is atestmeseg',
+        if (caption.trim().isNotEmpty) 'text': caption.trim(),
+      };
+
+      debugPrint('==================================================');
+      debugPrint('WHATSAPP IMAGE SEND');
+      debugPrint('URL: ${BaseUrl.production2}$endpoint');
+      debugPrint('PAYLOAD: $body');
+      debugPrint('FILE: ${file.path}');
+
+      final response = await ApiClient.post(
+        endpoint,
+        authenticated: true,
+        baseUrl: BaseUrl.production2,
+        body: body,
+        fileField: 'file',
+        filePath: file.path,
+      );
+
+      debugPrint('STATUS: ${response.statusCode}');
+      debugPrint('RESPONSE: ${response.body}');
+      debugPrint('==================================================');
+
+      return response;
+    } catch (error, stackTrace) {
+      debugPrint('WHATSAPP IMAGE SEND ERROR: $error');
       debugPrintStack(stackTrace: stackTrace);
       rethrow;
     }

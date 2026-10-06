@@ -2,9 +2,27 @@ import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_cont
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/dashboardwidget/DashboardStatCard.dart';
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_instance/src/extension_instance.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:get/get.dart';
+
+class _StatData {
+  final String value;
+  final String title;
+  final String bottomText;
+  final IconData icon;
+  final Color color;
+  final Color? valueColor;
+  final double? progress;
+
+  const _StatData({
+    required this.value,
+    required this.title,
+    required this.bottomText,
+    required this.icon,
+    required this.color,
+    this.valueColor,
+    this.progress,
+  });
+}
 
 // ============================================================
 // DASHBOARD BODY
@@ -17,90 +35,131 @@ Widget dashboardBody() {
     final docs = dashboardController.analyticsResponse.value?.result?.docs;
 
     final totalLeads = docs?.totalLeads?.isNotEmpty == true
-        ? docs!.totalLeads!.first.count
+        ? (docs!.totalLeads!.first.count ?? 0)
         : 0;
 
     final convertedLeads = docs?.convertedLeads?.isNotEmpty == true
-        ? docs!.convertedLeads!.first.count
+        ? (docs!.convertedLeads!.first.count ?? 0)
         : 0;
 
     final convertedRate = totalLeads == 0
         ? 0.0
-        : ((convertedLeads ?? 0) / totalLeads!.toInt()) * 100;
+        : convertedLeads / totalLeads * 100;
 
     final whatsappConversations = docs?.totalWhatsappConversations ?? 0;
-
     final todayLeads = docs?.todayLeads ?? 0;
 
-    final dashboardCards = [
-      {
-        'value': totalLeads.toString(),
-        'title': 'Total Leads',
-        'bottomText': 'Total leads',
-        'icon': Icons.person_outline,
-        'accentColor': Colors.indigo,
-        'iconColor': Colors.indigo,
-      },
-      {
-        'value': convertedLeads.toString(),
-        'title': 'Converted Leads',
-        'bottomText': 'Converted leads',
-        'icon': Icons.calendar_today_outlined,
-        'accentColor': Colors.teal,
-        'iconColor': Colors.teal,
-      },
+    // Top source (bottom text ke liye)
+    final sources = [...?docs?.sourceBreakdown]
+      ..sort((a, b) => (b.count ?? 0).compareTo(a.count ?? 0));
+    final topSource = sources.isNotEmpty && (sources.first.id ?? '').isNotEmpty
+        ? _titleCase(sources.first.id!)
+        : null;
+
+    final cards = <_StatData>[
+      _StatData(
+        value: '$totalLeads',
+        title: 'Total Leads',
+        bottomText: topSource == null ? 'All time' : 'Top source · $topSource',
+        icon: Icons.people_alt_outlined,
+        color: const Color(0xFF6366F1),
+      ),
+      _StatData(
+        value: '$convertedLeads',
+        title: 'Converted Leads',
+        bottomText: totalLeads == 0
+            ? 'No leads yet'
+            : '$convertedLeads of $totalLeads leads',
+        icon: Icons.verified_outlined,
+        color: const Color(0xFF10B981),
+        progress: totalLeads == 0 ? 0 : convertedLeads / totalLeads,
+      ),
       if (whatsappConversations > 0)
-        {
-          'value': whatsappConversations.toString(),
-          'title': 'WhatsApp Conversations',
-          'bottomText': 'Total conversations',
-          'icon': Icons.chat_outlined,
-          'accentColor': Colors.orange,
-          'iconColor': Colors.orange,
-        },
-      {
-        'value': '${convertedRate.toStringAsFixed(1)}%',
-        'title': 'Conversion Rate',
-        'bottomText': 'Converted / Total',
-        'icon': Icons.percent,
-        'accentColor': Colors.orange,
-        'iconColor': Colors.orange,
-      },
-      {
-        'value': todayLeads.toString(),
-        'title': 'Today Leads',
-        'bottomText': 'Today',
-        'icon': Icons.today_outlined,
-        'accentColor': Colors.purple,
-        'iconColor': Colors.purple,
-        'valueColor': TAppColors.success,
-      },
+        _StatData(
+          value: '$whatsappConversations',
+          title: 'WhatsApp Chats',
+          bottomText: totalLeads == 0
+              ? 'Total conversations'
+              : '${(whatsappConversations / totalLeads).toStringAsFixed(1)} chats per lead',
+          icon: Icons.chat_bubble_outline_rounded,
+          color: const Color(0xFF22C55E),
+        ),
+      _StatData(
+        value: '${convertedRate.toStringAsFixed(1)}%',
+        title: 'Conversion Rate',
+        bottomText: 'Converted ÷ Total',
+        icon: Icons.trending_up_rounded,
+        color: const Color(0xFFF59E0B),
+        progress: convertedRate / 100,
+      ),
+      _StatData(
+        value: '$todayLeads',
+        title: "Today's Leads",
+        bottomText: todayLeads == 0 ? 'None yet today' : 'Since midnight',
+        icon: Icons.bolt_rounded,
+        color: const Color(0xFFA855F7),
+        valueColor: todayLeads > 0 ? TAppColors.success : null,
+      ),
     ];
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: dashboardCards.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 1.25,
-      ),
-      itemBuilder: (context, index) {
-        final card = dashboardCards[index];
+    return LayoutBuilder(
+      builder: (context, box) {
+        final w = box.maxWidth;
 
-        return DashboardStatCard(
-          value: card['value'].toString(),
-          title: card['title'].toString(),
-          bottomText: card['bottomText'].toString(),
-          icon: card['icon'] as IconData,
-          accentColor: card['accentColor'] as Color,
-          iconColor: card['iconColor'] as Color,
-          valueColor: card['valueColor'] as Color?,
+        // Phone 2 · Tablet 3 · Desktop sab ek row me
+        final cols = w >= 1100
+            ? cards.length
+            : w >= 700
+            ? 3
+            : 2;
+        final height = w >= 700 ? 168.0 : 156.0;
+
+        return GridView.builder(
+          padding: EdgeInsets.all(w >= 700 ? 20 : 16),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: cards.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: cols,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            mainAxisExtent: height,
+          ),
+          itemBuilder: (context, index) {
+            final card = cards[index];
+
+            // Halka staggered entry animation
+            return TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: Duration(milliseconds: 400 + index * 90),
+              curve: Curves.easeOutCubic,
+              builder: (_, t, child) => Opacity(
+                opacity: t,
+                child: Transform.translate(
+                  offset: Offset(0, (1 - t) * 16),
+                  child: child,
+                ),
+              ),
+              child: DashboardStatCard(
+                value: card.value,
+                title: card.title,
+                bottomText: card.bottomText,
+                icon: card.icon,
+                accentColor: card.color,
+                iconColor: card.color,
+                valueColor: card.valueColor,
+                progress: card.progress,
+              ),
+            );
+          },
         );
       },
     );
   });
 }
+
+String _titleCase(String s) => s
+    .split(RegExp(r'\s+'))
+    .where((w) => w.isNotEmpty)
+    .map((w) => w[0].toUpperCase() + w.substring(1))
+    .join(' ');

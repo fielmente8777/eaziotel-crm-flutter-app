@@ -23,6 +23,7 @@ class WhatsappConversationMesseg extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lastmesttime = chat.createdAt.toString();
+    final whatsappController = Get.find<WhatsappController>();
     // final whatsapptemplatel =
     final controller = Get.put(
       WhatsappConversationDetailController(
@@ -34,7 +35,10 @@ class WhatsappConversationMesseg extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: WhatsappConversationHeader(chat: chat),
+      appBar: WhatsappConversationHeader(
+        chat: chat,
+        whatsappController: whatsappController,
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -52,7 +56,7 @@ class WhatsappConversationMesseg extends StatelessWidget {
 
             //   child: const Icon(Icons.add),
             // ),
-            WhatsappMessageInput(controller: controller,chatdetail:chat),
+            WhatsappMessageInput(controller: controller, chatdetail: chat , whatsappController: whatsappController,),
           ],
         ),
       ),
