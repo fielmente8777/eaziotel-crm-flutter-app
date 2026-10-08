@@ -3,6 +3,7 @@
  import 'package:eazotel/features/googleAnalytis/models/topPageModel.dart';
 import 'package:eazotel/features/googleAnalytis/screen/widgets/analytics_layout.dart';
 import 'package:eazotel/features/googleAnalytis/screen/widgets/analytics_palette.dart';
+import 'package:eazotel/features/googleAnalytis/screen/widgets/AnalyticsUiKit.dart' show analyticsLoader;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -85,10 +86,7 @@ class _TopPagesCardState extends State<TopPagesCard> {
           ),
           SizedBox(height: l.isPhone ? 14 : 26),
           if (widget.isLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 32),
-              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-            )
+            analyticsLoader()
           else if (pages.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),

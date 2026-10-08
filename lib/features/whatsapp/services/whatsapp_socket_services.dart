@@ -51,7 +51,7 @@ class WhatsappSocketService {
   // INTERNAL CONNECT
   // ============================================================
 
-  static void _connectInternal() {
+  static Future<void> _connectInternal() async {
     if (_isManuallyDisconnected) {
       print('⚠️ Socket manually disconnected. Reconnect cancelled.');
       return;
@@ -74,75 +74,105 @@ class WhatsappSocketService {
     print('URL: $socketUrl');
     print('==================================================');
 
+    WebSocketChannel? channel;
+
     try {
-      final channel = WebSocketChannel.connect(Uri.parse(socketUrl));
+      channel = WebSocketChannel.connect(Uri.parse(socketUrl));
 
-      _channel = channel;
-
-      print('');
-      print('==================================================');
-      print('✅ WHATSAPP SOCKET CONNECTED');
-      print('==================================================');
-
-      _isConnecting = false;
-
-      channel.stream.listen(
-        (message) {
-          _handleMessage(message);
-        },
-
-        onError: (error, stackTrace) {
-          print('');
-          print('==================================================');
-          print('❌ WHATSAPP SOCKET ERROR');
-          print('==================================================');
-          print('ERROR: $error');
-          print('STACK: $stackTrace');
-          print('==================================================');
-
-          _channel = null;
-          _isConnecting = false;
-
-          // Error ke baad automatically reconnect
-          _scheduleReconnect();
-        },
-
-        onDone: () {
-          print('');
-          print('==================================================');
-          print('🔴 WHATSAPP SOCKET CLOSED');
-          print('==================================================');
-          print('==================================================');
-
-          _channel = null;
-          _isConnecting = false;
-
-          // Socket khud close hua
-          // to automatically reconnect
-          _scheduleReconnect();
-        },
-
-        cancelOnError: false,
-      );
-    } catch (e, stackTrace) {
+      // connect() turant return ho jata hai. Asli connection ka result
+      // "ready" me aata hai — internet na ho (Failed host lookup) to error
+      // yahin milta hai. Ise await na karein to wo error unhandled reh
+      // jata hai aur app ko rok deta hai.
+      await channel.ready.timeout(const Duration(seconds: 15));
+    } catch (e) {
       print('');
       print('==================================================');
       print('❌ WHATSAPP SOCKET CONNECTION ERROR');
       print('==================================================');
       print('ERROR: $e');
-      print('STACK: $stackTrace');
       print('==================================================');
 
-      _channel = null;
       _isConnecting = false;
 
+      _closeQuietly(channel);
+
       _scheduleReconnect();
+
+      return;
     }
+
+    _isConnecting = false;
+
+    // Connect hote hote disconnect() call ho gaya
+    if (_isManuallyDisconnected) {
+      _closeQuietly(channel);
+      return;
+    }
+
+    _channel = channel;
+    _reconnectAttempts = 0;
+
+    print('');
+    print('==================================================');
+    print('✅ WHATSAPP SOCKET CONNECTED');
+    print('==================================================');
+
+    final connected = channel;
+
+    connected.stream.listen(
+      (message) {
+        _handleMessage(message);
+      },
+
+      onError: (error, stackTrace) {
+        print('');
+        print('==================================================');
+        print('❌ WHATSAPP SOCKET ERROR');
+        print('==================================================');
+        print('ERROR: $error');
+        print('==================================================');
+
+        // Error ke baad automatically reconnect
+        _onChannelClosed(connected);
+      },
+
+      onDone: () {
+        print('');
+        print('==================================================');
+        print('🔴 WHATSAPP SOCKET CLOSED');
+        print('==================================================');
+
+        // Socket khud close hua to automatically reconnect
+        _onChannelClosed(connected);
+      },
+
+      cancelOnError: false,
+    );
+  }
+
+  // Purane channel ka late error/close naye channel ko na hata de
+  static void _onChannelClosed(WebSocketChannel channel) {
+    if (!identical(_channel, channel)) return;
+
+    _channel = null;
+
+    _scheduleReconnect();
+  }
+
+  static void _closeQuietly(WebSocketChannel? channel) {
+    if (channel == null) return;
+
+    try {
+      channel.sink.close().catchError((_) {});
+    } catch (_) {}
   }
 
   // ============================================================
   // RECONNECT
   // ============================================================
+
+  // Lagatar fail hone par wait badhta hai: 3s, 6s, 12s, 24s, phir 30s
+  static int _reconnectAttempts = 0;
 
   static void _scheduleReconnect() {
     // Agar manually disconnect kiya gaya hai
@@ -157,14 +187,18 @@ class WhatsappSocketService {
       return;
     }
 
+    final seconds = (3 * (1 << _reconnectAttempts.clamp(0, 4))).clamp(3, 30);
+
+    _reconnectAttempts++;
+
     print('');
     print('==================================================');
     print('🔄 SOCKET RECONNECT SCHEDULED');
     print('==================================================');
-    print('Retrying in 3 seconds...');
+    print('Retrying in $seconds seconds...');
     print('==================================================');
 
-    _reconnectTimer = Timer(const Duration(seconds: 3), () {
+    _reconnectTimer = Timer(Duration(seconds: seconds), () {
       _reconnectTimer = null;
 
       if (_isManuallyDisconnected) {
@@ -180,7 +214,6 @@ class WhatsappSocketService {
       _connectInternal();
     });
   }
-
   // ============================================================
   // HANDLE MESSAGE
   // ============================================================

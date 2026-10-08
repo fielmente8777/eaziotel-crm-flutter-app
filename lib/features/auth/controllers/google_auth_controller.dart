@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:eazotel/core/api/api_clint_servic.dart';
-import 'package:eazotel/core/api/google_auth_service.dart';
+import 'package:eazotel/features/auth/services/gooogleAuth/google_auth_service.dart';
 import 'package:eazotel/core/local_storage/token_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
@@ -54,7 +54,7 @@ class GoogleAuthController extends GetxController {
         return false;
       }
 
-      debugPrint('🔑 GOOGLE ID TOKEN RECEIVED');
+      debugPrint('🔑 GOOGLE ID TOKEN RECEIVED$idToken');
 
       // ----------------------------------------------------------
       // 4. Send Google ID Token to Backend

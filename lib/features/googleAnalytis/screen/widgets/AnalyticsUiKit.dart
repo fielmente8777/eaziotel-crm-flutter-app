@@ -5,6 +5,7 @@
 import 'package:eazotel/features/googleAnalytis/screen/widgets/analytics_layout.dart';
 import 'package:eazotel/features/googleAnalytis/screen/widgets/analytics_palette.dart';
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 
 const kSeriesColors = [
   Color(0xFF6366F1), // indigo
@@ -293,10 +294,98 @@ class GlowBar extends StatelessWidget {
   }
 }
 
-Widget analyticsLoader() => const Padding(
-      padding: EdgeInsets.symmetric(vertical: 40),
-      child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+/// Card ke andar loading: shimmer rows (label + value + bar)
+Widget analyticsLoader({int rows = 4}) => AnalyticsShimmer(rows: rows);
+
+/// Shimmer placeholder. [blockHeight] do to rows ki jagah ek bada block
+/// (chart ke liye) banta hai.
+class AnalyticsShimmer extends StatelessWidget {
+  final int rows;
+  final double? blockHeight;
+
+  const AnalyticsShimmer({super.key, this.rows = 4, this.blockHeight});
+
+  static const _labelWidths = [120.0, 90.0, 140.0, 100.0, 110.0];
+
+  Widget _bar({double? width, double height = 10, double radius = 6}) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(radius),
+      ),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AnalyticsPalette.of(context);
+
+    return Shimmer.fromColors(
+      baseColor: c.border,
+      highlightColor: Color.lerp(c.border, Colors.white, c.isDark ? 0.12 : 0.7)!,
+      child: blockHeight != null
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _bar(width: 120, height: 12),
+                const SizedBox(height: 14),
+                _bar(width: double.infinity, height: blockHeight!, radius: 10),
+              ],
+            )
+          : Column(
+              children: [
+                for (int i = 0; i < rows; i++)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: i == rows - 1 ? 0 : 18),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            _bar(width: _labelWidths[i % _labelWidths.length]),
+                            const Spacer(),
+                            _bar(width: 44),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        _bar(width: double.infinity, height: 8),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+    );
+  }
+}
+
+/// Poora card shimmer (metric tabs / line chart ki jagah)
+class AnalyticsShimmerCard extends StatelessWidget {
+  final double height;
+  final AnalyticsLayout layout;
+
+  const AnalyticsShimmerCard({
+    super.key,
+    required this.height,
+    required this.layout,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AnalyticsPalette.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(layout.isPhone ? 14 : 20),
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(layout.radius),
+        border: Border.all(color: c.border),
+      ),
+      child: AnalyticsShimmer(blockHeight: height),
+    );
+  }
+}
 
 Widget analyticsEmpty(AnalyticsPalette c, [String msg = 'No data']) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 32),

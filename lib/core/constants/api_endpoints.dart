@@ -114,4 +114,14 @@ static const analytics_audience = 'google/analytics-audience/';
 
 class CallApiEndpoint {
   static const analytics = '/api/v1/call/analytics';
+
+  // Calls Management list: ?hid=..&page=..&limit=..
+  static const getAll = '/api/v1/call/getall';
+  static const makeCall = '/api/v1/call/auth/make-call';
+
+  // PUT: stage / segregation / guestType / priority badalna
+  static String updateCall(String id) => '/api/v1/call/update-call/$id';
+
+  // GET: call ki recording (audio). sid = call ka "sid"
+  static String recording(String sid) => '/api/v1/call/recording/$sid';
 }

@@ -1,3 +1,4 @@
+import 'package:eazotel/features/Calls%20Management/screen/widgets/make_call_dialog.dart';
 import 'package:eazotel/features/whatsapp/controller/whatsappController.dart'; // apna path
 import 'package:eazotel/features/whatsapp/controller/whatsapp_lead_filter_controller.dart';
 import 'package:eazotel/features/whatsapp/models/whatsappMessegesLeads.dart';
@@ -128,13 +129,15 @@ class WhatsappConversationHeader extends StatelessWidget
           CircleAvatar(
             radius: 19,
             backgroundColor: Colors.white.withOpacity(0.18),
-            child: Text(
-              _firstLetter(chat.name),
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            child: Icon(Icons.person),
+            //
+            // Text(
+            //   _firstLetter(chat.name),
+            //   style: const TextStyle(
+            //     color: Colors.white,
+            //     fontWeight: FontWeight.w600,
+            //   ),
+            // ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -168,7 +171,10 @@ class WhatsappConversationHeader extends StatelessWidget
         ],
       ),
       actions: [
-        IconButton(onPressed: () {}, icon: const Icon(Icons.call)),
+        IconButton(
+          onPressed: () => showMakeCallDialog(context, number: chat.phone),
+          icon: const Icon(Icons.call),
+        ),
         IconButton(
           onPressed: () {
             showWhatsappFilterSheet(

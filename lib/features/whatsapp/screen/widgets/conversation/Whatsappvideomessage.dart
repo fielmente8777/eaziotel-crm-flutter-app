@@ -2,8 +2,9 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:eazotel/features/whatsapp/controller/WhatsappImageController.dart.dart';
- import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappMediaPreview.dart';
+import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappMediaPreview.dart';
 import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappMessageTime.dart';
+import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappUploadProgress.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
@@ -60,23 +61,26 @@ class WhatsappVideoMessage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                WhatsappMediaPreview(
-                  controller: controller,
-                  width: maxWidth,
-                  height: 220,
-                  showPlay: true,
-                  onTap: downloading
-                      ? null
-                      : ready
-                      ? () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  WhatsappVideoPlayerPage(path: path),
-                            ),
-                          );
-                        }
-                      : controller.download,
+                WhatsappUploadOverlay(
+                  messageId: messageId,
+                  child: WhatsappMediaPreview(
+                    controller: controller,
+                    width: maxWidth,
+                    height: 220,
+                    showPlay: true,
+                    onTap: downloading
+                        ? null
+                        : ready
+                        ? () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    WhatsappVideoPlayerPage(path: path),
+                              ),
+                            );
+                          }
+                        : controller.download,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 WhatsappMessageTime(

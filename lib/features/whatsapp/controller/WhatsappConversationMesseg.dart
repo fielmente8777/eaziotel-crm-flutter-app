@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:eazotel/core/api/apiexception/api_exception.dart';
+import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappUploadProgress.dart';
 import 'package:eazotel/features/whatsapp/services/markConversationAsRead.dart';
 import 'package:eazotel/features/whatsapp/services/whatsappMessegSand.dart';
 import 'package:flutter/widgets.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -445,15 +445,74 @@ class WhatsappConversationDetailController extends GetxController {
   }
 
   // ============================================================
-  // GALLERY PICK
-  // (Android Photo Picker use hota hai, isliye storage permission
-  //  manifest me daalne ki zarurat nahi)
+  // GALLERY / CAMERA PICK
+  // (Android Photo Picker aur system camera app use hota hai, isliye
+  //  storage / camera permission manifest me daalne ki zarurat nahi)
   // ============================================================
 
+  // WhatsApp video limit
+  static const int _maxVideoBytes = 16 * 1024 * 1024;
+
+  bool _isVideoPath(String path) {
+    final lower = path.toLowerCase();
+
+    return lower.endsWith('.mp4') ||
+        lower.endsWith('.mov') ||
+        lower.endsWith('.m4v') ||
+        lower.endsWith('.3gp') ||
+        lower.endsWith('.mkv') ||
+        lower.endsWith('.webm') ||
+        lower.endsWith('.avi');
+  }
+
+  /// Preview me jo file hai wo video hai ya image
+  bool get pickedIsVideo {
+    final file = pickedImage.value;
+
+    return file != null && _isVideoPath(file.path);
+  }
+
+  /// Gallery se image ya video chuno
   Future<void> pickImageFromGallery() async {
     try {
+      final XFile? x = await _picker.pickMedia(
+        imageQuality: 80,
+        maxWidth: 1600,
+      );
+
+      if (x == null) return;
+
+      if (_isVideoPath(x.path)) {
+        // WhatsApp sirf MP4 video leta hai, 16 MB tak
+        if (!x.path.toLowerCase().endsWith('.mp4')) {
+          _showMessage('Video', 'Sirf MP4 video bheji ja sakti hai');
+
+          return;
+        }
+
+        if (await File(x.path).length() > _maxVideoBytes) {
+          _showMessage('Video', 'Video 16 MB se chhoti honi chahiye');
+
+          return;
+        }
+      }
+
+      pickedImage.value = File(x.path);
+    } catch (e, st) {
+      debugPrint('PICK MEDIA ERROR: $e');
+      debugPrintStack(stackTrace: st);
+
+      _showMessage('Error', 'File select nahi ho payi');
+    }
+  }
+
+  /// Camera se photo lo — gallery wali image ki tarah preview me aati hai
+  Future<void> pickImageFromCamera() => _pickImage(ImageSource.camera);
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
       final XFile? x = await _picker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         imageQuality: 80,
         maxWidth: 1600,
       );
@@ -465,73 +524,45 @@ class WhatsappConversationDetailController extends GetxController {
       debugPrint('PICK IMAGE ERROR: $e');
       debugPrintStack(stackTrace: st);
 
-      _showMessage('Error', 'Image select nahi ho payi');
-    }
-  }
-
-  // ============================================================
-  // LOCATION (permission + send as Google Maps link)
-  // ============================================================
-
-  Future<void> pickCurrentLocation() async {
-    try {
-      final serviceOn = await Geolocator.isLocationServiceEnabled();
-
-      if (!serviceOn) {
-        _showMessage('Location off', 'Please GPS on karein');
-
-        await Geolocator.openLocationSettings();
-
-        return;
-      }
-
-      var permission = await Geolocator.checkPermission();
-
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-
-      if (permission == LocationPermission.denied) {
-        _showMessage('Permission', 'Location permission chahiye');
-
-        return;
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        _showMessage(
-          'Permission',
-          'Settings se location permission allow karein',
-        );
-
-        await Geolocator.openAppSettings();
-
-        return;
-      }
-
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
+      _showMessage(
+        'Error',
+        source == ImageSource.camera
+            ? 'Camera se photo nahi li ja saki'
+            : 'Image select nahi ho payi',
       );
-
-      final link =
-          'https://maps.google.com/?q=${position.latitude},${position.longitude}';
-
-      await _sendText('📍 My location\n$link');
-    } catch (e) {
-      debugPrint('LOCATION ERROR: $e');
-
-      _showMessage('Error', 'Location nahi mil paayi');
     }
   }
 
+  // ============================================================
+  // LOCATION (send as Google Maps link)
+  // ============================================================
+
+  /// Location picker se chuni hui jagah bhejta hai.
+  /// Chat me ye link wala message map card ban kar dikhta hai.
+  Future<void> sendLocation({
+    required double latitude,
+    required double longitude,
+    String name = '',
+  }) async {
+    final link =
+        'https://maps.google.com/?q=${latitude.toStringAsFixed(6)},'
+        '${longitude.toStringAsFixed(6)}';
+
+    final label = name.trim().isEmpty ? 'Location' : name.trim();
+
+    await _sendText('📍 $label\n$link');
+  }
   // ============================================================
   // IMAGE CACHE HELPERS
   // WhatsappMediaController ye file naam expect karta hai:
   //   <documents>/whatsapp_image_<safeMessageId>.<ext>
   // ============================================================
 
-  Future<File> _cachedImageFile(String messageId, String extension) async {
+  Future<File> _cachedImageFile(
+    String messageId,
+    String extension, {
+    bool isVideo = false,
+  }) async {
     final dir = await getApplicationDocumentsDirectory();
 
     final safeId = (messageId.isEmpty ? 'unknown' : messageId).replaceAll(
@@ -539,12 +570,16 @@ class WhatsappConversationDetailController extends GetxController {
       '_',
     );
 
-    return File('${dir.path}/whatsapp_image_$safeId.$extension');
+    // Video ke liye WhatsappMediaController "whatsapp_video_" dhundhta hai
+    final prefix = isVideo ? 'whatsapp_video' : 'whatsapp_image';
+
+    return File('${dir.path}/${prefix}_$safeId.$extension');
   }
 
   String _imageExtension(String path) {
     final lower = path.toLowerCase();
 
+    if (lower.endsWith('.mp4')) return 'mp4';
     if (lower.endsWith('.png')) return 'png';
     if (lower.endsWith('.webp')) return 'webp';
 
@@ -553,6 +588,8 @@ class WhatsappConversationDetailController extends GetxController {
 
   String _mimeFromExtension(String extension) {
     switch (extension) {
+      case 'mp4':
+        return 'video/mp4';
       case 'png':
         return 'image/png';
       case 'webp':
@@ -585,6 +622,8 @@ class WhatsappConversationDetailController extends GetxController {
 
     final mimeType = _mimeFromExtension(extension);
 
+    final isVideo = extension == 'mp4';
+
     final tempMessageId = 'temp_img_${DateTime.now().microsecondsSinceEpoch}';
 
     isUploading.value = true;
@@ -593,16 +632,22 @@ class WhatsappConversationDetailController extends GetxController {
 
     try {
       // 1) Image ko app storage me copy karo (temp id ke naam se)
-      final target = await _cachedImageFile(tempMessageId, extension);
+      final target = await _cachedImageFile(
+        tempMessageId,
+        extension,
+        isVideo: isVideo,
+      );
 
       cachedFile = await file.copy(target.path);
 
       // 2) Turant chat me dikhao (WhatsApp jaisa)
       whatsappController.addSentMessageToCurrentConversation(
         phone: phone,
-        text: caption.isNotEmpty ? caption : '📷 Photo',
+        text: caption.isNotEmpty
+            ? caption
+            : (isVideo ? '🎥 Video' : '📷 Photo'),
         messageId: tempMessageId,
-        messageType: 'image',
+        messageType: isVideo ? 'video' : 'image',
         caption: caption,
         media: {'id': tempMessageId, 'mimeType': mimeType},
       );
@@ -617,12 +662,19 @@ class WhatsappConversationDetailController extends GetxController {
         }
       });
 
-      // 3) Server par upload
+      // 3) Server par upload (progress image / video ke upar dikhta hai)
+      WhatsappUploadProgress.update(tempMessageId, 0);
+
       final response = await WhatsappMessageSand.sendWhatsappImage(
         hid: whatsappController.hid,
         phone: phone,
         file: file,
         caption: caption,
+        // 100% tabhi jab server ka jawab aa jaye, tab tak 99% par ruko
+        onProgress: (value) => WhatsappUploadProgress.update(
+          tempMessageId,
+          value > 0.99 ? 0.99 : value,
+        ),
       );
 
       debugPrint('IMAGE SEND SUCCESS: ${response.body}');
@@ -640,7 +692,11 @@ class WhatsappConversationDetailController extends GetxController {
 
       if (realMessageId != null && realMessageId.isNotEmpty) {
         try {
-          final realFile = await _cachedImageFile(realMessageId, extension);
+          final realFile = await _cachedImageFile(
+            realMessageId,
+            extension,
+            isVideo: isVideo,
+          );
 
           if (await realFile.exists()) {
             await realFile.delete();
@@ -679,10 +735,14 @@ class WhatsappConversationDetailController extends GetxController {
 
       final message = e is ApiException
           ? e.message
-          : 'Image send nahi hui, dobara try karein';
+          : (isVideo
+                ? 'Video send nahi hui, dobara try karein'
+                : 'Image send nahi hui, dobara try karein');
 
       _showMessage('Error', message);
     } finally {
+      WhatsappUploadProgress.clear(tempMessageId);
+
       isUploading.value = false;
     }
   }
@@ -692,9 +752,14 @@ class WhatsappConversationDetailController extends GetxController {
   // ============================================================
 
   Future<void> sendMessage() async {
-    if (isUploading.value) return;
-
     if (pickedImage.value != null) {
+      // Ek time par ek hi file upload (text is dauran bhi bhej sakte hain)
+      if (isUploading.value) {
+        _showMessage('Please wait', 'Pehli file abhi upload ho rahi hai');
+
+        return;
+      }
+
       await _sendPickedImage();
 
       return;

@@ -1,4 +1,7 @@
+import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
+import 'package:eazotel/features/Calls%20Management/screen/widgets/make_call_dialog.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/lead_notes_api_controller.dart';
+import 'package:eazotel/features/whatsapp/services/whatsapp_chat_opener.dart';
 import 'package:eazotel/features/dashboard_screen/models/leads_responce_modle.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/LeadsScreenWidget/LeadsDeatils/leadsDetailsScreen/leadsDetailsNotesScreen.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/LeadsScreenWidget/LeadsDeatils/leadsDetailsScreen/leadsDetailsOverviewScreen.dart';
@@ -6,7 +9,6 @@ import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screen
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 Container leads_detail_body(
   ThemeData theme,
@@ -42,7 +44,7 @@ Container leads_detail_body(
                 icon: Icons.call,
                 iconColor: TAppColors.success,
                 onTap: () {
-                  _openDialer(phone.toString());
+                  showMakeCallDialog(context, number: phone);
                 },
               ),
             ),
@@ -57,7 +59,14 @@ Container leads_detail_body(
                 iconColor: isDark
                     ? TAppColors.whatsappDark
                     : TAppColors.whatsappLight,
-                onTap: () {},
+                onTap: () {
+                  // App ke andar wali WhatsApp chat (na ho to Add Contact)
+                  WhatsappChatOpener.open(
+                    context,
+                    phone: phone,
+                    hid: Get.find<DashboardController>().selectedHotelId.value,
+                  );
+                },
               ),
             ),
 
@@ -527,29 +536,5 @@ String _getLeadAge(dynamic leads) {
     return '${difference}d ago';
   } catch (_) {
     return 'Unknown';
-  }
-}
-
-Future<void> _openDialer(String phoneNumber) async {
-  final String phone = phoneNumber.trim();
-
-  if (phone.isEmpty) {
-    debugPrint('❌ Phone number is empty');
-    return;
-  }
-
-  final Uri uri = Uri(scheme: 'tel', path: phone);
-
-  try {
-    final bool launched = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
-
-    if (!launched) {
-      debugPrint('❌ Could not open phone dialer');
-    }
-  } catch (e) {
-    debugPrint('❌ Dialer error: $e');
   }
 }

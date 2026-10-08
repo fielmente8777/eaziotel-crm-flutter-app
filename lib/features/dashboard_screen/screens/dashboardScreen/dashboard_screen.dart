@@ -32,7 +32,7 @@ class DashboardScreen extends StatelessWidget {
   final DashboardController dashboardController = Get.put(
     DashboardController(),
   );
-  final analysicController = Get.put(AnalytisController());
+  // final analysicController = Get.put(AnalytisController());
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final LocationController locationController = Get.put(LocationController());
@@ -69,66 +69,66 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _analyticsSection(BuildContext context) {
-    return TResponsiveBuilder(
-      builder: (context, r) {
-        final layout = AnalyticsLayout(r);
+  // Widget _analyticsSection(BuildContext context) {
+  //   return TResponsiveBuilder(
+  //     builder: (context, r) {
+  //       final layout = AnalyticsLayout(r);
 
-        return Obx(() {
-          if (analysicController.isLoading.value) {
-            return const Padding(
-              padding: EdgeInsets.all(30),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
+  //       return Obx(() {
+  //         if (analysicController.isLoading.value) {
+  //           return const Padding(
+  //             padding: EdgeInsets.all(30),
+  //             child: Center(child: CircularProgressIndicator()),
+  //           );
+  //         }
 
-          final points =
-              analysicController.analyticsData.value?.chartData ?? [];
+  //         final points =
+  //             analysicController.analyticsData.value?.chartData ?? [];
 
-          final metric = analysicController.selectedMetric.value;
+  //         final metric = analysicController.selectedMetric.value;
 
-          return Padding(
-            padding: EdgeInsets.symmetric(vertical: r.pagePadding),
-            child: Column(
-              children: [
-                MetricTabs(
-                  points: points,
-                  selected: metric,
-                  onSelected: analysicController.changeMetric,
-                  layout: layout,
-                ),
+  //         return Padding(
+  //           padding: EdgeInsets.symmetric(vertical: r.pagePadding),
+  //           child: Column(
+  //             children: [
+  //               MetricTabs(
+  //                 points: points,
+  //                 selected: metric,
+  //                 onSelected: analysicController.changeMetric,
+  //                 layout: layout,
+  //               ),
 
-                SizedBox(height: r.gap + 4),
+  //               SizedBox(height: r.gap + 4),
 
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: r.pagePadding),
-                  child: AnalyticsLineChart(
-                    // points: points,
-                    // metric: metric,
-                    // rangeLabel:
-                    //     analysicController.selectedRange.value.label,
-                  ),
-                ),
+  //               Padding(
+  //                 padding: EdgeInsets.symmetric(horizontal: r.pagePadding),
+  //                 child: AnalyticsLineChart(
+  //                   // points: points,
+  //                   // metric: metric,
+  //                   // rangeLabel:
+  //                   //     analysicController.selectedRange.value.label,
+  //                 ),
+  //               ),
 
-                SizedBox(height: r.gap + 4),
+  //               SizedBox(height: r.gap + 4),
 
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: r.pagePadding),
-                  child: TrafficChannelsCard(
-                    channels:
-                        analysicController.trafficData.value?.channels ?? [],
-                    layout: layout,
-                  ),
-                ),
-              ],
-            ),
-          );
-        });
-      },
-    );
-  }
+  //               Padding(
+  //                 padding: EdgeInsets.symmetric(horizontal: r.pagePadding),
+  //                 child: TrafficChannelsCard(
+  //                   channels:
+  //                       analysicController.trafficData.value?.channels ?? [],
+  //                   layout: layout,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         );
+  //       });
+  //     },
+  //   );
+  // }
 
-  // ============================================================
+  // // ============================================================
   // DASHBOARD BODY
   // ============================================================
   Widget _dashboardBody(BuildContext context) {

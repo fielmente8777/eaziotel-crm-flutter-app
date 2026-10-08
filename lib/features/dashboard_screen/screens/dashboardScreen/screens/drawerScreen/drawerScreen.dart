@@ -1,3 +1,4 @@
+import 'package:eazotel/features/Calls%20Management/screen/calls_management_screen.dart';
 import 'package:eazotel/features/googleAnalytis/analytis_screen.dart';
 import 'package:eazotel/features/googleAnalytis/binding/analytis_binding.dart';
 import 'package:flutter/material.dart';
@@ -93,6 +94,8 @@ class DashboardDrawer extends StatelessWidget {
               leading: const Icon(Icons.bar_chart),
               title: const Text('Google Analytis'),
               onTap: () {
+                                Navigator.pop(context);
+
                 Get.to(() => const Analytis(), binding: AnalytisBinding());
               },
             ),
@@ -108,13 +111,16 @@ class DashboardDrawer extends StatelessWidget {
             ),
 
             // Settings
-            // ListTile(
-            //   leading: const Icon(Icons.settings_outlined),
-            //   title: const Text('Settings'),
-            //   onTap: () {
-            //     Navigator.pop(context);
-            //   },
-            // ),
+            
+            ListTile(
+              leading: const Icon(Icons.call),
+              title: const Text('Calls Management'),
+              onTap: () {
+                Navigator.pop(context);
+
+                Get.to(() => const CallsManagementScreen());
+              },
+            ),
             const Spacer(),
 
             // // Logout

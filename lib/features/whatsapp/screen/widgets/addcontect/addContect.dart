@@ -4,6 +4,7 @@ import 'package:country_picker/country_picker.dart';
 import 'package:eazotel/features/whatsapp/controller/whatsappController.dart';
 import 'package:eazotel/features/whatsapp/controller/whatsappTemplateController.dart';
 import 'package:eazotel/features/whatsapp/screen/widgets/whatsappbotumwidget/whatsappTemplate.dart';
+import 'package:eazotel/features/whatsapp/screen/widgets/whatsappbotumwidget/whatsappTemplateParams.dart';
 import 'package:eazotel/features/whatsapp/services/whatsappMessegSand.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,7 +12,10 @@ import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:get/get.dart';
 
 class AddContect extends StatefulWidget {
-  const AddContect({super.key});
+  /// Diya ho to phone number pehle se bhara aata hai (jaise Calls page se)
+  final String? initialPhone;
+
+  const AddContect({super.key, this.initialPhone});
 
   @override
   State<AddContect> createState() => _AddContectState();
@@ -58,6 +62,9 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
   /// Chuna hua template object
   dynamic selectedTemplate;
 
+  // Template ke variables jo user ne edit kiye (bhejne ke liye)
+  TemplateSendData? selectedTemplateData;
+
   bool isPickingContact = false;
   bool isSending = false;
 
@@ -71,6 +78,15 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
     phoneFocusNode.addListener(() {
       if (mounted) setState(() {});
     });
+
+    final initialPhone = widget.initialPhone?.trim() ?? '';
+
+    if (initialPhone.isNotEmpty) {
+      final parsed = _parseContactNumber(initialPhone);
+
+      selectedCountry = parsed.country;
+      phoneController.text = parsed.national;
+    }
   }
 
   @override
@@ -156,7 +172,7 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
                   children: [
                     _buildHandle(cs),
                     _buildHeader(theme, cs),
-                    Divider(color: cs.outlineVariant, height: 1),
+                    // Divider(color: cs.outlineVariant, height: 1),
                     const SizedBox(height: 22),
                     _label('Phone Number', cs),
                     const SizedBox(height: 10),
@@ -349,8 +365,8 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
   Widget _buildTemplateField(ThemeData theme, ColorScheme cs) {
     final hasTemplate = selectedTemplate != null;
 
-    String bodyPreview = '';
-    if (hasTemplate) {
+    String bodyPreview = selectedTemplateData?.preview ?? '';
+    if (hasTemplate && bodyPreview.isEmpty) {
       final components = _safeList(() => selectedTemplate.components);
       for (final c in components) {
         if (_safeString(() => c.type).toUpperCase() == 'BODY') {
@@ -430,7 +446,10 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
                   visualDensity: VisualDensity.compact,
                   onPressed: isSending
                       ? null
-                      : () => setState(() => selectedTemplate = null),
+                      : () => setState(() {
+                          selectedTemplate = null;
+                          selectedTemplateData = null;
+                        }),
                   icon: Icon(
                     Icons.close_rounded,
                     color: cs.onSurfaceVariant,
@@ -514,7 +533,22 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
                 controller: controller,
                 sendLabel: 'Select',
                 onSend: (template) async {
-                  if (mounted) setState(() => selectedTemplate = template);
+                  // Variables ({{1}}, {{2}} ...) edit karne ka popup
+                  final data = await showTemplateParamsEditor(
+                    context,
+                    template,
+                    actionLabel: 'Done',
+                  );
+
+                  // Cancel: template popup khula rahe
+                  if (data == null) return false;
+
+                  if (mounted) {
+                    setState(() {
+                      selectedTemplate = template;
+                      selectedTemplateData = data;
+                    });
+                  }
                   return true; // popup band ho jayega
                 },
               ),
@@ -773,46 +807,19 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
       return;
     }
 
-    final dynamic template = selectedTemplate;
+    final data = selectedTemplateData;
 
-    if (template == null) {
+    if (selectedTemplate == null || data == null) {
       _showTopSnack('Template', 'Please choose a template first.');
       return;
     }
 
-    // ---------- params nikalo ----------
-    final components = _safeList(() => template.components);
-
-    dynamic find(String type) {
-      for (final c in components) {
-        final t = _safeString(() => c.type);
-        if (t.toUpperCase() == type) return c;
-      }
-      return null;
-    }
-
-    final body = find('BODY');
-    final header = find('HEADER');
-
-    final bodyText = _safeList(() => body?.example?.bodyText);
-
-    final params = (bodyText.isNotEmpty && bodyText.first is List)
-        ? (bodyText.first as List).map((e) => e.toString()).toList()
-        : <String>[];
-
-    final headerParams = _safeList(
-      () => header?.example?.headerText,
-    ).map((e) => e.toString()).toList();
-
-    String preview = _safeString(() => body?.text);
-    for (int i = 0; i < params.length; i++) {
-      preview = preview.replaceAll('{{${i + 1}}}', params[i]);
-    }
-
-    final name = _safeString(() => template.name);
-    final lang = _safeString(() => template.language);
+    // ---------- params (user ke edit kiye hue) ----------
+    final params = data.params;
+    final headerParams = data.headerParams;
+    final preview = data.preview;
+    final name = data.name;
     final fullPhoneNumber = '+${selectedCountry.phoneCode}$phone';
-
     // ---------- API ----------
     final whatsappController = Get.find<WhatsappController>();
 
@@ -823,7 +830,7 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
         hid: whatsappController.hid,
         phone: fullPhoneNumber,
         templateName: name,
-        templateLanguage: lang.isEmpty ? 'en_US' : lang,
+        templateLanguage: data.language,
         templateParams: params,
         templateParamsHeader: headerParams,
       );

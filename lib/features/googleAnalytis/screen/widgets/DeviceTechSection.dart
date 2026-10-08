@@ -4,6 +4,7 @@ import 'package:eazotel/features/googleAnalytis/models/deviceModle.dart';
 import 'package:eazotel/features/googleAnalytis/screen/widgets/analytics_layout.dart';
 import 'package:eazotel/features/googleAnalytis/screen/widgets/analytics_palette.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:eazotel/features/googleAnalytis/screen/widgets/AnalyticsUiKit.dart' show analyticsLoader;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -345,10 +346,7 @@ class _Shell extends StatelessWidget {
   }
 }
 
-Widget _loader() => const Padding(
-  padding: EdgeInsets.symmetric(vertical: 40),
-  child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-);
+Widget _loader() => analyticsLoader();
 
 Widget _empty(AnalyticsPalette c) => Padding(
   padding: const EdgeInsets.symmetric(vertical: 32),

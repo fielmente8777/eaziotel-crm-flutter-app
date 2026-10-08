@@ -43,6 +43,7 @@ class ApiClient {
     String? baseUrl,
     String? fileField,
     String? filePath,
+    void Function(int sent, int total)? onUploadProgress,
   }) {
     return _request(
       method: 'POST',
@@ -52,6 +53,7 @@ class ApiClient {
       baseUrl: baseUrl,
       fileField: fileField,
       filePath: filePath,
+      onUploadProgress: onUploadProgress,
     );
   }
 
@@ -125,6 +127,7 @@ class ApiClient {
     String? baseUrl,
     String? fileField,
     String? filePath,
+    void Function(int sent, int total)? onUploadProgress,
   }) async {
     try {
       // ----------------------------------------------------------
@@ -181,6 +184,7 @@ class ApiClient {
         body: body,
         fileField: fileField,
         filePath: filePath,
+        onUploadProgress: onUploadProgress,
       );
 
       // ----------------------------------------------------------
@@ -214,6 +218,7 @@ class ApiClient {
             baseUrl: baseUrl,
             fileField: fileField,
             filePath: filePath,
+            onUploadProgress: onUploadProgress,
           );
         }
 
@@ -239,7 +244,14 @@ class ApiClient {
       if (response.statusCode >= 400) {
         print('❌ API ERROR: ${response.statusCode}');
 
-        throw _handleHttpError(response);
+        final error = _handleHttpError(response);
+
+        throw ApiException(
+          message: error.message,
+          statusCode: error.statusCode,
+          type: error.type,
+          responseBody: response.body,
+        );
       }
 
       // ==========================================================
@@ -311,13 +323,18 @@ class ApiClient {
     Map<String, dynamic>? body,
     String? fileField,
     String? filePath,
+    void Function(int sent, int total)? onUploadProgress,
   }) async {
     // ----------------------------------------------------------
     // MULTIPART (file upload) - sirf POST par
     // ----------------------------------------------------------
 
     if (method == 'POST' && fileField != null && filePath != null) {
-      final request = http.MultipartRequest('POST', url);
+      final request = _ProgressMultipartRequest(
+        'POST',
+        url,
+        onProgress: onUploadProgress,
+      );
 
       // Content-Type hatao, multipart ka boundary http package khud lagata hai
       final multipartHeaders = Map<String, String>.from(headers)
@@ -336,7 +353,12 @@ class ApiClient {
       final String mimeType;
       final String extension;
 
-      if (lowerPath.endsWith('.png')) {
+      final isVideo = lowerPath.endsWith('.mp4');
+
+      if (isVideo) {
+        mimeType = 'video/mp4';
+        extension = 'mp4';
+      } else if (lowerPath.endsWith('.png')) {
         mimeType = 'image/png';
         extension = 'png';
       } else if (lowerPath.endsWith('.webp')) {
@@ -352,13 +374,15 @@ class ApiClient {
         await http.MultipartFile.fromPath(
           fileField,
           filePath,
-          filename: 'image_${DateTime.now().millisecondsSinceEpoch}.$extension',
+          filename:
+              '${isVideo ? 'video' : 'image'}_${DateTime.now().millisecondsSinceEpoch}.$extension',
           contentType: http.MediaType.parse(mimeType),
         ),
       );
       final streamed = await _client
           .send(request)
-          .timeout(const Duration(seconds: 60));
+          // Video badi hoti hai, upload ko zyada time do
+          .timeout(Duration(seconds: isVideo ? 300 : 60));
 
       return http.Response.fromStream(streamed);
     }
@@ -705,5 +729,43 @@ class ApiClient {
       print('❌ Refresh Token Error: $e');
       return false;
     }
+  }
+}
+
+// ============================================================
+// MULTIPART REQUEST WITH UPLOAD PROGRESS
+// ============================================================
+
+/// Body bhejte waqt kitne bytes ja chuke hain, wo [onProgress] me batata hai.
+class _ProgressMultipartRequest extends http.MultipartRequest {
+  _ProgressMultipartRequest(super.method, super.url, {this.onProgress});
+
+  final void Function(int sent, int total)? onProgress;
+
+  @override
+  http.ByteStream finalize() {
+    final stream = super.finalize();
+
+    final callback = onProgress;
+
+    if (callback == null) return stream;
+
+    final total = contentLength;
+
+    var sent = 0;
+
+    return http.ByteStream(
+      stream.transform(
+        StreamTransformer<List<int>, List<int>>.fromHandlers(
+          handleData: (data, sink) {
+            sent += data.length;
+
+            callback(sent, total);
+
+            sink.add(data);
+          },
+        ),
+      ),
+    );
   }
 }

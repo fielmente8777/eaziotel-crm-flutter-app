@@ -46,6 +46,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Debug bhi eazotel-upload.jks se sign hota hai, taaki Google Maps
+            // API key ke liye sirf ek hi SHA-1 chahiye.
+            signingConfig = signingConfigs.getByName("release")
+        }
         release {
             signingConfig = signingConfigs.getByName("release")
         }

@@ -2,7 +2,9 @@ import 'package:eazotel/common/widgets/spacing.dart';
 import 'package:eazotel/features/whatsapp/controller/WhatsappConversationMesseg.dart';
 import 'package:eazotel/features/whatsapp/controller/whatsappController.dart';
 import 'package:eazotel/features/whatsapp/models/whatsappMessegesLeads.dart';
+import 'package:eazotel/features/whatsapp/screen/widgets/whatsappbotumwidget/whatsappLocationPicker.dart';
 import 'package:eazotel/features/whatsapp/screen/widgets/whatsappbotumwidget/whatsappTemplate.dart';
+import 'package:eazotel/features/whatsapp/screen/widgets/whatsappbotumwidget/whatsappTemplateParams.dart';
 import 'package:eazotel/features/whatsapp/services/whatsappMessegSand.dart';
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -42,7 +44,7 @@ class WhatsappMessageInput extends StatelessWidget {
         _TapmoateFooter(context, isWithin24Hours),
 
         // ============================================
-        // PICKED IMAGE PREVIEW
+        // PICKED IMAGE / VIDEO PREVIEW
         // ============================================
         Obx(() {
           final file = controller.pickedImage.value;
@@ -55,7 +57,29 @@ class WhatsappMessageInput extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.file(file, height: 140, fit: BoxFit.cover),
+                  child: controller.pickedIsVideo
+                      ? Container(
+                          height: 140,
+                          width: 140,
+                          color: Colors.black87,
+                          alignment: Alignment.center,
+                          child: const Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.play_circle_outline,
+                                color: Colors.white,
+                                size: 44,
+                              ),
+                              SizedBox(height: 6),
+                              Text(
+                                'Video',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        )
+                      : Image.file(file, height: 140, fit: BoxFit.cover),
                 ),
                 Positioned(
                   right: 4,
@@ -117,23 +141,10 @@ class WhatsappMessageInput extends StatelessWidget {
                     color: TAppColors.primary,
                     shape: BoxShape.circle,
                   ),
-                  child: Obx(
-                    () => controller.isUploading.value
-                        ? const Padding(
-                            padding: EdgeInsets.all(13),
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : IconButton(
-                            onPressed: controller.sendMessage,
-                            icon: const Icon(
-                              Icons.send,
-                              color: Colors.white,
-                              size: 21,
-                            ),
-                          ),
+                  // Upload ka progress ab image / video ke upar dikhta hai
+                  child: IconButton(
+                    onPressed: controller.sendMessage,
+                    icon: const Icon(Icons.send, color: Colors.white, size: 21),
                   ),
                 ),
               ],
@@ -149,14 +160,12 @@ class WhatsappMessageInput extends StatelessWidget {
   // ============================================================
 
   Padding _TapmoateFooter(BuildContext context, isWithin24Hours) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
-      child: Container(
+      child: SizedBox(
         height: 44,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(26),
-          border: Border.all(),
-        ),
         child: Row(
           children: [
             // Expanded must be the DIRECT child of Row, Obx goes inside it
@@ -178,10 +187,12 @@ class WhatsappMessageInput extends StatelessWidget {
                     height: 44,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF15151D),
+                      color: isDark ? TAppColors.darkCard : Colors.white,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: const Color(0xFFBFC0C8),
+                        color: isDark
+                            ? TAppColors.darkBorder
+                            : TAppColors.lightBorder,
                         width: 1,
                       ),
                     ),
@@ -190,14 +201,20 @@ class WhatsappMessageInput extends StatelessWidget {
                       child: DropdownButton<String>(
                         value: validValue,
                         isExpanded: true,
-                        dropdownColor: const Color(0xFF15151D),
-                        icon: const Icon(
+                        dropdownColor: isDark
+                            ? TAppColors.darkCard
+                            : Colors.white,
+                        icon: Icon(
                           Icons.keyboard_arrow_down_rounded,
-                          color: Colors.white,
+                          color: isDark
+                              ? TAppColors.darkText
+                              : TAppColors.lightText,
                           size: 24,
                         ),
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: isDark
+                              ? TAppColors.darkText
+                              : TAppColors.lightText,
                           fontSize: 16,
                         ),
                         items: [
@@ -244,19 +261,34 @@ class WhatsappMessageInput extends StatelessWidget {
                   height: 44,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF15151D),
+                    color: isDark ? TAppColors.darkCard : Colors.white,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: const Color(0xFFBFC0C8),
+                      color: isDark
+                          ? TAppColors.darkBorder
+                          : TAppColors.lightBorder,
                       width: 1,
                     ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.message_outlined),
+                      Icon(
+                        Icons.message_outlined,
+                        color: isDark
+                            ? TAppColors.darkText
+                            : TAppColors.lightText,
+                      ),
                       HSpace(width: 12),
-                      Text('Template'),
+                      Text(
+                        'Template',
+                        style: TextStyle(
+                          color: isDark
+                              ? TAppColors.darkText
+                              : TAppColors.lightText,
+                          fontSize: 16,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -379,7 +411,7 @@ class WhatsappMessageInput extends StatelessWidget {
 
         // CAMERA
         IconButton(
-          onPressed: () {},
+          onPressed: controller.pickImageFromCamera,
           icon: Icon(Icons.camera_alt_outlined, color: Colors.grey.shade600),
         ),
       ],
@@ -387,7 +419,7 @@ class WhatsappMessageInput extends StatelessWidget {
   }
 
   // ============================================================
-  // ATTACHMENT BOTTOM SHEET (Gallery / Location)
+  // ATTACHMENT BOTTOM SHEET (Gallery / Camera / Location)
   // ============================================================
 
   void _showAttachmentSheet(BuildContext context) {
@@ -408,15 +440,34 @@ class WhatsappMessageInput extends StatelessWidget {
                   Navigator.pop(sheetContext);
                   controller.pickImageFromGallery();
                 }),
+                _attachItem(Icons.camera_alt, 'Camera', Colors.pink, () {
+                  Navigator.pop(sheetContext);
+                  controller.pickImageFromCamera();
+                }),
                 _attachItem(Icons.location_on, 'Location', Colors.green, () {
                   Navigator.pop(sheetContext);
-                  controller.pickCurrentLocation();
+                  _pickAndSendLocation(context);
                 }),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  // Map par jagah chuno, phir bhejo
+  Future<void> _pickAndSendLocation(BuildContext context) async {
+    final picked = await Navigator.of(context).push<PickedLocation>(
+      MaterialPageRoute(builder: (_) => const WhatsappLocationPicker()),
+    );
+
+    if (picked == null) return;
+
+    await controller.sendLocation(
+      latitude: picked.latitude,
+      longitude: picked.longitude,
+      name: picked.name,
     );
   }
 
@@ -497,7 +548,7 @@ class WhatsappMessageInput extends StatelessWidget {
             height: MediaQuery.of(context).size.height * 0.80,
             padding: const EdgeInsets.all(0),
             child: WhatsappTemplateScreen(
-              onSend: (template) => _sendTemplate(template),
+              onSend: (template) => _sendTemplate(context, template),
             ),
           ),
         );
@@ -509,70 +560,22 @@ class WhatsappMessageInput extends StatelessWidget {
   // TEMPLATE SEND
   // ============================================================
 
-  Future<bool> _sendTemplate(dynamic template) {
-    final components = _safeList(() => template.components);
+  Future<bool> _sendTemplate(BuildContext context, dynamic template) async {
+    // Bhejne se pehle variables ({{1}}, {{2}} ...) edit karne ka popup
+    final data = await showTemplateParamsEditor(context, template);
 
-    dynamic find(String type) {
-      for (final c in components) {
-        final t = _safeString(() => c.type);
-        if (t.toUpperCase() == type) return c;
-      }
-      return null;
-    }
-
-    final body = find('BODY');
-    final header = find('HEADER');
-
-    // React logic: body.example.body_text[0] aur header.example.header_text
-    // Agar model me field name alag ho (jaise body_text), to yahan badlo.
-    final bodyText = _safeList(() => body?.example?.bodyText);
-
-    final params = (bodyText.isNotEmpty && bodyText.first is List)
-        ? (bodyText.first as List).map((e) => e.toString()).toList()
-        : <String>[];
-
-    final headerParams = _safeList(
-      () => header?.example?.headerText,
-    ).map((e) => e.toString()).toList();
-
-    // Preview: {{1}}, {{2}} ko values se replace karo
-    String preview = _safeString(() => body?.text);
-
-    for (int i = 0; i < params.length; i++) {
-      preview = preview.replaceAll('{{${i + 1}}}', params[i]);
-    }
-
-    final name = _safeString(() => template.name);
-    final lang = _safeString(() => template.language);
+    // Cancel: template popup khula rahe
+    if (data == null) return false;
 
     return controller.sendTemplateMessage(
-      templateName: name,
-      templateLanguage: lang.isEmpty ? 'en_US' : lang,
-      templateParams: params,
-      templateParamsHeader: headerParams,
-      preview: preview.isEmpty ? name : preview,
+      templateName: data.name,
+      templateLanguage: data.language,
+      templateParams: data.params,
+      templateParamsHeader: data.headerParams,
+      preview: data.preview,
     );
   }
-
-  List<dynamic> _safeList(dynamic Function() getter) {
-    try {
-      final v = getter();
-      if (v == null) return [];
-      return List<dynamic>.from(v as Iterable);
-    } catch (_) {
-      return [];
-    }
-  }
-
-  String _safeString(dynamic Function() getter) {
-    try {
-      return getter()?.toString() ?? '';
-    } catch (_) {
-      return '';
-    }
-  }
 }
-
 // ============================================================
 // FLOW POPUP DATA
 // ============================================================

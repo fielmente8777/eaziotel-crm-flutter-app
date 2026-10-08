@@ -4,17 +4,20 @@ import 'package:eazotel/features/googleAnalytis/models/traffic_sources_model.dar
 import 'package:eazotel/features/googleAnalytis/screen/widgets/analytics_layout.dart';
 import 'package:eazotel/features/googleAnalytis/screen/widgets/analytics_palette.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:eazotel/features/googleAnalytis/screen/widgets/AnalyticsUiKit.dart' show analyticsLoader;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class TrafficChannelsCard extends StatefulWidget {
   final List<TrafficChannel> channels;
   final AnalyticsLayout layout;
+  final bool isLoading;
 
   const TrafficChannelsCard({
     super.key,
     required this.channels,
     required this.layout,
+    this.isLoading = false,
   });
 
   @override
@@ -57,7 +60,9 @@ class _TrafficChannelsCardState extends State<TrafficChannelsCard> {
       title: 'By channel',
       trailing: '${_fmt.format(total)} sessions',
       layout: widget.layout,
-      child: total == 0
+      child: widget.isLoading
+          ? analyticsLoader()
+          : total == 0
           ? Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Center(

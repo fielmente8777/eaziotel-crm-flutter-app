@@ -183,6 +183,7 @@ class WhatsappMessageSand {
     required String phone,
     required File file,
     String caption = '',
+    void Function(double progress)? onProgress, // 0.0 - 1.0
   }) async {
     try {
       final endpoint = '${WhatsappApiEndpoint.sandmessages}$hid';
@@ -206,6 +207,9 @@ class WhatsappMessageSand {
         body: body,
         fileField: 'file',
         filePath: file.path,
+        onUploadProgress: onProgress == null
+            ? null
+            : (sent, total) => onProgress(total > 0 ? sent / total : 0),
       );
 
       debugPrint('STATUS: ${response.statusCode}');

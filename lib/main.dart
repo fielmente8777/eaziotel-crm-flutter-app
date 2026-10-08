@@ -1,16 +1,40 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:eazotel/core/api/apiexception/api_error_handler.dart';
+import 'package:eazotel/core/local_storage/token_storage.dart';
 import 'package:eazotel/routs/app_routs.dart';
 import 'package:eazotel/utils/theme/theme.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'theme_controller.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
   Get.put(ThemeController());
 
+  _printSavedAccessToken();
+
   runApp(DevicePreview(enabled: true, builder: (context) => const MyApp()));
+}
+
+/// App khulte hi SharedPreferences me saved access token console me dikhata hai.
+/// Sirf debug build me (release me token log nahi hota).
+Future<void> _printSavedAccessToken() async {
+  if (!kDebugMode) return;
+
+  try {
+    final token = await TokenStorage.getAccessToken();
+
+    debugPrint(
+      token == null || token.isEmpty
+          ? '🔑 ACCESS TOKEN: not found (user logged out)'
+          : '🔑 ACCESS TOKEN: $token',
+    );
+  } catch (e) {
+    debugPrint('🔑 ACCESS TOKEN READ ERROR: $e');
+  }
 }
 
 class MyApp extends StatelessWidget {

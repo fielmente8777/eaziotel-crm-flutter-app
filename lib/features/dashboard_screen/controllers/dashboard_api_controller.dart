@@ -1,18 +1,21 @@
 import 'package:eazotel/core/api/apiexception/api_error_handler.dart';
 import 'package:eazotel/core/api/apiexception/api_exception.dart';
 import 'package:eazotel/core/local_storage/token_storage.dart';
+import 'package:eazotel/features/dashboard_screen/controllers/dashboard_call_analytics_mixin.dart';
+import 'package:eazotel/features/dashboard_screen/controllers/dashboard_leads_mixin.dart';
 import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
 import 'package:eazotel/features/dashboard_screen/models/analytics_responce_modle.dart';
-import 'package:eazotel/features/dashboard_screen/models/callAnalytisResponceModel.dart';
-import 'package:eazotel/features/dashboard_screen/models/leads_responce_modle.dart';
 import 'package:eazotel/features/dashboard_screen/services/dashboard_api_service.dart';
-import 'package:eazotel/features/googleAnalytis/controller/analytisController.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class DashboardController extends GetxController {
+// Leads code lives in dashboard_leads_mixin.dart,
+// call analytics code in dashboard_call_analytics_mixin.dart.
+class DashboardController extends GetxController
+    with DashboardLeadsMixin, DashboardCallAnalyticsMixin {
   // API service
+  @override
   final DashboardApiService apiService = DashboardApiService();
 
   // ============================================================
@@ -20,8 +23,6 @@ class DashboardController extends GetxController {
   // ============================================================
 
   final isLoading = false.obs;
-  final isLeadsLoading = false.obs;
-  final isLoadingMoreLeads = false.obs;
   final isAnalyticsLoading = true.obs;
 
   // ============================================================
@@ -35,34 +36,10 @@ class DashboardController extends GetxController {
   // HOTEL
   // ============================================================
 
+  @override
   final selectedHotelId = ''.obs;
 
   static const String hotelIdKey = 'selected_hotel_id';
-
-  // ============================================================
-  // LEADS
-  // ============================================================
-
-  final selectedLead = Rxn<LeadModel>();
-
-  final leadResponse = Rxn<LeadResponseModel>();
-  final leads = <LeadModel>[].obs;
-
-  final leadsPage = 0.obs;
-  final leadsSearch = ''.obs;
-  final hasMoreLeads = true.obs;
-
-  final int leadsLimit = 20;
-
-  // ============================================================
-  // LEAD FILTERS
-  // ============================================================
-
-  final leadsSources = <String>[].obs;
-  final leadsStages = <String>[].obs;
-
-  final leadsStartDate = Rxn<DateTime>();
-  final leadsEndDate = Rxn<DateTime>();
 
   // ============================================================
   // ANALYTICS
@@ -84,54 +61,6 @@ class DashboardController extends GetxController {
     // because selectedHotelId is still empty at this point.)
     getUser();
     getUserDetails();
-  }
-
-  // ============================================================
-  // CALL ANALYTICS
-  // ============================================================
-
-  final callAnalytics = Rxn<CallAnalyticsResponse>();
-  final isCallAnalyticsLoading = false.obs;
-  final callRangeDays = 30.obs; // 1 / 7 / 30 / 90
-
-  Future<void> getCallAnalytics([String? hotelId]) async {
-    final hid = (hotelId ?? selectedHotelId.value).trim();
-
-    // savedHotelId.toString() gives "null" when nothing is saved
-    if (hid.isEmpty || hid == 'null') return;
-
-    // Local day boundaries → UTC (IST midnight = 18:30Z previous day)
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final from = today.subtract(Duration(days: callRangeDays.value - 1));
-    final to = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
-
-    try {
-      isCallAnalyticsLoading.value = true;
-
-      final result = await apiService.getCallAnalytics(
-        hotelId: hid,
-        from: from,
-        to: to,
-      );
-
-      // Hotel changed while this request was running → ignore old result
-      if (hid != selectedHotelId.value) return;
-
-      callAnalytics.value = result;
-    } on ApiException catch (e) {
-      ApiErrorHandler.handle(e);
-    } catch (e) {
-      print('getCallAnalytics error: $e');
-    } finally {
-      isCallAnalyticsLoading.value = false;
-    }
-  }
-
-  Future<void> changeCallRange(int days) async {
-    if (callRangeDays.value == days) return;
-    callRangeDays.value = days;
-    await getCallAnalytics();
   }
 
   // ============================================================
@@ -209,83 +138,6 @@ class DashboardController extends GetxController {
   }
 
   // ============================================================
-  // GET LEADS
-  // ============================================================
-
-  Future<void> getLeads(String hotelId, {bool reset = false}) async {
-    if (hotelId.isEmpty) {
-      return;
-    }
-
-    // Reset pagination
-    if (reset) {
-      leadsPage.value = 0;
-      hasMoreLeads.value = true;
-      leads.clear();
-    }
-
-    // Prevent duplicate calls
-    if (isLeadsLoading.value ||
-        isLoadingMoreLeads.value ||
-        !hasMoreLeads.value) {
-      return;
-    }
-
-    final isFirstPage = leadsPage.value == 0;
-
-    try {
-      if (isFirstPage) {
-        isLeadsLoading.value = true;
-      } else {
-        isLoadingMoreLeads.value = true;
-      }
-
-      final page = leadsPage.value + 1;
-
-      final result = await apiService.getLeads(
-        hotelId: hotelId,
-        page: page,
-        limit: leadsLimit,
-        search: leadsSearch.value,
-        sources: leadsSources,
-        stages: leadsStages,
-        startDate: leadsStartDate.value,
-        endDate: leadsEndDate.value,
-      );
-
-      leadResponse.value = result;
-
-      final loadedLeads = result.result?.docs?.leads ?? [];
-
-      // First page
-      if (isFirstPage) {
-        leads.assignAll(loadedLeads);
-      }
-      // Next pages
-      else {
-        leads.addAll(loadedLeads);
-      }
-
-      // Check more pages
-      if (loadedLeads.length < leadsLimit) {
-        hasMoreLeads.value = false;
-      }
-
-      // Update page
-      if (loadedLeads.isNotEmpty) {
-        leadsPage.value++;
-      }
-    } on ApiException catch (e) {
-      ApiErrorHandler.handle(e);
-    } catch (e) {
-      // Handle unexpected error
-    } finally {
-      isLeadsLoading.value = false;
-      isLoadingMoreLeads.value = false;
-    }
-  }
-
-  // ============================================================
   // GET ANALYTICS
   // ============================================================
 
@@ -307,105 +159,10 @@ class DashboardController extends GetxController {
     }
   }
 
-  // LOAD MORE LEADS
-  // ============================================================
-
-  Future<void> loadMoreLeads() async {
-    if (selectedHotelId.value.isEmpty) {
-      return;
-    }
-
-    if (!hasMoreLeads.value) {
-      return;
-    }
-
-    if (isLeadsLoading.value || isLoadingMoreLeads.value) {
-      return;
-    }
-
-    await getLeads(selectedHotelId.value);
-  }
-
-  // ============================================================
-  // SEARCH LEADS
-  // ============================================================
-
-  Future<void> searchLeads(String value) async {
-    leadsSearch.value = value.trim();
-
-    await getLeads(selectedHotelId.value, reset: true);
-  }
-
-  // ============================================================
-  // CLEAR SEARCH
-  // ============================================================
-
-  Future<void> clearLeadsSearch() async {
-    leadsSearch.value = '';
-
-    await getLeads(selectedHotelId.value, reset: true);
-  }
-
-  // ============================================================
-  // APPLY FILTERS
-  // ============================================================
-
-  Future<void> applyLeadFilters({
-    required List<String> sources,
-    required List<String> stages,
-    DateTime? startDate,
-    DateTime? endDate,
-  }) async {
-    leadsSources.assignAll(sources);
-    leadsStages.assignAll(stages);
-
-    leadsStartDate.value = startDate;
-    leadsEndDate.value = endDate;
-
-    await getLeads(selectedHotelId.value, reset: true);
-  }
-
-  // ============================================================
-  // CLEAR FILTERS
-  // ============================================================
-
-  Future<void> clearLeadFilters() async {
-    leadsSources.clear();
-    leadsStages.clear();
-
-    leadsStartDate.value = null;
-    leadsEndDate.value = null;
-
-    // Search remains active
-    await getLeads(selectedHotelId.value, reset: true);
-  }
-
-  // ============================================================
-  // CHECK FILTER ACTIVE
-  // ============================================================
-
-  bool get hasLeadFilters {
-    return leadsSources.isNotEmpty ||
-        leadsStages.isNotEmpty ||
-        leadsStartDate.value != null ||
-        leadsEndDate.value != null;
-  }
-
-  // ============================================================
-  // REFRESH LEADS
-  // ============================================================
-
-  Future<void> refreshLeads() async {
-    if (selectedHotelId.value.isEmpty) {
-      return;
-    }
-
-    await getLeads(selectedHotelId.value, reset: true);
-  }
-
   // ============================================================
   // CHANGE HOTEL
   // ============================================================
+
   Future<void> changeHotel(String hotelId) async {
     if (hotelId.isEmpty) return;
 
@@ -422,50 +179,32 @@ class DashboardController extends GetxController {
 
     // Leads bhi reset karo
     leadsSearch.value = '';
-    leadsSources.clear();
-    leadsStages.clear();
-    leadsStartDate.value = null;
-    leadsEndDate.value = null;
-    // final AnalytisController analytisService = Get.put(AnalytisController());
-    // await analytisService.loadAll();
+    resetLeadFilters();
 
     await Future.wait([
       getLeads(hotelId, reset: true),
       getAnalytics(hotelId),
       getCallAnalytics(hotelId),
     ]);
-  } // ============================================================
+  }
+
+  // ============================================================
   // CLEAR DASHBOARD DATA
   // ============================================================
 
   void clearDashboardData() {
-    // Leads
-    leads.clear();
-    leadResponse.value = null;
-    selectedLead.value = null;
+    // Leads, pagination, search, filters
+    clearLeadsData();
 
     // Analytics
     analyticsResponse.value = null;
 
     // Call analytics
     callAnalytics.value = null;
+    isCallAnalyticsLoading.value = false;
 
     // Hotel
     selectedHotelId.value = '';
-
-    // Pagination
-    leadsPage.value = 0;
-    hasMoreLeads.value = true;
-
-    // Search
-    leadsSearch.value = '';
-
-    // Filters
-    leadsSources.clear();
-    leadsStages.clear();
-
-    leadsStartDate.value = null;
-    leadsEndDate.value = null;
 
     // User
     userNameResponse.value = null;
@@ -473,9 +212,6 @@ class DashboardController extends GetxController {
 
     // Loading
     isLoading.value = false;
-    isLeadsLoading.value = false;
-    isLoadingMoreLeads.value = false;
     isAnalyticsLoading.value = false;
-    isCallAnalyticsLoading.value = false;
   }
 }

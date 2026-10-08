@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:eazotel/features/whatsapp/controller/WhatsappImageController.dart.dart';
 import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappFullScreenImage.dart';
 import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappMediaPreview.dart';
+import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappUploadProgress.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -62,31 +63,36 @@ class WhatsappImageMessage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 if (path != null && path.isNotEmpty && File(path).existsSync())
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              WhatsappFullScreenImage(imagePath: path),
-                        ),
-                      );
-                    },
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(9),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: maxHeight),
-                        child: Image.file(
-                          File(path),
-                          fit: BoxFit.contain,
-                          filterQuality: FilterQuality.medium,
-                          gaplessPlayback: true,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(
-                              Icons.broken_image_outlined,
-                              color: Colors.grey,
-                              size: 38,
-                            );
-                          },
+                  WhatsappUploadOverlay(
+                    messageId: messageId,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                WhatsappFullScreenImage(imagePath: path),
+                          ),
+                        );
+                      },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(9),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxHeight: maxHeight,
+                          ),
+                          child: Image.file(
+                            File(path),
+                            fit: BoxFit.contain,
+                            filterQuality: FilterQuality.medium,
+                            gaplessPlayback: true,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.broken_image_outlined,
+                                color: Colors.grey,
+                                size: 38,
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),

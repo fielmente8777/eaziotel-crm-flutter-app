@@ -3,6 +3,7 @@
  import 'package:eazotel/features/googleAnalytis/models/Conversions%20model.dart';
 import 'package:eazotel/features/googleAnalytis/screen/widgets/analytics_layout.dart';
 import 'package:eazotel/features/googleAnalytis/screen/widgets/analytics_palette.dart';
+import 'package:eazotel/features/googleAnalytis/screen/widgets/AnalyticsUiKit.dart' show analyticsLoader;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -79,10 +80,7 @@ class _TopEventsCardState extends State<TopEventsCard> {
           _header(c),
           SizedBox(height: l.isPhone ? 14 : 20),
           if (widget.isLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 32),
-              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-            )
+            analyticsLoader()
           else if (events.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),

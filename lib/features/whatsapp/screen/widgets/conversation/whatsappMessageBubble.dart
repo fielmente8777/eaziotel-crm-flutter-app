@@ -26,6 +26,21 @@ class WhatsappMessageBubble extends StatelessWidget {
 
     // TEXT
     if (message.isText) {
+      // Maps link wala text (app se bheji location) map card me dikhao
+      final linkLocation = WhatsappLocationMessage.parseMapsLink(
+        message.body ?? '',
+      );
+
+      if (linkLocation != null) {
+        return WhatsappLocationMessage(
+          location: linkLocation,
+          body: message.body,
+          createdAt: message.createdAt,
+          status: message.status,
+          isIncoming: message.isIncoming,
+        );
+      }
+
       return WhatsappTextBubble(
         body: message.body ?? '',
         createdAt: message.createdAt,

@@ -1,3 +1,4 @@
+import 'package:eazotel/core/api/apiexception/api_exception.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/headerLocationController.dart';
 import 'package:eazotel/features/googleAnalytis/models/Conversions%20model.dart';
 import 'package:eazotel/features/googleAnalytis/models/analytisdata.dart';
@@ -20,6 +21,10 @@ class AnalytisController extends GetxController {
   final isDevicesLoading = false.obs; // device & tech
   final isGeoLoading = false.obs; // countries + cities
   final isAudienceLoading = false.obs; // users by device / country
+
+  // Hotel ka Google Analytics connect nahi hai
+  final isNotConnected = false.obs;
+  static const String notConnectedError = 'GA property not connected';
 
   final hotelId = ''.obs;
 
@@ -83,8 +88,21 @@ class AnalytisController extends GetxController {
         startDate: selectedRange.value.startDate,
         endDate: selectedRange.value.endDate,
       );
+
+      // API replies {"error":"GA property not connected"} with status 200
+      if (json['error'] == notConnectedError) {
+        isNotConnected.value = true;
+        analyticsData.value = null;
+        return;
+      }
+
+      isNotConnected.value = false;
       analyticsData.value = AnalyticsModel.fromJson(json);
     } catch (e) {
+      // ...or the same body with an error status (ApiClient throws)
+      isNotConnected.value =
+          e is ApiException &&
+          (e.responseBody?.contains(notConnectedError) ?? false);
       print('Analytics Error: $e');
     } finally {
       isLoading.value = false;

@@ -6,6 +6,10 @@
 		<true/>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<key>NSCameraUsageDescription</key>
+		<string>The camera is used to take a photo and send it in WhatsApp chat.</string>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Your location is used to show where you are on the map when you send a location in WhatsApp chat.</string>
 		<key>CFBundleDisplayName</key>
 		<string>Eazotel</string>
 		<key>CFBundleExecutable</key>

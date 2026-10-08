@@ -1,5 +1,7 @@
 import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappMessageTime.dart';
+import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class WhatsappLocationMessage extends StatelessWidget {
@@ -17,6 +19,31 @@ class WhatsappLocationMessage extends StatelessWidget {
     required this.status,
     required this.isIncoming,
   });
+
+  static final RegExp _mapsLinkRegex = RegExp(
+    r'https?://(?:www\.)?(?:maps\.google\.com/(?:maps)?\?q=|google\.com/maps/search/\?api=1&query=)'
+    r'(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)',
+  );
+
+  /// Text message jo sirf ek Google Maps link (+ chhota sa label) ho,
+  /// use location map me badalta hai. Aam text ke liye null.
+  static Map<String, dynamic>? parseMapsLink(String body) {
+    final match = _mapsLinkRegex.firstMatch(body);
+    if (match == null) return null;
+
+    final latitude = double.tryParse(match.group(1)!);
+    final longitude = double.tryParse(match.group(2)!);
+    if (latitude == null || longitude == null) return null;
+
+    // Link ke alawa lamba text ho to wo normal message hai
+    final rest = body.replaceFirst(match.group(0)!, '').trim();
+    if (rest.contains('\n') || rest.length > 80) return null;
+
+    var name = rest.replaceFirst('📍', '').trim();
+    if (name == 'Location' || name == 'My location') name = '';
+
+    return {'latitude': latitude, 'longitude': longitude, 'name': name};
+  }
 
   dynamic _field(String key) {
     final l = location;
@@ -69,6 +96,29 @@ class WhatsappLocationMessage extends StatelessWidget {
     }
   }
 
+  // Chhota Google map (touch band — tap poore card ka hai).
+  // liteMode: Android par halka static map, chat list ke liye sahi.
+  Widget _mapPreview(double latitude, double longitude) {
+    final point = LatLng(latitude, longitude);
+
+    return IgnorePointer(
+      child: GoogleMap(
+        key: ValueKey('$latitude,$longitude'),
+        initialCameraPosition: CameraPosition(target: point, zoom: 15),
+        liteModeEnabled: true,
+        markers: {
+          Marker(markerId: const MarkerId('location'), position: point),
+        },
+        myLocationButtonEnabled: false,
+        zoomControlsEnabled: false,
+        mapToolbarEnabled: false,
+        scrollGesturesEnabled: false,
+        zoomGesturesEnabled: false,
+        rotateGesturesEnabled: false,
+        tiltGesturesEnabled: false,
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     final name = _getString('name');
@@ -77,6 +127,19 @@ class WhatsappLocationMessage extends StatelessWidget {
     final longitude = _getDouble('longitude');
 
     final hasCoordinates = latitude != null && longitude != null;
+
+    // Text bubble jaise hi colors (light / dark theme)
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final bubbleColor = isIncoming
+        ? (isDark ? TAppColors.darkCard : Colors.white)
+        : (isDark ? const Color(0xff005c4b) : const Color(0xffd9fdd3));
+
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subTextColor = isDark ? Colors.white70 : Colors.grey.shade600;
+    final linkColor = isDark
+        ? const Color(0xff7fe3cf)
+        : const Color(0xff00a884);
 
     return Align(
       alignment: isIncoming ? Alignment.centerLeft : Alignment.centerRight,
@@ -89,9 +152,7 @@ class WhatsappLocationMessage extends StatelessWidget {
           bottom: 3,
         ),
         decoration: BoxDecoration(
-          color: isIncoming
-              ? Theme.of(context).cardColor
-              : const Color(0xffd9fdd3),
+          color: bubbleColor,
           borderRadius: BorderRadius.circular(10),
         ),
         clipBehavior: Clip.antiAlias,
@@ -102,21 +163,20 @@ class WhatsappLocationMessage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
+              SizedBox(
                 height: 170,
                 width: double.infinity,
-                color: Colors.grey.shade300,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Icon(
-                      Icons.map_outlined,
-                      size: 65,
-                      color: Colors.grey.shade600,
-                    ),
-                    const Icon(Icons.location_pin, size: 42, color: Colors.red),
-                  ],
-                ),
+                child: hasCoordinates
+                    ? _mapPreview(latitude, longitude)
+                    : Container(
+                        color: Colors.grey.shade300,
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.map_outlined,
+                          size: 65,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 10, 10, 8),
@@ -126,9 +186,10 @@ class WhatsappLocationMessage extends StatelessWidget {
                     if (name.isNotEmpty)
                       Text(
                         name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          color: textColor,
                         ),
                       ),
                     if (address.isNotEmpty)
@@ -138,7 +199,7 @@ class WhatsappLocationMessage extends StatelessWidget {
                           address,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey.shade600,
+                            color: subTextColor,
                           ),
                         ),
                       ),
@@ -149,18 +210,18 @@ class WhatsappLocationMessage extends StatelessWidget {
                           '$latitude, $longitude',
                           style: TextStyle(
                             fontSize: 10,
-                            color: Colors.grey.shade500,
+                            color: subTextColor,
                           ),
                         ),
                       ),
                     if (hasCoordinates)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 6),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
                         child: Text(
                           'Tap to open in Maps',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xff00a884),
+                            color: linkColor,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
