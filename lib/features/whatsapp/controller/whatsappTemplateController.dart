@@ -26,8 +26,6 @@ class Whatsapptemplatecontroller extends GetxController {
     super.onInit();
 
     getWhatsappTemplate();
-   
-
   }
 
   // ============================================================

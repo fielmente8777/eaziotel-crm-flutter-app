@@ -130,6 +130,27 @@ class DashboardController extends GetxController
       final result = await apiService.getUserDetails(token);
 
       userNameResponse.value = result;
+
+
+
+  //     userNameResponse.value =UserResponseModel(
+  // status: result.status,
+  // data: [
+  //   // Apne custom user (TESTING)
+  //   UserModel(displayName: '(gangadhar)', phone: '+917497042180'),
+
+  //   // API se aaye user
+  //   ...result.data,
+  // ],   / for call testing 
+
+
+
+
+
+
+
+
+
     } on ApiException catch (e) {
       ApiErrorHandler.handle(e);
     } catch (e) {

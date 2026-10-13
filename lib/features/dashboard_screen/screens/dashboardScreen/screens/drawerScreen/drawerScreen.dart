@@ -1,3 +1,6 @@
+import 'package:eazotel/features/marketing/screen/email_marketing_screen.dart';
+import 'package:eazotel/features/marketing/screen/whatsapp_marketing_screen.dart';
+import 'package:eazotel/features/setting_screen/setting_screen.dart';
 import 'package:eazotel/features/Calls%20Management/screen/calls_management_screen.dart';
 import 'package:eazotel/features/googleAnalytis/analytis_screen.dart';
 import 'package:eazotel/features/googleAnalytis/binding/analytis_binding.dart';
@@ -94,9 +97,58 @@ class DashboardDrawer extends StatelessWidget {
               leading: const Icon(Icons.bar_chart),
               title: const Text('Google Analytis'),
               onTap: () {
-                                Navigator.pop(context);
+                Navigator.pop(context);
 
                 Get.to(() => const Analytis(), binding: AnalytisBinding());
+              },
+            ),
+
+            // Marketing: tap karne par niche do option khulte hain
+            Theme(
+              data: Theme.of(
+                context,
+              ).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                leading: const Icon(Icons.campaign_outlined),
+                title: const Text('Marketing'),
+                childrenPadding: const EdgeInsets.only(left: 16),
+                children: [
+                  ListTile(
+                    leading: const Icon(
+                      Icons.chat_outlined,
+                      color: Color(0xFF25D366),
+                    ),
+                    title: const Text('WhatsApp Marketing'),
+                    onTap: () {
+                      Navigator.pop(context);
+
+                      Get.to(() => const WhatsappMarketingScreen());
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.mail_outline,
+                      color: Color(0xFFEA4335),
+                    ),
+                    title: const Text('Email Marketing'),
+                    onTap: () {
+                      Navigator.pop(context);
+
+                      Get.to(() => const EmailMarketingScreen());
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            // Calls Management
+            ListTile(
+              leading: const Icon(Icons.call),
+              title: const Text('Calls Management'),
+              onTap: () {
+                Navigator.pop(context);
+
+                Get.to(() => const CallsManagementScreen());
               },
             ),
 
@@ -110,15 +162,14 @@ class DashboardDrawer extends StatelessWidget {
               },
             ),
 
-            // Settings
-            
+            // setting
             ListTile(
-              leading: const Icon(Icons.call),
-              title: const Text('Calls Management'),
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
               onTap: () {
                 Navigator.pop(context);
 
-                Get.to(() => const CallsManagementScreen());
+                Get.to(() => const SettingScreen());
               },
             ),
             const Spacer(),

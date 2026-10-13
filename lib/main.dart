@@ -1,6 +1,7 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:eazotel/core/api/apiexception/api_error_handler.dart';
 import 'package:eazotel/core/local_storage/token_storage.dart';
+import 'package:eazotel/core/startup/app_start.dart';
 import 'package:eazotel/routs/app_routs.dart';
 import 'package:eazotel/utils/theme/theme.dart';
 import 'package:flutter/foundation.dart';
@@ -9,14 +10,24 @@ import 'package:get/get.dart';
 
 import 'theme_controller.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   Get.put(ThemeController());
 
   _printSavedAccessToken();
 
-  runApp(DevicePreview(enabled: true, builder: (context) => const MyApp()));
+  // Native splash (logo) tab tak dikhta hai jab tak ye check hota hai.
+  // Phir seedhi Login ya Dashboard khulti hai, beech me koi splash page nahi.
+  final home = await AppStart.firstScreen();
+
+  // Device Preview sirf debug me. Release (Play Store) build me band.
+  runApp(
+    DevicePreview(
+      enabled: kDebugMode,
+      builder: (context) => MyApp(home: home),
+    ),
+  );
 }
 
 /// App khulte hi SharedPreferences me saved access token console me dikhata hai.
@@ -38,7 +49,10 @@ Future<void> _printSavedAccessToken() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.home});
+
+  /// Pehli screen (Login ya Dashboard), AppStart.firstScreen se
+  final Widget home;
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +68,7 @@ class MyApp extends StatelessWidget {
 
         themeMode: themeController.themeMode.value,
 
-        initialRoute: '/',
+        home: home,
         routes: AppRoutes.routes,
       ),
     );
@@ -70,7 +84,7 @@ class MyApp extends StatelessWidget {
 
 //   @override
 //   Widget build(BuildContext context) {
-    
+
 //     return Scaffold(
 //       appBar: AppBar(title: const Text('Welcome')),
 
@@ -92,8 +106,6 @@ class MyApp extends StatelessWidget {
 //     );
 //   }
 // }
-
-
 
 // // ============================================================
 // // SETTINGS SCREEN

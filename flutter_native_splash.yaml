@@ -1,15 +1,27 @@
-flutter_native_splash:
-  color: "#020712"
+# ============================================================
+# NATIVE SPLASH (phone khud dikhata hai, app load hone se pehle)
+#
+#   background : wahi gradient jo purani Flutter splash screen me tha
+#                (#020712 -> #061A4D -> #0D3BA3 -> #041942)
+#   beech me   : sirf Eazotel logo
+#
+# Badalne ke baad ye command chalao:
+#   dart run flutter_native_splash:create
+# ============================================================
 
-  background_image: assets/image/1.png
+flutter_native_splash:
+  # color tab dikhta hai jab tak background image load ho
+  color: "#061A4D"
+  background_image: assets/splash/splash_background.png
+  image: assets/splash/splash_logo.png
 
   android: true
   ios: true
+  web: false
   fullscreen: true
 
-  android_gravity: center
-  ios_content_mode: scaleAspectFit
-
+  # Android 12+ background me sirf ek rang allow karta hai (image nahi),
+  # isliye gradient ka beech wala gehra neela rang
   android_12:
-    color: "#020712"
-    background_image: assets/image/1.png
+    color: "#061A4D"
+    image: assets/splash/splash_logo_android12.png

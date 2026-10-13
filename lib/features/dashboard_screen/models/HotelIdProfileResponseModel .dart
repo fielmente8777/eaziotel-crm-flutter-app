@@ -169,6 +169,8 @@ class ProfileModel {
   final String uid;
   final WatiCredsModel watiCreds;
 
+  final UrlsModel urls;
+
   ProfileModel({
     required this.id,
     required this.currency,
@@ -187,6 +189,7 @@ class ProfileModel {
     required this.template,
     required this.uid,
     required this.watiCreds,
+    required this.urls,
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
@@ -217,6 +220,7 @@ class ProfileModel {
       template: _stringValue(json['template']),
       uid: _stringValue(json['uId']),
       watiCreds: WatiCredsModel.fromJson(json['watiCreds'] ?? {}),
+      urls: UrlsModel.fromJson(json['urls'] ?? {}),
     );
   }
 }
@@ -480,4 +484,31 @@ int _intValue(dynamic value) {
   }
 
   return int.tryParse(value?.toString() ?? '') ?? 0;
+}
+
+
+
+
+class UrlsModel {
+  final List<String> landingPages;
+  final List<String> websites;
+
+  UrlsModel({
+    required this.landingPages,
+    required this.websites,
+  });
+
+  factory UrlsModel.fromJson(Map<String, dynamic> json) {
+    return UrlsModel(
+      landingPages: List<String>.from(json['landingPages'] ?? []),
+      websites: List<String>.from(json['websites'] ?? []),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'landingPages': landingPages,
+      'websites': websites,
+    };
+  }
 }

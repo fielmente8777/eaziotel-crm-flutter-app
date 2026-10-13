@@ -5,11 +5,9 @@ import 'package:eazotel/core/api/apiexception/api_error_handler.dart';
 import 'package:eazotel/core/api/apiexception/api_exception.dart';
 import 'package:eazotel/features/auth/services/gooogleAuth/google_auth_service.dart';
 import 'package:eazotel/core/constants/api_endpoints.dart';
+import 'package:eazotel/core/local_storage/session_cleaner.dart';
 import 'package:eazotel/core/local_storage/token_storage.dart';
 import 'package:eazotel/features/auth/screens/login_screen.dart';
-import 'package:eazotel/features/dashboard_screen/controllers/bottom_nav_controller.dart';
-import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
-import 'package:eazotel/features/dashboard_screen/controllers/headerLocationController.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -66,6 +64,9 @@ class LoginController extends GetxController {
         await TokenStorage.saveTokens(accessToken: token.toString());
 
         debugPrint('TOKEN SAVED SUCCESSFULLY');
+
+        // Pichhle user ke bache hue controller hatao -> dashboard naya data laye
+        SessionCleaner.deleteControllers();
 
         // Password manager ko bolo "Save password?" poochhe.
         // Ye field khali karne se PEHLE hona chahiye.
@@ -144,6 +145,8 @@ class LoginController extends GetxController {
 
           debugPrint('💾 BACKEND TOKEN SAVED');
 
+          SessionCleaner.deleteControllers();
+
           emailController.clear();
           passwordController.clear();
 
@@ -175,27 +178,9 @@ class LoginController extends GetxController {
     try {
       debugPrint('🚪 LOGGING OUT');
 
-      // Dashboard
-      if (Get.isRegistered<DashboardController>()) {
-        final dashboard = Get.find<DashboardController>();
-
-        dashboard.clearDashboardData();
-
-        Get.delete<DashboardController>(force: true);
-      }
-
-      // Location
-      if (Get.isRegistered<LocationController>()) {
-        Get.delete<LocationController>(force: true);
-      }
-
-      // Bottom navigation
-      if (Get.isRegistered<BottomNavController>()) {
-        Get.delete<BottomNavController>(force: true);
-      }
-
-      // Clear token
-      await TokenStorage.clearTokens();
+      // Saare controller, SharedPreferences (token, hotel id ...) aur
+      // download hui recordings saaf karo
+      await SessionCleaner.clearAll();
 
       // Google logout
       try {
@@ -208,7 +193,11 @@ class LoginController extends GetxController {
         return;
       }
 
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      // '/login' naam ka route app me nahi hai, isliye seedha screen kholo
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
     } catch (e) {
       debugPrint('LOGOUT ERROR: $e');
 

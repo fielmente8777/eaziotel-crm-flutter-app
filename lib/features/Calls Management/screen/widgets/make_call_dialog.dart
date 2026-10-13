@@ -210,15 +210,9 @@ class _MakeCallDialogState extends State<_MakeCallDialog> {
 
             // ---------- From (team ka user) ----------
             Obx(() {
-              final users = <UserModel>[
-                // Apne custom user
-                UserModel(displayName: '(gangadhar)', phone: '+917497042180'),
-                // // UserModel(displayName: 'Test User 2', phone: '+919876543210'),
+              final users = _dashboard.userNameResponse.value?.data ?? [];
 
-                // // API se aaye user
-                // ...(_dashboard.userNameResponse.value?.data ?? <UserModel>[]),
-              ];
-
+              
               // final users = _testUsers; // TESTING
               return DropdownButtonFormField<UserModel>(
                 initialValue: users.contains(_from) ? _from : null,

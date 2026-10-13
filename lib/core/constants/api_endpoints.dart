@@ -3,6 +3,8 @@ class AuthApiEndpoint {
 
   static const String login = '/eazotel/ceateuser';
 
+  static const String changePassword = '/eazotel/edit/password';
+
   static const String signup = '/eazotel/createwebsite';
 
   static const String sendOtp = '/auth/send-otp';
@@ -99,6 +101,16 @@ class WhatsappApiEndpoint {
   static const String deletWhatsappLeads =
       '/api/v1/whatsapp/conversations?hid=';
   static const String flow = '/api/v1/whatsapp/flow/get?hid=';
+
+  // Settings > WhatsApp tab
+  static const String accountDetails =
+      '/api/v1/whatsapp/account/connection/details';
+  static const String businessProfile = '/api/v1/whatsapp/profile';
+  static const String updateBusinessProfile = '/api/v1/whatsapp/profile/update';
+  static const String chatbotFlow = '/api/v1/whatsapp/flow';
+  static const String billing = '/api/v1/whatsapp/billing';
+  static const String billingTransactions =
+      '/api/v1/whatsapp/billing/transactions';
 }
 
 class AnalytisApiEndpoint {
@@ -108,9 +120,8 @@ class AnalytisApiEndpoint {
   static const analytics_conversions = 'google/analytics-conversions/';
   static const analytics_devices = 'google/analytics-devices/';
   static const analytics_geo = 'google/analytics-geo/';
-static const analytics_audience = 'google/analytics-audience/';
+  static const analytics_audience = 'google/analytics-audience/';
 }
-
 
 class CallApiEndpoint {
   static const analytics = '/api/v1/call/analytics';
@@ -119,9 +130,83 @@ class CallApiEndpoint {
   static const getAll = '/api/v1/call/getall';
   static const makeCall = '/api/v1/call/auth/make-call';
 
+  // POST: Exotel credentials save (Settings > Integration > Exotel Connect)
+  static const connectExotel = '/api/v1/call/auth/connect';
+
   // PUT: stage / segregation / guestType / priority badalna
   static String updateCall(String id) => '/api/v1/call/update-call/$id';
 
   // GET: call ki recording (audio). sid = call ka "sid"
   static String recording(String sid) => '/api/v1/call/recording/$sid';
+}
+
+class SubscriptionApiEndpoint {
+  SubscriptionApiEndpoint._();
+
+  /// GET /api/v1/subscription/my   (baseUrl: BaseUrl.production2)
+  static const String mySubscription = '/api/v1/subscription/my';
+}
+
+/// Settings > Team Management (base: BaseUrl.production)
+class TeamApiEndpoint {
+  TeamApiEndpoint._();
+
+  static String createUser(String token) => '/user/create/$token';
+
+  static String editUser(String token) => '/user/edit/$token';
+
+  static String deleteUser(String emailId) => '/user/delete/$emailId';
+}
+
+/// Settings > Notification tab (base: BaseUrl.production2)
+class SettingApiEndpoint {
+  SettingApiEndpoint._();
+
+  static const String getConfig = '/api/v1/setting/get-config';
+  static const String updateConfig = '/api/v1/setting/update-config';
+}
+
+/// Settings > Integration tab (base: BaseUrl.production)
+class IntegrationApiEndpoint {
+  IntegrationApiEndpoint._();
+
+  /// GET `/google/status/<hid>`  -> {"connected": true, "email": "..."}
+  static String googleStatus(String hid) => '/google/status/$hid';
+
+  /// GET  /google/gsc-settings/<propertyId>  (base: production)
+  static String gscSettings(String propertyId) =>
+      '/google/gsc-settings/$propertyId';
+
+  /// POST /google/save-gsc-settings  (base: production)
+  static const String saveGscSettings = '/google/save-gsc-settings';
+
+  /// GET  /api/v1/google-ads/auth/google/start?ndid=  (base: production2)
+  /// -> {"googleAuthUrl": "https://accounts.google.com/..."}
+  static const String googleAdsStart = '/api/v1/google-ads/auth/google/start';
+}
+
+/// Settings > Eazbot tab (base: BaseUrl.production)
+class EazbotApiEndpoint {
+  EazbotApiEndpoint._();
+
+  /// POST ?hid=  -> bot banata ya update karta hai
+  static const String create = '/leadeazbot/create';
+}
+
+/// Marketing (WhatsApp + Email). Base: BaseUrl.production2
+class MarketingApiEndpoint {
+  MarketingApiEndpoint._();
+
+  /// GET ?hid=  -> result.docs.campaigns
+  static const String whatsappCampaigns = '/api/v1/whatsapp/campaign';
+
+  /// GET ?page=&limit=  -> result.doc {campaign, recipients, pagination}
+  static String whatsappCampaignDetail(String id) =>
+      '/api/v1/whatsapp/campaign/broadcast/$id';
+
+  /// GET ?hid=&page=&limit=  -> result.doc (list) + result.pagination
+  static const String emailRecipients = '/api/v1/email-marketing/recipients';
+
+  /// GET ?hid=&page=&limit=  -> result.doc (list) + result.pagination
+  static const String emailCampaigns = '/api/v1/email-marketing/campaigns';
 }

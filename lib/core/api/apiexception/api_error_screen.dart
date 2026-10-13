@@ -1,7 +1,7 @@
 import 'package:eazotel/features/dashboard_screen/controllers/bottom_nav_controller.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/headerLocationController.dart';
-import 'package:eazotel/features/splash_screen/screens/splash_screen.dart';
+import 'package:eazotel/core/startup/app_start.dart';
 import 'package:flutter/material.dart';
 import 'package:eazotel/core/api/apiexception/api_error_handler.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -56,10 +56,7 @@ class ExceptionScreen extends StatelessWidget {
                       Get.delete<BottomNavController>(force: true);
                       ApiErrorHandler.reset();
 
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (_) => const SplashScreen()),
-                        (route) => false,
-                      );
+                      AppStart.restart(context);
                     },
                     child: const Text('Try Again'),
                   ),

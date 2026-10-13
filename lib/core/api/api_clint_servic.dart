@@ -33,7 +33,8 @@ class ApiClient {
   // ============================================================
   // POST
   // (fileField + filePath dene par multipart/form-data bhejta hai,
-  //  body ke fields form fields ban jaate hain)
+  //  body ke fields form fields ban jaate hain.
+  //  formData: true dene par bina file ke bhi form-data jata hai.)
   // ============================================================
 
   static Future<http.Response> post(
@@ -43,6 +44,7 @@ class ApiClient {
     String? baseUrl,
     String? fileField,
     String? filePath,
+    bool formData = false,
     void Function(int sent, int total)? onUploadProgress,
   }) {
     return _request(
@@ -53,6 +55,7 @@ class ApiClient {
       baseUrl: baseUrl,
       fileField: fileField,
       filePath: filePath,
+      formData: formData,
       onUploadProgress: onUploadProgress,
     );
   }
@@ -127,6 +130,7 @@ class ApiClient {
     String? baseUrl,
     String? fileField,
     String? filePath,
+    bool formData = false,
     void Function(int sent, int total)? onUploadProgress,
   }) async {
     try {
@@ -184,6 +188,7 @@ class ApiClient {
         body: body,
         fileField: fileField,
         filePath: filePath,
+        formData: formData,
         onUploadProgress: onUploadProgress,
       );
 
@@ -218,6 +223,7 @@ class ApiClient {
             baseUrl: baseUrl,
             fileField: fileField,
             filePath: filePath,
+            formData: formData,
             onUploadProgress: onUploadProgress,
           );
         }
@@ -323,6 +329,7 @@ class ApiClient {
     Map<String, dynamic>? body,
     String? fileField,
     String? filePath,
+    bool formData = false,
     void Function(int sent, int total)? onUploadProgress,
   }) async {
     // ----------------------------------------------------------
@@ -383,6 +390,32 @@ class ApiClient {
           .send(request)
           // Video badi hoti hai, upload ko zyada time do
           .timeout(Duration(seconds: isVideo ? 300 : 60));
+
+      return http.Response.fromStream(streamed);
+    }
+
+    // ----------------------------------------------------------
+    // FORM DATA (bina file ke) - sirf POST par
+    // ----------------------------------------------------------
+
+    if (method == 'POST' && formData) {
+      final request = http.MultipartRequest('POST', url);
+
+      // Content-Type hatao, form ka boundary http package khud lagata hai
+      final formHeaders = Map<String, String>.from(headers)
+        ..removeWhere((key, _) => key.toLowerCase() == 'content-type');
+
+      request.headers.addAll(formHeaders);
+
+      body?.forEach((key, value) {
+        if (value != null) {
+          request.fields[key] = value.toString();
+        }
+      });
+
+      final streamed = await _client
+          .send(request)
+          .timeout(const Duration(seconds: 30));
 
       return http.Response.fromStream(streamed);
     }

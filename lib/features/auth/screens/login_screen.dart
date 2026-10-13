@@ -108,10 +108,9 @@ class LoginScreen extends StatelessWidget {
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   autocorrect: false,
-                  autofillHints: const [
-                    AutofillHints.username,
-                    AutofillHints.email,
-                  ],
+                  // Sirf "username": "email" hint bhi dene par password manager
+                  // is field ko login ka username nahi, ek aam email field maanta hai
+                  autofillHints: const [AutofillHints.username],
                   decoration: const InputDecoration(
                     hintText: 'your@email.com',
                     suffixIcon: Icon(Icons.mail_outline),

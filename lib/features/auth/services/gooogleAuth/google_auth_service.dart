@@ -9,11 +9,11 @@ class GoogleAuthService {
       '737012285391-mvm0kikmmfqm8vu8hr3lmcc39lb8blj2.apps.googleusercontent.com'; // work on abijeet acoutn
 
   // static const String webClientId =
-  //     '579254279555-me5qc2denm58ttngj6qipo4rdqb18vrh.apps.googleusercontent.com'; it will work in suport acotu
+  //     '579254279555-me5qc2denm58ttngj6qipo4rdqb18vrh.apps.googleusercontent.com'; //it will work in suport acotu
 
   static bool _initialized = false;
 
-  // ============================================================
+  // =============================================================
   // INITIALIZE
   // ============================================================
 
