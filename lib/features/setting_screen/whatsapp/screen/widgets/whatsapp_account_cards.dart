@@ -117,6 +117,11 @@ class WhatsappPhoneCard extends StatelessWidget {
 
         final quality = info.qualityRating;
 
+        // Web jaisa: message tabhi jaate hain jab Cloud API + LIVE ho
+        final isCloudApi = info.platform.toUpperCase() == 'CLOUD_API';
+        final isLive = info.accountMode.toUpperCase() == 'LIVE';
+        final connected = isCloudApi && isLive;
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -146,6 +151,10 @@ class WhatsappPhoneCard extends StatelessWidget {
                     _Pill(label: quality, color: _qualityColor(quality)),
                   ],
                 ),
+                _Pill(
+                  label: connected ? 'Message Enabled' : 'Messaging Disabled',
+                  color: connected ? TAppColors.info : p.subText,
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -168,22 +177,29 @@ class WhatsappPhoneCard extends StatelessWidget {
               children: [
                 _Box(
                   label: 'Cloud API',
-                  // Ye card tabhi dikhta hai jab WhatsApp juda ho
-                  value: 'Connected',
-                  color: TAppColors.success,
+                  value: connected ? 'Connected' : 'Not Connected',
+                  color: connected ? TAppColors.success : TAppColors.error,
                 ),
                 _Box(
                   label: 'Platform',
-                  value: info.platform,
-                  color: TAppColors.success,
+                  value: info.platform.isEmpty ? '—' : info.platform,
+                  color: isCloudApi ? TAppColors.success : p.text,
                 ),
                 _Box(
                   label: 'Account Mode',
-                  value: info.accountMode,
-                  color: TAppColors.success,
+                  value: info.accountMode.isEmpty ? '—' : info.accountMode,
+                  color: isLive ? TAppColors.success : p.subText,
                 ),
               ],
             ),
+            if (!isCloudApi)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'Requires Cloud API to send messages',
+                  style: TextStyle(color: TAppColors.error, fontSize: 11.5),
+                ),
+              ),
           ],
         );
       }),

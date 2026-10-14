@@ -119,8 +119,12 @@ class WhatsappAiCard extends StatelessWidget {
                 ),
                 foregroundColor: const WidgetStatePropertyAll(Colors.white),
               ),
-              onPressed: controller.saveAiConfiguration,
-              child: const Text('Save Configuration'),
+              onPressed: controller.isSavingAi.value
+                  ? null
+                  : controller.saveAiConfiguration,
+              child: Text(
+                controller.isSavingAi.value ? 'Saving…' : 'Save Configuration',
+              ),
             ),
           ],
         );

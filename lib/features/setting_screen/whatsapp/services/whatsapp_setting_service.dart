@@ -10,6 +10,8 @@
 //   getFlowIds          : GET /api/v1/whatsapp/flow
 //   getBilling          : GET /api/v1/whatsapp/billing
 //   getTransactions     : GET /api/v1/whatsapp/billing/transactions
+//   updateAutoMessageConfig : PUT /api/v1/whatsapp/account/<id>/automessageConfig/update
+//   deleteTemplate      : DELETE /api/v1/whatsapp/message/template/delete
 //
 // Templates ki API pehle se WhatsappTemaplate.getWhatsappTemplates me hai.
 // ============================================================
@@ -21,6 +23,8 @@ import 'package:eazotel/core/constants/api_base_url.dart';
 import 'package:eazotel/core/constants/api_endpoints.dart';
 import 'package:eazotel/features/whatsapp/models/FlowResponseModel.dart';
 import 'package:flutter/foundation.dart';
+
+import '../models/whatsapp_action_response.dart';
 
 class WhatsappSettingService {
   WhatsappSettingService._();
@@ -180,14 +184,16 @@ class WhatsappSettingService {
     required String email,
     required String address,
     required List<String> websites,
+
+    /// Nayi profile photo (web jaisa "file" field me jaati hai)
+    String? photoPath,
   }) async {
     try {
-      final response = await ApiClient.post(
+      final response = await ApiClient.multipart(
         '${WhatsappApiEndpoint.updateBusinessProfile}?hid=$hid',
         authenticated: true,
         baseUrl: BaseUrl.production2,
-        formData: true,
-        body: {
+        fields: {
           'about': about,
           'vertical': vertical,
           'email': email,
@@ -195,6 +201,9 @@ class WhatsappSettingService {
           // Web bhi list ko text bana kar bhejta hai: ["https://a.com/","https://b.com/"]
           'websites': jsonEncode(websites),
         },
+        files: [
+          if (photoPath != null) ApiUploadFile(field: 'file', path: photoPath),
+        ],
       );
 
       debugPrint('');
@@ -396,6 +405,88 @@ class WhatsappSettingService {
       return FlowResponseModel.fromJson(json);
     } catch (e, stackTrace) {
       debugPrint('❌ WHATSAPP FLOW LIST ERROR: $e');
+      debugPrint('STACK: $stackTrace');
+      rethrow;
+    }
+  }
+
+  // ============================================================
+  // AUTO MESSAGE / AI SAVE
+  // PUT /api/v1/whatsapp/account/<phoneNumberId>/automessageConfig/update
+  //   auto message: { phoneNumberId, autoMessage: {...}, notification: {enable} }
+  //   AI          : { phoneNumberId, ai: {enabled, duration: {from, to}, timezone} }
+  // ============================================================
+
+  static Future<WhatsappActionResponse> updateAutoMessageConfig({
+    required String phoneNumberId,
+    required Map<String, dynamic> body,
+  }) async {
+    final endpoint = WhatsappApiEndpoint.autoMessageConfig(phoneNumberId);
+
+    try {
+      final response = await ApiClient.put(
+        endpoint,
+        body: {'phoneNumberId': phoneNumberId, ...body},
+        authenticated: true,
+        baseUrl: BaseUrl.production2,
+      );
+
+      debugPrint('');
+      debugPrint('==================================================');
+      debugPrint('⚙️ WHATSAPP AUTO MESSAGE CONFIG API');
+      debugPrint('==================================================');
+      debugPrint('URL: ${BaseUrl.production2}$endpoint');
+      debugPrint('STATUS: ${response.statusCode}');
+      debugPrint('BODY: ${response.body}');
+      debugPrint('==================================================');
+
+      final Map<String, dynamic> json =
+          jsonDecode(response.body) as Map<String, dynamic>;
+
+      return WhatsappActionResponse.fromJson(json);
+    } catch (e, stackTrace) {
+      debugPrint('❌ WHATSAPP AUTO MESSAGE CONFIG ERROR: $e');
+      debugPrint('STACK: $stackTrace');
+      rethrow;
+    }
+  }
+
+  // ============================================================
+  // TEMPLATE DELETE
+  // DELETE /api/v1/whatsapp/message/template/delete
+  // body: { templateName, language }
+  // ============================================================
+
+  static Future<WhatsappActionResponse> deleteTemplate({
+    required String templateName,
+    required String language,
+  }) async {
+    const endpoint = WhatsappApiEndpoint.deleteTemplate;
+
+    try {
+      final response = await ApiClient.delete(
+        endpoint,
+        body: {'templateName': templateName, 'language': language},
+        authenticated: true,
+        baseUrl: BaseUrl.production2,
+      );
+
+      debugPrint('');
+      debugPrint('==================================================');
+      debugPrint('🗑️ WHATSAPP TEMPLATE DELETE API');
+      debugPrint('==================================================');
+      debugPrint('URL: ${BaseUrl.production2}$endpoint');
+      debugPrint('STATUS: ${response.statusCode}');
+      debugPrint('BODY: ${response.body}');
+      debugPrint('==================================================');
+
+      final Map<String, dynamic> json = response.body.trim().isEmpty
+          ? {'success': true}
+          : jsonDecode(response.body) as Map<String, dynamic>;
+
+      return WhatsappActionResponse.fromJson(json);
+    } catch (e, stackTrace) {
+      debugPrint('❌ WHATSAPP TEMPLATE DELETE ERROR: $e');
       debugPrint('STACK: $stackTrace');
       rethrow;
     }

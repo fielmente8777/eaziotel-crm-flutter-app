@@ -3,7 +3,7 @@ import 'package:eazotel/features/whatsapp/models/FlowResponseModel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
- import '../services/whatsapp_setting_service.dart';
+import '../services/whatsapp_setting_service.dart';
 
 enum FlowTab {
   flowName('Flow Name'),

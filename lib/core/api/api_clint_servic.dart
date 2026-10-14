@@ -118,6 +118,30 @@ class ApiClient {
   }
 
   // ============================================================
+  // MULTIPART (form-data + kitni bhi files, POST ya PUT)
+  // Jaise Quick Reply: title, text + 3 photo + 1 PDF
+  // (ek hi field naam "file" se kai files bhej sakte ho)
+  // ============================================================
+
+  static Future<http.Response> multipart(
+    String endpoint, {
+    String method = 'POST',
+    Map<String, dynamic>? fields,
+    List<ApiUploadFile> files = const [],
+    bool authenticated = true,
+    String? baseUrl,
+  }) {
+    return _request(
+      method: method,
+      endpoint: endpoint,
+      body: fields,
+      authenticated: authenticated,
+      baseUrl: baseUrl,
+      files: files,
+    );
+  }
+
+  // ============================================================
   // MAIN REQUEST
   // ============================================================
 
@@ -132,6 +156,7 @@ class ApiClient {
     String? filePath,
     bool formData = false,
     void Function(int sent, int total)? onUploadProgress,
+    List<ApiUploadFile>? files,
   }) async {
     try {
       // ----------------------------------------------------------
@@ -190,6 +215,7 @@ class ApiClient {
         filePath: filePath,
         formData: formData,
         onUploadProgress: onUploadProgress,
+        files: files,
       );
 
       // ----------------------------------------------------------
@@ -225,6 +251,7 @@ class ApiClient {
             filePath: filePath,
             formData: formData,
             onUploadProgress: onUploadProgress,
+            files: files,
           );
         }
 
@@ -322,6 +349,48 @@ class ApiClient {
   // SEND REQUEST
   // ============================================================
 
+  // ============================================================
+  // MULTIPART SEND (multipart() se aata hai)
+  // ============================================================
+
+  static Future<http.Response> _sendMultipart({
+    required String method,
+    required Uri url,
+    required Map<String, String> headers,
+    required List<ApiUploadFile> files,
+    Map<String, dynamic>? fields,
+  }) async {
+    final request = http.MultipartRequest(method, url);
+
+    // Content-Type hatao, boundary http package khud lagata hai
+    request.headers.addAll(
+      Map<String, String>.from(headers)
+        ..removeWhere((key, _) => key.toLowerCase() == 'content-type'),
+    );
+
+    fields?.forEach((key, value) {
+      if (value != null) request.fields[key] = value.toString();
+    });
+
+    for (final file in files) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          file.field,
+          file.path,
+          filename: file.fileName,
+          contentType: http.MediaType.parse(file.mimeType),
+        ),
+      );
+    }
+
+    final streamed = await _client
+        .send(request)
+        // Video / kai file ho sakti hain, isliye zyada time
+        .timeout(Duration(seconds: files.isEmpty ? 30 : 300));
+
+    return http.Response.fromStream(streamed);
+  }
+
   static Future<http.Response> _sendRequest({
     required String method,
     required Uri url,
@@ -331,7 +400,18 @@ class ApiClient {
     String? filePath,
     bool formData = false,
     void Function(int sent, int total)? onUploadProgress,
+    List<ApiUploadFile>? files,
   }) async {
+    if (files != null) {
+      return _sendMultipart(
+        method: method,
+        url: url,
+        headers: headers,
+        fields: body,
+        files: files,
+      );
+    }
+
     // ----------------------------------------------------------
     // MULTIPART (file upload) - sirf POST par
     // ----------------------------------------------------------
@@ -801,4 +881,48 @@ class _ProgressMultipartRequest extends http.MultipartRequest {
       ),
     );
   }
+}
+
+// ============================================================
+// UPLOAD FILE (ApiClient.multipart ke liye)
+// ============================================================
+
+class ApiUploadFile {
+  ApiUploadFile({required this.field, required this.path, String? fileName})
+    : fileName = fileName ?? path.split(RegExp(r'[\/]')).last;
+
+  /// Form ka naam, jaise "file"
+  final String field;
+
+  /// Phone / computer par file ka rasta
+  final String path;
+  final String fileName;
+
+  /// Extension se type (jpg -> image/jpeg, pdf -> application/pdf ...)
+  String get mimeType {
+    final ext = fileName.contains('.')
+        ? fileName.split('.').last.toLowerCase()
+        : '';
+    return _mimeTypes[ext] ?? 'application/octet-stream';
+  }
+
+  static const Map<String, String> _mimeTypes = {
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'webp': 'image/webp',
+    'gif': 'image/gif',
+    'mp4': 'video/mp4',
+    'mov': 'video/quicktime',
+    '3gp': 'video/3gpp',
+    'pdf': 'application/pdf',
+    'doc': 'application/msword',
+    'docx':
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xls': 'application/vnd.ms-excel',
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'ppt': 'application/vnd.ms-powerpoint',
+    'pptx':
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  };
 }

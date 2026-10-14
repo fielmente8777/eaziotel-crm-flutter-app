@@ -111,6 +111,40 @@ class WhatsappApiEndpoint {
   static const String billing = '/api/v1/whatsapp/billing';
   static const String billingTransactions =
       '/api/v1/whatsapp/billing/transactions';
+
+  // Settings > WhatsApp > Message Templates (form-data, ?hid=)
+  static const String createTemplate =
+      '/api/v1/whatsapp/message/template/create';
+  static String updateTemplate(String id) =>
+      '/api/v1/whatsapp/message/template/$id';
+
+  /// DELETE, body {templateName, language}
+  static const String deleteTemplate =
+      '/api/v1/whatsapp/message/template/delete';
+
+  /// PUT: auto message + notification, ya AI configuration
+  static String autoMessageConfig(String phoneNumberId) =>
+      '/api/v1/whatsapp/account/$phoneNumberId/automessageConfig/update';
+
+  /// POST {flowName, screens, category} (?hid=)
+  static const String createFlow = '/api/v1/whatsapp/flow/create';
+
+  /// WhatsApp Flow (chatbot) me upload hui photo dekhne ke liye (?ndid=)
+  static String media(String mediaId) => '/api/v1/whatsapp/media/$mediaId';
+
+  /// Carousel card ki photo upload (form-data "file") -> result.doc.imageUrl
+  static const String imageUpload = '/api/v1/image/upload';
+}
+
+/// Settings > WhatsApp > Quick Replies. Base: BaseUrl.production2 (?hid=)
+class QuickReplyApiEndpoint {
+  QuickReplyApiEndpoint._();
+
+  /// GET list, POST create (form-data)
+  static const String list = '/api/v1/quick-reply';
+
+  /// PUT update (form-data), DELETE
+  static String byId(String id) => '/api/v1/quick-reply/$id';
 }
 
 class AnalytisApiEndpoint {
@@ -209,4 +243,78 @@ class MarketingApiEndpoint {
 
   /// GET ?hid=&page=&limit=  -> result.doc (list) + result.pagination
   static const String emailCampaigns = '/api/v1/email-marketing/campaigns';
+}
+
+/// Google Ads Insights (drawer). Base: BaseUrl.production2
+class GoogleAdsApiEndpoint {
+  GoogleAdsApiEndpoint._();
+
+  /// Google se taaza data DB me lata hai (?startDate=&endDate=&targetAccountId=)
+  static const String sync = '/api/v1/google-ads/sync';
+  static const String accounts = '/api/v1/google-ads/accounts';
+  static String campaigns(String accountId) =>
+      '/api/v1/google-ads/campaigns/$accountId';
+  static String adGroups(String campaignId) =>
+      '/api/v1/google-ads/adgroups/$campaignId';
+  static String ads(String adGroupId) => '/api/v1/google-ads/ads/$adGroupId';
+
+  /// ?level=account|campaign|ad&startDate=&endDate=
+  static String summary(String entityId) =>
+      '/api/v1/google-ads/metrics/summary/$entityId';
+  static String devices(String entityId) =>
+      '/api/v1/google-ads/metrics/devices/$entityId';
+}
+
+/// SEO (drawer > SEO > Local Seo / Website Seo). Base: BaseUrl.production2
+/// hid nahi chahiye, token se user pehchana jaata hai.
+class SeoApiEndpoint {
+  SeoApiEndpoint._();
+
+  static const String _base = '/api/v1/seo/seo-intelligence';
+
+  /// GET: saare keywords + local config + geo grid + trend
+  static const String intelligence = _base;
+
+  /// GET: credits (balance) + pricing
+  static const String tokens = '$_base/tokens';
+
+  // ---------- Local SEO ----------
+
+  /// POST {keywords, selfDomain, selfHotelName}
+  static const String track = '$_base/track';
+
+  /// POST {businessType, city, district, state}
+  static const String suggestKeywords = '$_base/suggest-keywords';
+
+  /// POST {businessName, lat, lng, radiusKm, city, district, ...}
+  static const String onboarding = '$_base/onboarding';
+
+  /// POST {} (map coverage dobara scan)
+  static const String triggerGridScan = '$_base/trigger-grid-scan';
+
+  /// POST {radiusKm}
+  static const String updateRadius = '$_base/update-radius';
+
+  /// POST {keyword}
+  static const String updateGridKeyword = '$_base/update-grid-keyword';
+
+  // ---------- Website SEO ----------
+
+  /// POST {websiteUrl} (ek baar, badal nahi sakte)
+  static const String setWebsite = '$_base/set-website';
+
+  /// POST {country}
+  static const String updateWebsiteCountry = '$_base/update-website-country';
+
+  /// POST {keywords}
+  static const String trackLink = '$_base/track-link';
+
+  // ---------- Dono ----------
+
+  /// POST {keyword}
+  static const String refreshKeyword = '$_base/refresh-keyword';
+
+  /// DELETE
+  static String untrack(String keyword) =>
+      '$_base/${Uri.encodeComponent(keyword)}';
 }

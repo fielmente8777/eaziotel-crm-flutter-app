@@ -22,7 +22,9 @@ import 'package:eazotel/features/whatsapp/services/whatsappTemplate.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../message_templates/controller/message_template_controller.dart';
 import '../models/auto_message_config.dart';
+import '../models/whatsapp_action_response.dart';
 import '../models/whatsapp_account_info.dart';
 import '../models/whatsapp_widget_code.dart';
 import '../services/whatsapp_setting_service.dart';
@@ -74,6 +76,9 @@ class WhatsappSettingController extends GetxController {
 
   /// Chatbot flow ki id (auto message ke "Flow" dropdown ke liye)
   final flowIds = <String>[].obs;
+
+  /// WhatsApp phone number ki id (auto message / AI save me lagti hai)
+  final phoneNumberId = ''.obs;
 
   @override
   void onInit() {
@@ -140,12 +145,23 @@ class WhatsappSettingController extends GetxController {
         profile: profile,
       );
 
+      // auto message / AI save ke liye WhatsApp phone number ki id
+      final phone = details['phoneNumber'];
+      phoneNumberId.value = phone is Map ? (phone['id']?.toString() ?? '') : '';
+
+      final notification = details['notification'];
+      notifyOnWhatsapp.value =
+          notification is Map && notification['enable'] == true;
+
       _readAutoMessages(details['autoMessage']);
       _readAi(details['ai']);
     } catch (e) {
       debugPrint('WHATSAPP SETTING: account error: $e');
     }
   }
+
+  /// Template banane / hatane ke baad list dobara lao
+  Future<void> reloadTemplates() => _loadTemplates();
 
   Future<void> _loadTemplates() async {
     try {
@@ -166,13 +182,22 @@ class WhatsappSettingController extends GetxController {
   }
 
   // ============================================================
-  // 2. AUTO MESSAGE
-  // Saved setting server se aati hai. Badlav abhi sirf screen par hota hai
-  // (save ki API nahi mili).
+  // 2. AUTO MESSAGE (web ke AutoMessageCard jaisa)
+  //
+  //   har module: switch -> type (Template / Text / Flow*) ->
+  //     Template : template chuno (neeche poora preview)
+  //     Text     : apna message likho
+  //     Flow     : chatbot flow chuno (*sirf WhatsApp module me)
+  //   "Apply same config to all": pehle chalu module ki setting
+  //     sab me lag jaati hai; hatane par purani wapas aa jaati hai
+  //   "Save Configuration" tabhi dikhta hai jab kuch badla ho
   // ============================================================
 
   /// Paanch module: Eazbot, Webform, Meta, Google, WhatsApp
   final autoMessages = AutoMessageConfig.listFromJson({}).obs;
+
+  /// Server wali (saved) setting, badlav pakadne ke liye
+  late String _savedAutoMessages = _autoSignature;
 
   /// Server ka `autoMessage` Map -> paanch module
   void _readAutoMessages(dynamic json) {
@@ -181,67 +206,70 @@ class WhatsappSettingController extends GetxController {
         json is Map ? Map<String, dynamic>.from(json) : {},
       ),
     );
+    _savedAutoMessages = _autoSignature;
+    applyToAll.value = false;
+    _beforeApplyAll = null;
   }
 
-  /// "Apply same config to all modules" ka checkbox
+  String get _autoSignature => autoMessages.map((m) => m.signature).join(';');
+
+  /// Kuch badla hai? (Save button)
+  bool get autoMessageChanged => _autoSignature != _savedAutoMessages;
+
+  /// Koi module chalu hai? (warna "Apply to all" band)
+  bool get anyAutoMessageEnabled => autoMessages.any((m) => m.enabled);
+
+  /// "Apply same config to all modules"
   final applyToAll = false.obs;
+  List<AutoMessageConfig>? _beforeApplyAll;
 
-  /// Switch on / off
-  void setAutoMessageEnabled(AutoMessageConfig module, bool enabled) {
-    module.enabled = enabled;
-
-    _afterAutoMessageChange(module);
-  }
-
-  /// Pehla dropdown: Template ya Flow
-  void setAutoMessageType(AutoMessageConfig module, String type) {
-    module.type = type;
-    module.selection = null; // type badla to purana chunav hata do
-
-    _afterAutoMessageChange(module);
-  }
-
-  /// Doosra dropdown: kaunsa template / flow
-  void setAutoMessageSelection(AutoMessageConfig module, String? selection) {
-    module.selection = selection;
-
-    _afterAutoMessageChange(module);
-  }
-
-  void _afterAutoMessageChange(AutoMessageConfig changed) {
-    // Checkbox laga ho to wahi setting baaki sab module me bhi daal do
-    if (applyToAll.value) {
+  void toggleApplyToAll(bool on) {
+    if (on) {
+      if (!anyAutoMessageEnabled) return;
+      _beforeApplyAll = autoMessages.map((m) => m.copy()).toList();
+      final source = autoMessages.firstWhere((m) => m.enabled);
       for (final module in autoMessages) {
-        module.enabled = changed.enabled;
-        module.type = changed.type;
-        module.selection = changed.selection;
+        module.copyFrom(source);
+        module.enabled = true;
       }
+    } else if (_beforeApplyAll != null) {
+      autoMessages.assignAll(_beforeApplyAll!);
+      _beforeApplyAll = null;
     }
-
-    // List ke andar ka object badla hai, isliye screen ko khud batana padta hai
+    applyToAll.value = on;
     autoMessages.refresh();
   }
 
-  /// Doosre dropdown ke option: template ke naam ya flow ki id
-  List<String> optionsFor(AutoMessageConfig module) {
-    if (module.isFlow) return flowIds.toList();
+  /// Ek module badlo (Apply to all laga ho to sab me wahi badlav)
+  void updateAutoMessage(
+    AutoMessageConfig module,
+    void Function(AutoMessageConfig m) change,
+  ) {
+    if (applyToAll.value) {
+      for (final m in autoMessages) {
+        change(m);
+        if (m.isFlow && !m.canUseFlow) m.type = AutoMessageConfig.typeTemplate;
+      }
+    } else {
+      change(module);
+    }
 
-    return templates
-        .map((template) => template.name ?? '')
-        .where((name) => name.isNotEmpty)
-        .toList();
+    // Sab band ho gaye to "Apply to all" bhi hata do (web jaisa)
+    if (!anyAutoMessageEnabled && applyToAll.value) {
+      applyToAll.value = false;
+      _beforeApplyAll = null;
+    }
+    autoMessages.refresh();
   }
 
-  /// Chune hue template ka message (dropdown ke neeche preview me dikhta hai)
-  String? previewFor(AutoMessageConfig module) {
-    if (module.isFlow) return null;
+  /// Template dropdown ke naam
+  List<String> get templateNames => templates
+      .map((template) => template.name ?? '')
+      .where((name) => name.isNotEmpty)
+      .toList();
 
-    final template = templates.firstWhereOrNull(
-      (t) => t.name == module.selection,
-    );
-
-    return template == null ? null : bodyOf(template);
-  }
+  WhatsappTemplate? templateNamed(String name) =>
+      templates.firstWhereOrNull((t) => t.name == name);
 
   /// Template ke BODY hisse ka text
   String? bodyOf(WhatsappTemplate template) {
@@ -252,6 +280,121 @@ class WhatsappSettingController extends GetxController {
     final text = body?.text?.trim() ?? '';
 
     return text.isEmpty ? null : text;
+  }
+
+  /// Web me notification ka switch nahi dikhta, par saved value
+  /// wapas bhejni hoti hai
+  final notifyOnWhatsapp = false.obs;
+
+  /// true = Save chal raha hai
+  final isSavingAutoMessage = false.obs;
+
+  /// Web jaisa: band module {enabled:false}, chalu module poori detail
+  Future<void> saveAutoMessages() async {
+    if (isSavingAutoMessage.value) return;
+    if (phoneNumberId.value.isEmpty) {
+      _toast('Not saved', 'WhatsApp phone number not found. Pull to refresh.');
+      return;
+    }
+
+    // Chalu module me jo chahiye wo bhara ho
+    for (final m in autoMessages.where((m) => m.enabled)) {
+      final missing = m.isTemplate
+          ? m.templateName.isEmpty
+          : m.isText
+          ? m.message.trim().isEmpty
+          : m.flowId.isEmpty;
+      if (missing) {
+        _toast(
+          'Check ${m.label}',
+          m.isTemplate
+              ? 'Please select a template.'
+              : m.isText
+              ? 'Please write the message.'
+              : 'Please select a flow.',
+        );
+        return;
+      }
+    }
+
+    final config = <String, dynamic>{};
+    for (final m in autoMessages) {
+      if (!m.enabled) {
+        config[m.key] = {'enabled': false};
+        continue;
+      }
+
+      config[m.key] = {
+        'enabled': true,
+        'type': m.type,
+        'templateName': m.templateName.isEmpty ? null : m.templateName,
+        'message': m.isText ? m.message.trim() : null,
+        'flowId': m.isFlow ? m.flowId : null,
+        'templateMeta': m.isTemplate ? _templateMeta(m.templateName) : null,
+      };
+    }
+
+    isSavingAutoMessage.value = true;
+    try {
+      final response = await WhatsappSettingService.updateAutoMessageConfig(
+        phoneNumberId: phoneNumberId.value,
+        body: {
+          'autoMessage': config,
+          'notification': {'enable': notifyOnWhatsapp.value},
+        },
+      );
+
+      if (response.isSuccess) {
+        _savedAutoMessages = _autoSignature;
+        autoMessages.refresh();
+      }
+      _toast(
+        response.isSuccess ? 'Saved' : 'Not saved',
+        response.message(
+          response.isSuccess
+              ? 'Auto message updated successfully'
+              : 'Unable to save auto message.',
+        ),
+      );
+    } catch (e) {
+      _toast(
+        'Not saved',
+        WhatsappActionResponse.errorOf(e, 'Unable to save auto message.'),
+      );
+    } finally {
+      isSavingAutoMessage.value = false;
+    }
+  }
+
+  /// Web ka getTemplateMeta: template ki zaroori jaankari server ke liye
+  Map<String, dynamic>? _templateMeta(String? name) {
+    final template = templates.firstWhereOrNull((t) => t.name == name);
+    if (template == null) return null;
+
+    TemplateComponent? part(String type) => template.components
+        ?.firstWhereOrNull((c) => c.type?.toUpperCase() == type);
+
+    final body = part('BODY');
+    final header = part('HEADER');
+    final buttons = part('BUTTONS');
+
+    return {
+      'name': template.name,
+      'language': template.language ?? 'en',
+      'bodyText': body?.text ?? '',
+      'variables': body?.example?.bodyText?.firstOrNull ?? <String>[],
+      'headerVariables': header?.example?.headerText ?? <String>[],
+      'headerType': header?.format,
+      'buttons': [
+        for (final b in buttons?.buttons ?? <TemplateButton>[])
+          {
+            'type': b.type,
+            'text': b.text,
+            if (b.url != null) 'url': b.url,
+            if (b.example != null) 'example': b.example,
+          },
+      ],
+    };
   }
 
   // ============================================================
@@ -284,6 +427,7 @@ class WhatsappSettingController extends GetxController {
     required String address,
     required String industry,
     required List<String> websites,
+    String? photoPath,
   }) async {
     if (isSavingProfile.value) return;
 
@@ -318,6 +462,7 @@ class WhatsappSettingController extends GetxController {
         email: mail,
         address: address.trim(),
         websites: links,
+        photoPath: photoPath,
       );
 
       // Server se naya data lao, phir form band karo
@@ -393,26 +538,125 @@ class WhatsappSettingController extends GetxController {
   }
 
   // ============================================================
-  // 6. BUTTONS JINKI API ABHI NAHI MILI
-  // API milne par: WhatsappSettingService me call banao,
-  // phir yahan _notConnected ki jagah use chalao.
+  // 6. AI SAVE
   // ============================================================
 
-  void saveAiConfiguration() => _notConnected('Saving the AI configuration');
+  final isSavingAi = false.obs;
 
-  void createTemplate() => _notConnected('Creating a template');
+  String _hhmm(TimeOfDay t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
-  void editTemplate(WhatsappTemplate template) =>
-      _notConnected('Editing a template');
+  Future<void> saveAiConfiguration() async {
+    if (isSavingAi.value) return;
+    if (phoneNumberId.value.isEmpty) {
+      _toast('Not saved', 'WhatsApp phone number not found. Pull to refresh.');
+      return;
+    }
 
-  void deleteTemplate(WhatsappTemplate template) =>
-      _notConnected('Deleting a template');
+    final from = _hhmm(aiFrom.value);
+    final to = _hhmm(aiTo.value);
 
-  void _notConnected(String action) {
-    Get.snackbar(
-      'Not connected yet',
-      '$action needs its API. The screen is ready.',
-      snackPosition: SnackPosition.BOTTOM,
+    // Web jaisa: "From" "To" se baad nahi ho sakta
+    if (from.compareTo(to) > 0) {
+      _toast('Check the time', 'From time cannot be later than To time.');
+      return;
+    }
+
+    isSavingAi.value = true;
+    try {
+      final response = await WhatsappSettingService.updateAutoMessageConfig(
+        phoneNumberId: phoneNumberId.value,
+        body: {
+          'ai': {
+            'enabled': aiEnabled.value,
+            'duration': {'from': from, 'to': to},
+            'timezone': 'Asia/Kolkata',
+          },
+        },
+      );
+      _toast(
+        response.isSuccess ? 'Saved' : 'Not saved',
+        response.message(
+          response.isSuccess
+              ? 'AI configuration saved successfully'
+              : 'Unable to save AI configuration.',
+        ),
+      );
+    } catch (e) {
+      _toast(
+        'Not saved',
+        WhatsappActionResponse.errorOf(e, 'Unable to save AI configuration.'),
+      );
+    } finally {
+      isSavingAi.value = false;
+    }
+  }
+
+  // ============================================================
+  // 7. TEMPLATES (Overview ke templates card se)
+  // Create / Edit -> "Message Templates" menu ka form khulta hai
+  // ============================================================
+
+  void createTemplate() {
+    Get.put(MessageTemplateController()).startCreate();
+    selectedMenu.value = WhatsappSettingMenu.messageTemplates;
+  }
+
+  void editTemplate(WhatsappTemplate template) {
+    Get.put(MessageTemplateController()).startEdit(template);
+    selectedMenu.value = WhatsappSettingMenu.messageTemplates;
+  }
+
+  /// Template ka naam jo abhi delete ho raha hai (button par loading)
+  final deletingTemplate = RxnString();
+
+  Future<void> deleteTemplate(WhatsappTemplate template) async {
+    final name = template.name ?? '';
+    if (name.isEmpty || deletingTemplate.value != null) return;
+
+    final sure = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Delete template?'),
+        content: Text('"$name" will be deleted from WhatsApp.'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
+    if (sure != true) return;
+
+    deletingTemplate.value = name;
+    try {
+      final response = await WhatsappSettingService.deleteTemplate(
+        templateName: name,
+        language: template.language ?? 'en_US',
+      );
+
+      if (response.isSuccess) {
+        templates.removeWhere((t) => t.name == name);
+        _toast('Deleted', 'Template deleted successfully');
+      } else {
+        _toast('Not deleted', response.message('Unable to delete template.'));
+      }
+    } catch (e) {
+      _toast(
+        'Not deleted',
+        WhatsappActionResponse.errorOf(e, 'Unable to delete template.'),
+      );
+    } finally {
+      deletingTemplate.value = null;
+    }
+  }
+
+  void _toast(String title, String message) {
+    Get.snackbar(title, message, snackPosition: SnackPosition.BOTTOM);
   }
 }

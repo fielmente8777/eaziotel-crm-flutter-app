@@ -10,6 +10,9 @@
 // Save par controller.saveBusinessProfile() API ko call karta hai.
 // ============================================================
 
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -114,7 +117,7 @@ class _ProfileView extends StatelessWidget {
                 'Website',
                 info.websites.isEmpty ? '-' : info.websites.join('\n'),
               ),
-              item('Platform', 'Whatsapp'),
+              item('Platform', 'WhatsApp'),
             ],
           ),
         ),
@@ -179,6 +182,26 @@ class _ProfileFormState extends State<_ProfileForm> {
   late final TextEditingController _website1 = _field(_websiteAt(0));
   late final TextEditingController _website2 = _field(_websiteAt(1));
 
+  /// Nayi chuni profile photo (null = purani hi rahegi)
+  String? _photoPath;
+
+  Future<void> _pickPhoto() async {
+    final file = await FilePicker.pickFile(type: FileType.image);
+    final path = file?.path;
+    if (file == null || path == null) return;
+
+    final size = file.lengthSync() ?? await file.length() ?? 0;
+    if (size > 5 * 1024 * 1024) {
+      Get.snackbar(
+        'Image too large',
+        'Profile photo should be less than 5MB.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+    setState(() => _photoPath = path);
+  }
+
   late String _industry = _industries.contains(widget.info.industry)
       ? widget.info.industry
       : 'UNDEFINED';
@@ -213,6 +236,7 @@ class _ProfileFormState extends State<_ProfileForm> {
       address: _address.text,
       industry: _industry,
       websites: [_website1.text, _website2.text],
+      photoPath: _photoPath,
     );
   }
 
@@ -256,6 +280,51 @@ class _ProfileFormState extends State<_ProfileForm> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ---------- Photo (tap = badlo) ----------
+          Center(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(44),
+              onTap: isSaving ? null : _pickPhoto,
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: p.primary.withValues(alpha: 0.15),
+                    foregroundImage: _photoPath != null
+                        ? FileImage(File(_photoPath!))
+                        : widget.info.profilePicture.startsWith('http')
+                        ? NetworkImage(widget.info.profilePicture)
+                        : null,
+                    child: Icon(Icons.storefront_outlined, color: p.primary),
+                  ),
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: CircleAvatar(
+                      radius: 13,
+                      backgroundColor: p.primary,
+                      child: const Icon(
+                        Icons.camera_alt,
+                        size: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                _photoPath == null
+                    ? 'Tap to change photo (max 5MB)'
+                    : 'New photo selected',
+                style: TextStyle(color: p.subText, fontSize: 11),
+              ),
+            ),
+          ),
           label('About'),
           input(_about, hint: 'About your business', maxLength: 139),
 

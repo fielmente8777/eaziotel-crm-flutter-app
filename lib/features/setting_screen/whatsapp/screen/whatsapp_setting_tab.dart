@@ -7,7 +7,11 @@
 //   data aa raha hai         ->  _Loading      (shimmer)
 //   menu = Overview          ->  _Overview     (saare card)
 //   menu = Credits & Usage   ->  WhatsappCreditsPage
-//   menu = kuch aur          ->  SettingComingSoon
+//   menu = Message Templates ->  MessageTemplatesPage (message_templates/)
+//   menu = Auto Message      ->  _AutoMessagePage
+//   menu = Flows             ->  WhatsappFlowPage (+ flow_builder/)
+//   menu = Quick Replies     ->  QuickRepliesPage (quick_replies/)
+//   menu = WhatsApp Flow     ->  ChatbotFlowPage (chatbot_flow/)
 //
 // Card khud widgets/ folder me hain, data controller/ me.
 // ============================================================
@@ -19,9 +23,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../screen/widgets/setting_coming_soon.dart';
 import '../../screen/widgets/setting_section_card.dart';
 import '../controller/whatsapp_setting_controller.dart';
+import '../chatbot_flow/screen/chatbot_flow_page.dart';
+import '../message_templates/screen/message_templates_page.dart';
+import '../quick_replies/screen/quick_replies_page.dart';
 import 'whatsapp_credits_page.dart';
 import 'widgets/whatsapp_account_cards.dart';
 import 'widgets/whatsapp_ai_card.dart';
@@ -57,20 +63,24 @@ class WhatsappSettingTab extends StatelessWidget {
         final body = Obx(() {
           final menu = controller.selectedMenu.value;
 
-          if (menu == WhatsappSettingMenu.creditsUsage) {
-            return const WhatsappCreditsPage();
+          switch (menu) {
+            case WhatsappSettingMenu.creditsUsage:
+              return const WhatsappCreditsPage();
+            case WhatsappSettingMenu.flows:
+              return const WhatsappFlowPage();
+            case WhatsappSettingMenu.messageTemplates:
+              return const MessageTemplatesPage();
+            case WhatsappSettingMenu.quickReplies:
+              return const QuickRepliesPage();
+            case WhatsappSettingMenu.whatsappFlow:
+              return const ChatbotFlowPage();
+            case WhatsappSettingMenu.autoMessage:
+              if (controller.isLoading.value) return _Loading(r: r);
+              return _AutoMessagePage(controller: controller, r: r);
+            case WhatsappSettingMenu.overview:
+              if (controller.isLoading.value) return _Loading(r: r);
+              return _Overview(controller: controller, r: r);
           }
-          if (menu == WhatsappSettingMenu.flows) {
-            return const WhatsappFlowPage();
-          }
-
-          if (menu != WhatsappSettingMenu.overview) {
-            return SettingComingSoon(title: menu.label);
-          }
-
-          if (controller.isLoading.value) return _Loading(r: r);
-
-          return _Overview(controller: controller, r: r);
         });
 
         // Window: menu left side me. Phone / tablet: menu upar chips me.
@@ -171,6 +181,37 @@ class _Overview extends StatelessWidget {
             WhatsappTemplatesCard(controller: controller, r: r),
             space,
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// AUTO MESSAGE (alag page; Overview wala hi card, beech me)
+// ============================================================
+
+class _AutoMessagePage extends StatelessWidget {
+  const _AutoMessagePage({required this.controller, required this.r});
+
+  final WhatsappSettingController controller;
+  final TResponsive r;
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: controller.load,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(r.pagePadding),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: WhatsappAutoMessageCard(
+              controller: controller,
+              columns: r.isPhone ? 1 : 2,
+            ),
+          ),
         ),
       ),
     );

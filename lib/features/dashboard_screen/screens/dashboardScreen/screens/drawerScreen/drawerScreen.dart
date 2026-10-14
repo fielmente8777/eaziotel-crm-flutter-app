@@ -1,5 +1,8 @@
+import 'package:eazotel/features/google_ads/screen/google_ads_screen.dart';
 import 'package:eazotel/features/marketing/screen/email_marketing_screen.dart';
 import 'package:eazotel/features/marketing/screen/whatsapp_marketing_screen.dart';
+import 'package:eazotel/features/seo/screen/local_seo_screen.dart';
+import 'package:eazotel/features/seo/screen/website_seo_screen.dart';
 import 'package:eazotel/features/setting_screen/setting_screen.dart';
 import 'package:eazotel/features/Calls%20Management/screen/calls_management_screen.dart';
 import 'package:eazotel/features/googleAnalytis/analytis_screen.dart';
@@ -150,6 +153,55 @@ class DashboardDrawer extends StatelessWidget {
 
                 Get.to(() => const CallsManagementScreen());
               },
+            ),
+
+            // Google Ads Insights (Calls Management ke neeche, web jaisa)
+            ListTile(
+              leading: const Icon(Icons.ads_click),
+              title: const Text('Google Ads Insights'),
+              onTap: () {
+                Navigator.pop(context);
+
+                Get.to(() => const GoogleAdsScreen());
+              },
+            ),
+
+            // SEO: tap karne par Local Seo / Website Seo (web jaisa)
+            Theme(
+              data: Theme.of(
+                context,
+              ).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                leading: const Icon(Icons.query_stats),
+                title: const Text('SEO'),
+                childrenPadding: const EdgeInsets.only(left: 16),
+                children: [
+                  ListTile(
+                    leading: const Icon(
+                      Icons.map_outlined,
+                      color: Color(0xFF10B981),
+                    ),
+                    title: const Text('Local Seo'),
+                    onTap: () {
+                      Navigator.pop(context);
+
+                      Get.to(() => const LocalSeoScreen());
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.travel_explore,
+                      color: Color(0xFF3B82F6),
+                    ),
+                    title: const Text('Website Seo'),
+                    onTap: () {
+                      Navigator.pop(context);
+
+                      Get.to(() => const WebsiteSeoScreen());
+                    },
+                  ),
+                ],
+              ),
             ),
 
             // Profile

@@ -1,5 +1,5 @@
-import 'package:eazotel/features/setting_screen/screen/widgets/setting_coming_soon.dart';
 import 'package:eazotel/features/setting_screen/whatsapp/controller/whatsapp_Flow_controller.dart';
+import 'package:eazotel/features/setting_screen/whatsapp/flow_builder/screen/flow_builder_view.dart';
 import 'package:eazotel/features/whatsapp/models/FlowResponseModel.dart';
 import 'package:eazotel/utils/res/t_responsive_builder.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +30,7 @@ class WhatsappFlowPage extends StatelessWidget {
                       case FlowTab.flowName:
                         return _FlowListTab(controller: controller);
                       case FlowTab.createFlow:
-                        return const SettingComingSoon(title: 'create flow');
+                        return const FlowBuilderView();
                     }
                   }),
                 ],
@@ -160,8 +160,6 @@ class _FlowListTab extends StatelessWidget {
 // TABLE
 // ============================================================
 
-
-
 class _FlowTable extends StatelessWidget {
   const _FlowTable({required this.flows});
 
@@ -283,8 +281,6 @@ class _FlowTable extends StatelessWidget {
         '${two(date.hour)}:${two(date.minute)}:${two(date.second)}';
   }
 }
-
-
 
 // ============================================================
 // FLOW PREVIEW DIALOG  (eye icon dabane par)
