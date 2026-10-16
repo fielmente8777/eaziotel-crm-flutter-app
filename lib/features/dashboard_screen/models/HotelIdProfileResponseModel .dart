@@ -6,6 +6,10 @@ class ProfileResponseModel {
   final bool status;
   final SubscriptionDetailsModel subscriptionDetails;
 
+  /// Login kiye hue user ka email (`User.emailId`).
+  /// WhatsApp "Take over" me yahi bheja jaata hai.
+  final String userEmail;
+
   ProfileResponseModel({
     required this.access,
     required this.admin,
@@ -13,10 +17,14 @@ class ProfileResponseModel {
     required this.profile,
     required this.status,
     required this.subscriptionDetails,
+    this.userEmail = '',
   });
 
   factory ProfileResponseModel.fromJson(Map<String, dynamic> json) {
+    final user = json['User'];
+
     return ProfileResponseModel(
+      userEmail: user is Map ? (user['emailId']?.toString().trim() ?? '') : '',
       access: AccessModel.fromJson(json['Access'] ?? {}),
       admin: json['Admin'] ?? false,
       data: DataModel.fromJson(json['Data'] ?? {}),
@@ -486,17 +494,11 @@ int _intValue(dynamic value) {
   return int.tryParse(value?.toString() ?? '') ?? 0;
 }
 
-
-
-
 class UrlsModel {
   final List<String> landingPages;
   final List<String> websites;
 
-  UrlsModel({
-    required this.landingPages,
-    required this.websites,
-  });
+  UrlsModel({required this.landingPages, required this.websites});
 
   factory UrlsModel.fromJson(Map<String, dynamic> json) {
     return UrlsModel(
@@ -506,9 +508,6 @@ class UrlsModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'landingPages': landingPages,
-      'websites': websites,
-    };
+    return {'landingPages': landingPages, 'websites': websites};
   }
 }

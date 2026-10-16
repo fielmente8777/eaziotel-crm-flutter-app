@@ -184,6 +184,20 @@ mixin WhatsappConversationListMixin
   }
 
   // ============================================================
+  // HANDLING (Take over / Hand back ke baad list me bhi badlo)
+  // ============================================================
+
+  void setConversationHandling(
+    String conversationId,
+    WhatsappHandlingModel handling,
+  ) {
+    final index = _conversationIndex(conversationId);
+    if (index != -1) {
+      _updateConversation(index, {'handling': handling.toJson()});
+    }
+  }
+
+  // ============================================================
   // TAB / SEARCH / LATEST
   // ============================================================
 

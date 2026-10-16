@@ -10,10 +10,12 @@
 //   4. CHANGE PASSWORD : form check + API call
 // ============================================================
 
+import 'package:eazotel/core/api/apiexception/api_exception.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/headerLocationController.dart';
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
 import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';
+import 'package:eazotel/features/setting_screen/whatsapp/models/whatsapp_action_response.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -56,9 +58,155 @@ class ProfileSettingController extends GetxController {
   // HOTELS
   // ============================================================
 
-  void editHotel(HotelModel hotel) => _notConnected('Editing a hotel');
+  /// Add / edit / delete sirf admin kar sakta hai (web jaisa)
+  bool get canManageHotels => dashboard.user.value?.admin ?? false;
 
-  void deleteHotel(HotelModel hotel) => _notConnected('Deleting a hotel');
+  /// Abhi app me chuna hua hotel
+  String get currentHotelId => location.selectedHotel.value?.hotelId ?? '';
+
+  final isSavingHotel = false.obs;
+
+  /// Jis hotel ka delete chal raha hai ('' = koi nahi)
+  final deletingHotelId = ''.obs;
+
+  /// Card par tap: app ka hotel badlo (header ke location selector jaisa)
+  Future<void> switchHotel(HotelModel hotel) async {
+    if (hotel.hotelId == currentHotelId) return;
+
+    await location.selectHotel(hotel);
+    _toast('Location changed', 'Now showing ${_nameOf(hotel)}.');
+  }
+
+  /// Naye hotel ki id app chunta hai (web jaisa): sab number hain to
+  /// sabse badi + 1, warna abhi ka time
+  String _nextHotelId() {
+    final ids = hotels.map((h) => h.hotelId).toList();
+    final numbers = ids.map(int.tryParse).toList();
+
+    if (ids.isNotEmpty && numbers.every((n) => n != null)) {
+      return '${numbers.cast<int>().reduce((a, b) => a > b ? a : b) + 1}';
+    }
+    return '${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  /// Add (hotel == null) ya edit. true = save ho gaya (dialog band karo)
+  Future<bool> saveHotel(HotelModel? hotel, Map<String, String> fields) async {
+    if (isSavingHotel.value) return false;
+
+    final adding = hotel == null;
+    final clean = {for (final e in fields.entries) e.key: e.value.trim()};
+    if ((clean['local'] ?? '').isEmpty) return false;
+
+    isSavingHotel.value = true;
+
+    try {
+      final hotelId = adding ? _nextHotelId() : hotel.hotelId;
+      final list = adding
+          ? await _service.addHotel(hotelId: hotelId, fields: clean)
+          : await _service.updateHotel(hotelId: hotelId, fields: clean);
+
+      // Server ne list na bheji to apni taraf se badlo
+      await location.replaceHotels(
+        list ??
+            [
+              for (final h in hotels)
+                if (h.hotelId != hotelId) h,
+              HotelModel(
+                hotelId: hotelId,
+                local: clean['local'] ?? '',
+                city: clean['city'] ?? '',
+                state: clean['state'] ?? '',
+                country: clean['country'] ?? '',
+                pinCode: clean['pinCode'] ?? '',
+              ),
+            ],
+      );
+
+      _toast(adding ? 'Location added' : 'Location updated', _nameOf2(clean));
+      return true;
+    } catch (e) {
+      _toast(
+        adding ? 'Could not add the location' : 'Could not update the location',
+        _errorText(e),
+        error: true,
+      );
+      return false;
+    } finally {
+      isSavingHotel.value = false;
+    }
+  }
+
+  Future<void> deleteHotel(HotelModel hotel) async {
+    if (hotel.hotelId == currentHotelId) {
+      _toast(
+        "Can't remove this location",
+        "You can't remove the location you're using. Switch to another one first.",
+        error: true,
+      );
+      return;
+    }
+
+    final ok = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Remove location?'),
+        content: Text(
+          '${_nameOf(hotel)} will be removed from your account. '
+          'Bookings and leads already recorded for it are not deleted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            child: const Text('Remove', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    deletingHotelId.value = hotel.hotelId;
+
+    try {
+      final list = await _service.deleteHotel(hotel.hotelId);
+      await location.replaceHotels(
+        list ?? hotels.where((h) => h.hotelId != hotel.hotelId).toList(),
+      );
+      _toast('Location removed', '${_nameOf(hotel)} was removed.');
+    } catch (e) {
+      _toast('Could not remove the location', _errorText(e), error: true);
+    } finally {
+      deletingHotelId.value = '';
+    }
+  }
+
+  /// Server ka message (ho to), warna seedha sa
+  String _errorText(Object e) {
+    if (e is ApiException) {
+      return WhatsappActionResponse.errorOf(e, 'Please try again.');
+    }
+    final text = '$e'.replaceFirst('Exception: ', '').trim();
+    return text.isEmpty || text.length > 200 ? 'Please try again.' : text;
+  }
+
+  String _nameOf(HotelModel h) =>
+      h.local.trim().isEmpty ? 'This location' : h.local.trim();
+
+  String _nameOf2(Map<String, String> f) =>
+      (f['local'] ?? '').isEmpty ? 'Saved' : f['local']!;
+
+  void _toast(String title, String message, {bool error = false}) {
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: error ? const Color(0xFFEF4444) : null,
+      colorText: error ? Colors.white : null,
+      margin: const EdgeInsets.all(12),
+    );
+  }
 
   // ============================================================
   // URLS

@@ -3,7 +3,7 @@ import 'package:eazotel/features/whatsapp/controller/whatsappController.dart'; /
 import 'package:eazotel/features/whatsapp/controller/whatsapp_lead_filter_controller.dart';
 import 'package:eazotel/features/whatsapp/models/whatsappMessegesLeads.dart';
 import 'package:eazotel/features/whatsapp/screen/widgets/whatsapp_lead_filter_widget.dart';
-import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
+import 'package:eazotel/features/whatsapp/screen/widgets/whatsapp_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -76,7 +76,7 @@ class WhatsappConversationHeader extends StatelessWidget
 
     return AppBar(
       elevation: 0,
-      backgroundColor: TAppColors.primary,
+      backgroundColor: _barColor(context),
       foregroundColor: Colors.white,
       leading: IconButton(
         icon: const Icon(Icons.close),
@@ -85,16 +85,10 @@ class WhatsappConversationHeader extends StatelessWidget
       title: Text('$count selected'),
       actions: [
         if (deleting)
+          // Delete ho raha hai: hourglass (gol loader nahi)
           const Padding(
             padding: EdgeInsets.all(16),
-            child: SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            ),
+            child: Icon(Icons.hourglass_top_rounded, size: 20),
           )
         else
           IconButton(
@@ -117,7 +111,7 @@ class WhatsappConversationHeader extends StatelessWidget
   Widget _buildNormalBar(BuildContext context) {
     return AppBar(
       elevation: 0,
-      backgroundColor: TAppColors.primary,
+      backgroundColor: _barColor(context),
       foregroundColor: Colors.white,
       leading: IconButton(
         onPressed: () => Navigator.of(context).pop(),
@@ -126,18 +120,9 @@ class WhatsappConversationHeader extends StatelessWidget
       titleSpacing: 0,
       title: Row(
         children: [
-          CircleAvatar(
-            radius: 19,
-            backgroundColor: Colors.white.withOpacity(0.18),
-            child: Icon(Icons.person),
-            //
-            // Text(
-            //   _firstLetter(chat.name),
-            //   style: const TextStyle(
-            //     color: Colors.white,
-            //     fontWeight: FontWeight.w600,
-            //   ),
-            // ),
+          WaAvatar(
+            name: chat.name?.isNotEmpty == true ? chat.name! : chat.phone,
+            size: 38,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -283,3 +268,9 @@ void showWhatsappFilterSheet({
     },
   );
 }
+
+/// Chat header ka rang: WhatsApp jaisa (light: hara, dark: gehra slate)
+Color _barColor(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark
+    ? const Color(0xFF1F2C34)
+    : WaPalette.greenDark;

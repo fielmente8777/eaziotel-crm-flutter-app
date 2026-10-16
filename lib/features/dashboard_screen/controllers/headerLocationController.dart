@@ -104,7 +104,26 @@ class LocationController extends GetxController {
     // ============================================================
 
     await dashboardController.changeHotel(hotel.hotelId);
-   
+  }
+
+  // ============================================================
+  // REPLACE HOTELS (Settings me add / edit / delete ke baad)
+  // ============================================================
+
+  /// Server ki nayi list lagao. Chuna hua hotel wahi rehta hai (naam badla ho
+  /// to naya naam dikhe). Wo hat gaya ho to pehla hotel chuno.
+  Future<void> replaceHotels(List<HotelModel> list) async {
+    hotels.assignAll(list);
+    filteredHotels.assignAll(list);
+
+    final currentId = selectedHotel.value?.hotelId;
+    final current = list.firstWhereOrNull((h) => h.hotelId == currentId);
+
+    if (current != null) {
+      selectedHotel.value = current;
+    } else if (list.isNotEmpty) {
+      await selectHotel(list.first);
+    }
   }
 
   // ============================================================

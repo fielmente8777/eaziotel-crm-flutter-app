@@ -2,7 +2,7 @@ import 'package:eazotel/core/api/apiexception/api_error_handler.dart';
 import 'package:eazotel/core/api/apiexception/api_exception.dart';
 import 'package:eazotel/core/local_storage/token_storage.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_call_analytics_mixin.dart';
-import 'package:eazotel/features/dashboard_screen/controllers/dashboard_leads_mixin.dart';
+import 'package:eazotel/features/leads/controller/leads_list_mixin.dart';
 import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
 import 'package:eazotel/features/dashboard_screen/models/analytics_responce_modle.dart';
@@ -10,7 +10,7 @@ import 'package:eazotel/features/dashboard_screen/services/dashboard_api_service
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Leads code lives in dashboard_leads_mixin.dart,
+// Leads code lives in features/leads/controller/leads_list_mixin.dart,
 // call analytics code in dashboard_call_analytics_mixin.dart.
 class DashboardController extends GetxController
     with DashboardLeadsMixin, DashboardCallAnalyticsMixin {
@@ -131,26 +131,15 @@ class DashboardController extends GetxController
 
       userNameResponse.value = result;
 
+      //     userNameResponse.value =UserResponseModel(
+      // status: result.status,
+      // data: [
+      //   // Apne custom user (TESTING)
+      //   UserModel(displayName: '(gangadhar)', phone: '+917497042180'),
 
-
-  //     userNameResponse.value =UserResponseModel(
-  // status: result.status,
-  // data: [
-  //   // Apne custom user (TESTING)
-  //   UserModel(displayName: '(gangadhar)', phone: '+917497042180'),
-
-  //   // API se aaye user
-  //   ...result.data,
-  // ],   / for call testing 
-
-
-
-
-
-
-
-
-
+      //   // API se aaye user
+      //   ...result.data,
+      // ],   / for call testing
     } on ApiException catch (e) {
       ApiErrorHandler.handle(e);
     } catch (e) {

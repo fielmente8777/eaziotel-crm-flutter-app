@@ -15,6 +15,7 @@ import 'package:get/get.dart';
 import '../../setting_screen/screen/widgets/setting_section_card.dart';
 import '../controller/whatsapp_marketing_controller.dart';
 import '../models/marketing_models.dart';
+import 'whatsapp_campaign_create_screen.dart';
 import 'whatsapp_campaign_detail_screen.dart';
 import 'widgets/marketing_common.dart';
 
@@ -26,12 +27,12 @@ class WhatsappMarketingScreen extends StatelessWidget {
     Get.to(() => const WhatsappCampaignDetailScreen());
   }
 
-  void _create() {
-    Get.snackbar(
-      'Create Campaign',
-      'Creating a campaign needs its API. Please use the web dashboard for now.',
-      snackPosition: SnackPosition.BOTTOM,
+  /// Naya campaign screen; ban gaya to list dobara laao
+  Future<void> _create(WhatsappMarketingController controller) async {
+    final created = await Get.to<bool>(
+      () => const WhatsappCampaignCreateScreen(),
     );
+    if (created == true) controller.load();
   }
 
   @override
@@ -50,7 +51,7 @@ class WhatsappMarketingScreen extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _create,
+        onPressed: () => _create(controller),
         icon: const Icon(Icons.add),
         label: const Text('New Campaign'),
       ),
@@ -104,6 +105,19 @@ class WhatsappMarketingScreen extends StatelessWidget {
                   90,
                 ),
                 children: [
+                  if (controller.campaigns.isNotEmpty) ...[
+                    _Summary(controller: controller),
+                    const SizedBox(height: 12),
+                  ],
+                  TextField(
+                    onChanged: (v) => controller.search.value = v,
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      hintText: 'Search campaign or template',
+                      prefixIcon: Icon(Icons.search, size: 18),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   _FilterChips(controller: controller),
                   const SizedBox(height: 12),
                   content,
@@ -323,6 +337,100 @@ class _CampaignTable extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+// ============================================================
+// SUMMARY (saare campaign ka jod)
+//   Campaigns | Messages sent | Delivery rate | Read rate
+// ============================================================
+
+class _Summary extends StatelessWidget {
+  const _Summary({required this.controller});
+
+  final WhatsappMarketingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = SettingPalette(context);
+    final c = controller;
+
+    final tiles = [
+      (Icons.campaign_rounded, 'Campaigns', '${c.campaigns.length}', p.primary),
+      (Icons.send_rounded, 'Messages sent', '${c.totalSent}', TAppColors.info),
+      (
+        Icons.done_all_rounded,
+        'Delivery rate',
+        '${c.deliveryRate}%',
+        TAppColors.success,
+      ),
+      (
+        Icons.visibility_rounded,
+        'Read rate',
+        '${c.readRate}%',
+        const Color(0xFF8B5CF6),
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (_, box) {
+        final columns = box.maxWidth >= 640 ? 4 : 2;
+        final width = (box.maxWidth - 10 * (columns - 1)) / columns;
+
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (final (icon, label, value, color) in tiles)
+              Container(
+                width: width,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: p.card,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: p.border),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: .14),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(icon, size: 19, color: color),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            value,
+                            maxLines: 1,
+                            style: TextStyle(
+                              color: p.text,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: p.subText, fontSize: 11.5),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

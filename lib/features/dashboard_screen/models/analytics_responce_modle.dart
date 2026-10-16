@@ -33,11 +33,7 @@ class AnalyticsRequest {
   final String? basesurl;
   final String? endpoint;
 
-  AnalyticsRequest({
-    this.method,
-    this.basesurl,
-    this.endpoint,
-  });
+  AnalyticsRequest({this.method, this.basesurl, this.endpoint});
 
   factory AnalyticsRequest.fromJson(Map<String, dynamic> json) {
     return AnalyticsRequest(
@@ -52,17 +48,12 @@ class AnalyticsResult {
   final bool? success;
   final AnalyticsDocs? docs;
 
-  AnalyticsResult({
-    this.success,
-    this.docs,
-  });
+  AnalyticsResult({this.success, this.docs});
 
   factory AnalyticsResult.fromJson(Map<String, dynamic> json) {
     return AnalyticsResult(
       success: json['success'],
-      docs: json['docs'] != null
-          ? AnalyticsDocs.fromJson(json['docs'])
-          : null,
+      docs: json['docs'] != null ? AnalyticsDocs.fromJson(json['docs']) : null,
     );
   }
 }
@@ -111,14 +102,10 @@ class AnalyticsDocs {
 class CountData {
   final int? count;
 
-  CountData({
-    this.count,
-  });
+  CountData({this.count});
 
   factory CountData.fromJson(Map<String, dynamic> json) {
-    return CountData(
-      count: json['count'],
-    );
+    return CountData(count: json['count']);
   }
 }
 
@@ -126,15 +113,9 @@ class BreakdownData {
   final String? id;
   final int? count;
 
-  BreakdownData({
-    this.id,
-    this.count,
-  });
+  BreakdownData({this.id, this.count});
 
   factory BreakdownData.fromJson(Map<String, dynamic> json) {
-    return BreakdownData(
-      id: json['_id']?.toString(),
-      count: json['count'],
-    );
+    return BreakdownData(id: json['_id']?.toString(), count: json['count']);
   }
 }

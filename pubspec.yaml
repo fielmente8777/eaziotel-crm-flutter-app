@@ -3,7 +3,7 @@ description: "A new Flutter project."
 
 publish_to: "none"
 
-version: 1.0.4+5
+version: 1.0.5+6
 
 environment:
   sdk: ^3.11.4
@@ -43,6 +43,9 @@ dependencies:
   intl: ^0.20.2
   google_maps_flutter: ^2.18.1
   file_picker: ^13.1.0
+  flutter_ringtone_player: ^4.0.0+4
+  flutter_widget_from_html_core: ^0.17.4
+  archive: ^4.5.2
 
 dev_dependencies:
   flutter_test:

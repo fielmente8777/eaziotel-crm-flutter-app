@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:eazotel/features/dashboard_screen/models/leads_responce_modle.dart';
+import 'package:eazotel/features/leads/models/leads_responce_modle.dart';
 import 'package:eazotel/features/whatsapp/controller/whatsappTemplateController.dart';
 import 'package:eazotel/features/whatsapp/models/FlowResponseModel.dart';
 import 'package:eazotel/features/whatsapp/models/WhatsappMessagesResponseModel.dart';

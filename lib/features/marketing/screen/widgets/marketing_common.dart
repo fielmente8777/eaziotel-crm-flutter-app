@@ -184,11 +184,8 @@ class MarketingState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (loading)
-              const SizedBox(
-                width: 28,
-                height: 28,
-                child: CircularProgressIndicator(strokeWidth: 2.5),
-              )
+              // Gol loader nahi: hourglass (app me sab jagah jaisa)
+              Icon(Icons.hourglass_top_rounded, size: 34, color: p.primary)
             else
               Icon(icon, size: 42, color: p.subText),
             const SizedBox(height: 10),

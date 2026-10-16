@@ -14,11 +14,7 @@ class CallAnalyticsResponse {
   final String? message;
   final CallAnalyticsDoc? doc;
 
-  const CallAnalyticsResponse({
-    required this.success,
-    this.message,
-    this.doc,
-  });
+  const CallAnalyticsResponse({required this.success, this.message, this.doc});
 
   factory CallAnalyticsResponse.fromJson(Map<String, dynamic> json) {
     final result = json['result'] as Map<String, dynamic>?;
@@ -50,20 +46,24 @@ class CallAnalyticsDoc {
 
   factory CallAnalyticsDoc.fromJson(Map<String, dynamic> json) {
     List<Map<String, dynamic>> list(String k) =>
-        ((json[k] as List?) ?? const []).whereType<Map<String, dynamic>>().toList();
+        ((json[k] as List?) ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .toList();
 
     return CallAnalyticsDoc(
       summary: CallSummary.fromJson(
         (json['summary'] as Map<String, dynamic>?) ?? const {},
       ),
       trend: list('trend').map(CallTrendPoint.fromJson).toList(),
-      statusDistribution:
-          list('statusDistribution').map((e) => CallCount.fromJson(e, 'status')).toList(),
-      directionDistribution: list('directionDistribution')
-          .map((e) => CallCount.fromJson(e, 'direction'))
-          .toList(),
-      stageDistribution:
-          list('stageDistribution').map((e) => CallCount.fromJson(e, 'stage')).toList(),
+      statusDistribution: list(
+        'statusDistribution',
+      ).map((e) => CallCount.fromJson(e, 'status')).toList(),
+      directionDistribution: list(
+        'directionDistribution',
+      ).map((e) => CallCount.fromJson(e, 'direction')).toList(),
+      stageDistribution: list(
+        'stageDistribution',
+      ).map((e) => CallCount.fromJson(e, 'stage')).toList(),
       topCallers: list('topCallers').map(TopCaller.fromJson).toList(),
     );
   }
@@ -82,8 +82,12 @@ class CallMetric {
     required this.trend,
   });
 
-  static const empty =
-      CallMetric(value: 0, previous: 0, change: 0, trend: 'neutral');
+  static const empty = CallMetric(
+    value: 0,
+    previous: 0,
+    change: 0,
+    trend: 'neutral',
+  );
 
   factory CallMetric.fromJson(dynamic json) {
     if (json is! Map<String, dynamic>) return empty;
@@ -118,15 +122,15 @@ class CallSummary {
   });
 
   factory CallSummary.fromJson(Map<String, dynamic> json) => CallSummary(
-        totalCalls: CallMetric.fromJson(json['totalCalls']),
-        successfulCalls: CallMetric.fromJson(json['successfulCalls']),
-        missedCalls: CallMetric.fromJson(json['missedCalls']),
-        followUps: CallMetric.fromJson(json['followUps']),
-        totalTalkTime: CallMetric.fromJson(json['totalTalkTime']),
-        averageDuration: CallMetric.fromJson(json['averageDuration']),
-        successRate: _d(json['successRate']),
-        missedRate: _d(json['missedRate']),
-      );
+    totalCalls: CallMetric.fromJson(json['totalCalls']),
+    successfulCalls: CallMetric.fromJson(json['successfulCalls']),
+    missedCalls: CallMetric.fromJson(json['missedCalls']),
+    followUps: CallMetric.fromJson(json['followUps']),
+    totalTalkTime: CallMetric.fromJson(json['totalTalkTime']),
+    averageDuration: CallMetric.fromJson(json['averageDuration']),
+    successRate: _d(json['successRate']),
+    missedRate: _d(json['missedRate']),
+  );
 }
 
 class CallTrendPoint {
@@ -143,12 +147,11 @@ class CallTrendPoint {
   });
 
   factory CallTrendPoint.fromJson(Map<String, dynamic> json) => CallTrendPoint(
-        date: DateTime.tryParse((json['date'] ?? '').toString()) ??
-            DateTime.now(),
-        totalCalls: _i(json['totalCalls']),
-        successfulCalls: _i(json['successfulCalls']),
-        missedCalls: _i(json['missedCalls']),
-      );
+    date: DateTime.tryParse((json['date'] ?? '').toString()) ?? DateTime.now(),
+    totalCalls: _i(json['totalCalls']),
+    successfulCalls: _i(json['successfulCalls']),
+    missedCalls: _i(json['missedCalls']),
+  );
 }
 
 class CallCount {
@@ -180,10 +183,10 @@ class TopCaller {
   });
 
   factory TopCaller.fromJson(Map<String, dynamic> json) => TopCaller(
-        phoneNumber: (json['phoneNumber'] ?? '').toString(),
-        totalCalls: _i(json['totalCalls']),
-        totalTalkTime: _i(json['totalTalkTime']),
-        averageDuration: _d(json['averageDuration']),
-        lastCall: DateTime.tryParse((json['lastCall'] ?? '').toString()),
-      );
+    phoneNumber: (json['phoneNumber'] ?? '').toString(),
+    totalCalls: _i(json['totalCalls']),
+    totalTalkTime: _i(json['totalTalkTime']),
+    averageDuration: _d(json['averageDuration']),
+    lastCall: DateTime.tryParse((json['lastCall'] ?? '').toString()),
+  );
 }

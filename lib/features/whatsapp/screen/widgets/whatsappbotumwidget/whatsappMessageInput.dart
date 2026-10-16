@@ -7,6 +7,7 @@ import 'package:eazotel/features/whatsapp/screen/widgets/whatsappbotumwidget/wha
 import 'package:eazotel/features/whatsapp/screen/widgets/whatsappbotumwidget/whatsappTemplateParams.dart';
 import 'package:eazotel/features/whatsapp/services/whatsappMessegSand.dart';
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
+import 'package:eazotel/features/whatsapp/screen/widgets/whatsapp_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -100,7 +101,8 @@ class WhatsappMessageInput extends StatelessWidget {
 
         Container(
           padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
-          color: Theme.of(context).scaffoldBackgroundColor,
+          // Chat ke background jaisa (beech me alag patti na dikhe)
+          color: WaPalette(context).wallpaper,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -138,7 +140,7 @@ class WhatsappMessageInput extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: TAppColors.primary,
+                    color: WaPalette.green,
                     shape: BoxShape.circle,
                   ),
                   // Upload ka progress ab image / video ke upar dikhta hai
@@ -840,14 +842,7 @@ class _FlowSetupDialogState extends State<FlowSetupDialog> {
                     ),
                   ),
                   child: _isSending
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
+                      ? const Icon(Icons.hourglass_top_rounded, size: 18)
                       : const Text('Send'),
                 ),
               ],

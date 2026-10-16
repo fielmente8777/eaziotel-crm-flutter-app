@@ -21,7 +21,17 @@ class AuthApiEndpoint {
 
   static const String UserProfile = '/user';
 
+  // Login kiye hue user ki details (User.emailId) — Bearer token ke saath
+  static const String userDetails = '/user/user-details';
+
   static const String updateProfile = '/auth/profile';
+
+  /// Hotel location (gian). POST = naya, PUT/DELETE = /<hotelId>
+  /// Jawab: result.hotels = { hotelId: { local, city, ... } } (poori nayi list)
+  static const String profileHotels = '/api/v1/profile/hotels';
+
+  static String profileHotel(String hotelId) =>
+      '/api/v1/profile/hotels/${Uri.encodeComponent(hotelId)}';
 
   static const String deleteAccount = '/auth/delete-account';
 
@@ -102,6 +112,15 @@ class WhatsappApiEndpoint {
       '/api/v1/whatsapp/conversations?hid=';
   static const String flow = '/api/v1/whatsapp/flow/get?hid=';
 
+  // Chat: kaun reply karega (AI ya team ka banda)
+  static String takeOver(String conversationId) =>
+      '/api/v1/whatsapp/conversations/$conversationId/takeover';
+  static String release(String conversationId) =>
+      '/api/v1/whatsapp/conversations/$conversationId/release';
+
+  // Chat: automated flow (form) chal raha hai ya nahi
+  static const String flowSession = '/api/v1/whatsapp/flow-session';
+
   // Settings > WhatsApp tab
   static const String accountDetails =
       '/api/v1/whatsapp/account/connection/details';
@@ -134,6 +153,23 @@ class WhatsappApiEndpoint {
 
   /// Carousel card ki photo upload (form-data "file") -> result.doc.imageUrl
   static const String imageUpload = '/api/v1/image/upload';
+}
+
+/// Drawer > Meta Insights. Base: BaseUrl.production2
+class MetaApiEndpoint {
+  MetaApiEndpoint._();
+
+  /// GET ?hid=&period=day|week|28_days|90_days -> result.doc
+  static const String pageOverview = '/api/v1/meta/page/overview';
+}
+
+/// Drawer > Social Media: bahar ka portal (browser me khulta hai)
+class SocialMediaLinks {
+  SocialMediaLinks._();
+
+  static const String portal = 'https://social.eazotel.com';
+  static const String login =
+      'https://social.eazotel.com/client/eazotel/clientlogin.do';
 }
 
 /// Settings > WhatsApp > Quick Replies. Base: BaseUrl.production2 (?hid=)
@@ -242,7 +278,58 @@ class MarketingApiEndpoint {
   static const String emailRecipients = '/api/v1/email-marketing/recipients';
 
   /// GET ?hid=&page=&limit=  -> result.doc (list) + result.pagination
+  /// POST multipart (naya campaign banao)
   static const String emailCampaigns = '/api/v1/email-marketing/campaigns';
+
+  // ---------- WhatsApp: naya campaign ----------
+
+  /// POST ?hid=  { campaignName, template, source? }
+  static const String whatsappCreateCampaign =
+      '/api/v1/whatsapp/campaign/create';
+
+  /// GET ?hid=&source=  -> result.totalUsers (kitne logon tak jayega)
+  static const String whatsappCampaignAudience =
+      '/api/v1/whatsapp/campaign/users';
+
+  // ---------- Email: recipient batch (kisko bhejna hai) ----------
+
+  /// POST { hid, leadIds }
+  static const String emailBatchLeads =
+      '/api/v1/email-marketing/recipient-batches/leads';
+
+  /// POST { hid, search }  (search se milne wale saare lead)
+  static const String emailBatchAllLeads =
+      '/api/v1/email-marketing/recipient-batches/leads/all';
+
+  /// POST { hid, emails }
+  static const String emailBatchManual =
+      '/api/v1/email-marketing/recipient-batches/manual';
+
+  // ---------- Email: campaign ----------
+
+  static String emailCampaign(String id) =>
+      '/api/v1/email-marketing/campaigns/$id';
+
+  /// GET ?hid=&page=&limit=&status=
+  static String emailCampaignRecipients(String id) =>
+      '/api/v1/email-marketing/campaigns/$id/recipients';
+
+  /// POST { hid }
+  static String emailCampaignSend(String id) =>
+      '/api/v1/email-marketing/campaigns/$id/send';
+
+  // ---------- Email: templates ----------
+
+  /// GET ?hid=&page=&limit=&search=   POST { hid, name, subject, html ... }
+  static const String emailTemplates = '/api/v1/email-marketing/templates';
+
+  /// PATCH / DELETE ?hid=
+  static String emailTemplate(String id) =>
+      '/api/v1/email-marketing/templates/$id';
+
+  /// POST ?hid=  { prompt, tone, brandName, ... }  (AI, 20-60 sec)
+  static const String emailTemplateGenerate =
+      '/api/v1/email-marketing/templates/generate';
 }
 
 /// Google Ads Insights (drawer). Base: BaseUrl.production2

@@ -46,8 +46,40 @@ class WhatsappMarketingController extends GetxController {
   final campaigns = <WhatsappCampaign>[].obs;
   final filter = CampaignFilter.all.obs;
 
-  List<WhatsappCampaign> get visibleCampaigns =>
-      campaigns.where((c) => filter.value.matches(c.status)).toList();
+  /// Campaign ya template ke naam se dhoondo
+  final search = ''.obs;
+
+  List<WhatsappCampaign> get visibleCampaigns {
+    final query = search.value.trim().toLowerCase();
+
+    return campaigns
+        .where(
+          (c) =>
+              filter.value.matches(c.status) &&
+              (query.isEmpty ||
+                  c.name.toLowerCase().contains(query) ||
+                  c.templateName.toLowerCase().contains(query)),
+        )
+        .toList();
+  }
+
+  // ============================================================
+  // SUMMARY (saare campaign ka jod, web jaisa)
+  // ============================================================
+
+  int get totalSent => campaigns.fold(0, (sum, c) => sum + c.sent);
+
+  int get totalDelivered => campaigns.fold(0, (sum, c) => sum + c.delivered);
+
+  int get totalRead => campaigns.fold(0, (sum, c) => sum + c.read);
+
+  /// Bheje gaye me se kitne pahunche (%)
+  int get deliveryRate =>
+      totalSent == 0 ? 0 : (totalDelivered * 100 / totalSent).round();
+
+  /// Pahunche hue me se kitne padhe gaye (%)
+  int get readRate =>
+      totalDelivered == 0 ? 0 : (totalRead * 100 / totalDelivered).round();
 
   @override
   void onInit() {

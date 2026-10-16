@@ -1,20 +1,31 @@
 // ============================================================
 // EMAIL MARKETING SCREEN  (Drawer > Marketing > Email Marketing)
 //
-// "EazoMail": Recipients / Campaigns / Templates
-//   window : left side menu
-//   phone  : upar chips
-// Campaign par tap -> stats + email ka text (bottom sheet)
+// "EazoMail": Recipients / Campaigns / Templates   (web dashboard jaisa)
+//   window : left side menu        phone : upar chips
+//
+// RECIPIENTS : search, select (ek / page / search ke saare)
+//              [Send to selected]  ⋮ Import from Excel / CSV
+// CAMPAIGNS  : list -> tap = detail (stats + recipients + email)
+// TEMPLATES  : saved / AI templates: Use, Edit with AI, Delete
+// Compose    : neeche button (kisi ko bhi email likho)
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive_builder.dart';
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../setting_screen/screen/widgets/setting_section_card.dart';
 import '../controller/email_marketing_controller.dart';
 import '../models/marketing_models.dart';
+import '../services/email_import.dart';
+import 'email_ai_template_screen.dart';
+import 'email_campaign_detail_screen.dart';
+import 'email_compose_screen.dart';
+import 'email_import_screen.dart';
+import 'widgets/email_html_preview.dart';
 import 'widgets/marketing_common.dart';
 
 class EmailMarketingScreen extends StatelessWidget {
@@ -26,6 +37,21 @@ class EmailMarketingScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('EazoMail')),
+      floatingActionButton: Obx(
+        () => controller.section.value == EmailSection.templates
+            ? FloatingActionButton.extended(
+                heroTag: 'eazomail_ai',
+                onPressed: () => EmailActions.newAiTemplate(controller),
+                icon: const Icon(Icons.auto_awesome),
+                label: const Text('New with AI'),
+              )
+            : FloatingActionButton.extended(
+                heroTag: 'eazomail_compose',
+                onPressed: () => EmailActions.compose(controller),
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('Compose'),
+              ),
+      ),
       body: SafeArea(
         child: TResponsiveBuilder(
           builder: (context, r) => Obx(() {
@@ -34,11 +60,7 @@ class EmailMarketingScreen extends StatelessWidget {
                 controller: controller,
               ),
               EmailSection.campaigns => _CampaignsView(controller: controller),
-              EmailSection.templates => const MarketingState(
-                icon: Icons.dashboard_customize_outlined,
-                message:
-                    'Templates are coming soon.\nPlease use the web dashboard for now.',
-              ),
+              EmailSection.templates => _TemplatesView(controller: controller),
             };
 
             if (r.isDesktop) {
@@ -76,8 +98,108 @@ class EmailMarketingScreen extends StatelessWidget {
   }
 }
 
-String _countFor(EmailMarketingController c, EmailSection s) =>
-    s == EmailSection.recipients ? '${c.recipientPage.value.total}' : '';
+// ============================================================
+// ACTIONS (compose, Excel import, AI template ...)
+// ============================================================
+
+class EmailActions {
+  EmailActions._();
+
+  static void _toast(String title, String message, {bool error = false}) {
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: error ? TAppColors.error : null,
+      colorText: error ? Colors.white : null,
+      margin: const EdgeInsets.all(12),
+    );
+  }
+
+  /// Compose kholo; bhej diya to selection hatao + campaigns taaza
+  static Future<void> compose(
+    EmailMarketingController c, {
+    RecipientBatch? batch,
+    EmailTemplate? template,
+  }) async {
+    final sent = await Get.to<bool>(
+      () => EmailComposeScreen(
+        batchId: batch?.batchId,
+        recipientCount: batch?.count ?? 0,
+        template: template,
+      ),
+    );
+    if (sent == true) c.onSent();
+  }
+
+  /// Chune hue logon ko email
+  static Future<void> sendToSelected(EmailMarketingController c) async {
+    final batch = await c.prepareSelected(
+      onError: (m) => _toast('Could not continue', m, error: true),
+    );
+    if (batch != null) await compose(c, batch: batch);
+  }
+
+  /// Excel / CSV -> emails check karo -> compose
+  static Future<void> importFile(EmailMarketingController c) async {
+    final file = await FilePicker.pickFile(
+      type: FileType.custom,
+      allowedExtensions: const ['xlsx', 'csv', 'txt'],
+    );
+    final path = file?.path;
+    if (file == null || path == null) return;
+
+    List<String> emails;
+    try {
+      emails = await EmailImport.fromFile(path);
+    } on FormatException catch (e) {
+      _toast('Could not read file', e.message, error: true);
+      return;
+    } catch (_) {
+      _toast(
+        'Could not read file',
+        'Please upload a valid .xlsx or .csv file.',
+        error: true,
+      );
+      return;
+    }
+
+    if (emails.isEmpty) {
+      _toast(
+        'No emails found',
+        'No valid email addresses were found in this file.',
+      );
+      return;
+    }
+
+    final batch = await Get.to<RecipientBatch>(
+      () => EmailImportScreen(fileName: file.name, emails: emails),
+    );
+    if (batch != null) await compose(c, batch: batch);
+  }
+
+  static Future<void> newAiTemplate(
+    EmailMarketingController c, {
+    EmailTemplate? edit,
+  }) async {
+    final saved = await Get.to<bool>(
+      () => EmailAiTemplateScreen(initial: edit),
+    );
+    if (saved == true) {
+      c.loadTemplates(edit == null ? 1 : c.templatePage.value.page);
+    }
+  }
+}
+
+// ============================================================
+// MENU
+// ============================================================
+
+String _countFor(EmailMarketingController c, EmailSection s) => switch (s) {
+  EmailSection.recipients => '${c.recipientPage.value.total}',
+  EmailSection.campaigns => '${c.campaignPage.value.total}',
+  EmailSection.templates => '${c.templatePage.value.total}',
+};
 
 class _SideMenu extends StatelessWidget {
   const _SideMenu({required this.controller});
@@ -127,12 +249,7 @@ class _ChipMenu extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
-                label: Text(
-                  [
-                    s.label,
-                    _countFor(controller, s),
-                  ].where((e) => e.isNotEmpty).join(' '),
-                ),
+                label: Text('${s.label} ${_countFor(controller, s)}'),
                 selected: controller.section.value == s,
                 onSelected: (_) => controller.section.value = s,
               ),
@@ -154,11 +271,11 @@ class _RecipientsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Search / loading / page badalne par dobara bane
     return Obx(() {
       final p = SettingPalette(context);
       final c = controller;
-      final list = c.visibleRecipients;
+      final list = c.recipients;
+      final selected = c.selectedCount;
 
       Widget content;
       if (c.isRecipientsLoading.value) {
@@ -174,31 +291,44 @@ class _RecipientsView extends StatelessWidget {
           onRetry: () => c.loadRecipients(c.recipientPage.value.page),
         );
       } else if (list.isEmpty) {
-        content = const MarketingState(
+        content = MarketingState(
           icon: Icons.people_outline,
-          message: 'No recipients found',
+          message: c.recipientSearch.value.isEmpty
+              ? 'No recipients yet'
+              : 'No recipients match "${c.recipientSearch.value}"',
         );
       } else {
         content = Column(
           children: [
             for (final r in list)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                  radius: 16,
-                  backgroundColor: p.primary.withValues(alpha: 0.15),
-                  child: Text(
-                    r.name.isEmpty ? '?' : r.name[0].toUpperCase(),
-                    style: TextStyle(color: p.primary, fontSize: 13),
+              Material(
+                color: c.isSelected(r)
+                    ? p.primary.withValues(alpha: .08)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+                child: CheckboxListTile(
+                  value: c.isSelected(r),
+                  onChanged: c.allMatching.value || r.id.isEmpty
+                      ? null
+                      : (_) => c.toggle(r),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                ),
-                title: Text(
-                  r.name.isEmpty ? '-' : r.name,
-                  style: TextStyle(color: p.text, fontSize: 13.5),
-                ),
-                subtitle: Text(
-                  r.email,
-                  style: TextStyle(color: p.subText, fontSize: 12),
+                  title: Text(
+                    r.name.isEmpty ? '-' : r.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: p.text, fontSize: 13.5),
+                  ),
+                  subtitle: Text(
+                    r.email,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: p.subText, fontSize: 12),
+                  ),
                 ),
               ),
           ],
@@ -208,10 +338,10 @@ class _RecipientsView extends StatelessWidget {
       return RefreshIndicator(
         onRefresh: () => c.loadRecipients(c.recipientPage.value.page),
         child: ListView(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
           children: [
             TextField(
-              onChanged: (v) => c.recipientSearch.value = v,
+              onChanged: c.searchRecipients,
               decoration: const InputDecoration(
                 isDense: true,
                 hintText: 'Search recipients by name or email',
@@ -219,11 +349,115 @@ class _RecipientsView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
+
+            // ---------- Select page + actions ----------
+            Row(
+              children: [
+                Checkbox(
+                  value: c.isPageSelected,
+                  onChanged: list.isEmpty ? null : (_) => c.togglePage(),
+                ),
+                Expanded(
+                  child: Text(
+                    selected == 0
+                        ? 'Select all on this page'
+                        : '$selected selected',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: selected == 0 ? p.subText : p.text,
+                      fontSize: 13,
+                      fontWeight: selected == 0
+                          ? FontWeight.w400
+                          : FontWeight.w700,
+                    ),
+                  ),
+                ),
+                FilledButton.icon(
+                  onPressed: selected == 0 || c.isPreparing.value
+                      ? null
+                      : () => EmailActions.sendToSelected(c),
+                  icon: Icon(
+                    c.isPreparing.value
+                        ? Icons.hourglass_top_rounded
+                        : Icons.send_rounded,
+                    size: 18,
+                  ),
+                  label: Text(selected == 0 ? 'Send' : 'Send ($selected)'),
+                ),
+                PopupMenuButton<String>(
+                  tooltip: 'More',
+                  onSelected: (v) => switch (v) {
+                    'import' => EmailActions.importFile(c),
+                    'clear' => c.clearSelection(),
+                    _ => null,
+                  },
+                  itemBuilder: (_) => [
+                    const PopupMenuItem(
+                      value: 'import',
+                      child: ListTile(
+                        leading: Icon(Icons.upload_file_outlined),
+                        title: Text('Import from Excel / CSV'),
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    if (selected > 0)
+                      const PopupMenuItem(
+                        value: 'clear',
+                        child: ListTile(
+                          leading: Icon(Icons.clear_all),
+                          title: Text('Clear selection'),
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+
+            // ---------- "Select all N matching" ----------
+            if (c.canSelectAllMatching || c.allMatching.value)
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: p.primary.withValues(alpha: .1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        c.allMatching.value
+                            ? 'All ${c.recipientPage.value.total} matching recipients selected.'
+                            : 'All ${list.length} on this page are selected.',
+                        style: TextStyle(color: p.text, fontSize: 12.5),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: c.allMatching.value
+                          ? c.clearSelection
+                          : c.selectAllMatching,
+                      child: Text(
+                        c.allMatching.value
+                            ? 'Clear'
+                            : 'Select all ${c.recipientPage.value.total}',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             content,
             const Divider(),
             PagerBar(
               page: c.recipientPage.value,
-              shown: c.recipients.length,
+              shown: list.length,
               onPage: c.loadRecipients,
             ),
           ],
@@ -244,7 +478,6 @@ class _CampaignsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Search / loading / page badalne par dobara bane
     return Obx(() {
       final p = SettingPalette(context);
       final c = controller;
@@ -265,7 +498,7 @@ class _CampaignsView extends StatelessWidget {
       } else if (c.campaigns.isEmpty) {
         content = const MarketingState(
           icon: Icons.send_outlined,
-          message: 'No campaigns found',
+          message: 'No campaigns yet.\nTap Compose to send your first email.',
         );
       } else {
         content = Column(
@@ -275,23 +508,30 @@ class _CampaignsView extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
                   color: p.card,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: p.border),
                 ),
                 child: ListTile(
-                  onTap: () => _showCampaign(context, campaign),
+                  onTap: () {
+                    c.openCampaign(campaign);
+                    Get.to(() => const EmailCampaignDetailScreen());
+                  },
                   title: Text(
                     campaign.subject,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: p.text, fontSize: 13.5),
+                    style: TextStyle(
+                      color: p.text,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   subtitle: Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
                       '${campaign.recipientCount} recipients  •  '
                       'Sent ${campaign.stat('sent')}  •  '
-                      'Failed ${campaign.stat('failed')}  •  '
+                      'Opened ${campaign.stat('opened')}  •  '
                       '${formatDateTime(campaign.createdAt)}',
                       style: TextStyle(color: p.subText, fontSize: 11.5),
                     ),
@@ -306,7 +546,7 @@ class _CampaignsView extends StatelessWidget {
       return RefreshIndicator(
         onRefresh: () => c.loadCampaigns(c.campaignPage.value.page),
         child: ListView(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
           children: [
             content,
             const Divider(),
@@ -320,101 +560,258 @@ class _CampaignsView extends StatelessWidget {
       );
     });
   }
+}
 
-  void _showCampaign(BuildContext context, EmailCampaign campaign) {
-    final p = SettingPalette(context);
+// ============================================================
+// TEMPLATES
+// ============================================================
 
-    final stats = [
-      ('Sent', 'sent', TAppColors.success),
-      ('Delivered', 'delivered', TAppColors.success),
-      ('Failed', 'failed', TAppColors.error),
-      ('Opened', 'opened', const Color(0xFF8B5CF6)),
-      ('Clicked', 'clicked', TAppColors.info),
-      ('Unsubscribed', 'unsubscribed', TAppColors.warning),
-    ];
+class _TemplatesView extends StatelessWidget {
+  const _TemplatesView({required this.controller});
 
-    showModalBottomSheet<void>(
+  final EmailMarketingController controller;
+
+  Future<void> _delete(BuildContext context, EmailTemplate t) async {
+    final ok = await showDialog<bool>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: p.card,
-      builder: (_) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.75,
-        maxChildSize: 0.95,
-        builder: (_, scroll) => ListView(
-          controller: scroll,
-          padding: const EdgeInsets.all(16),
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete template?'),
+        content: Text(
+          '"${t.name.isEmpty ? 'Untitled template' : t.name}" will be removed.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    await controller.deleteTemplate(
+      t,
+      onError: (m) => Get.snackbar(
+        'Could not delete',
+        m,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: TAppColors.error,
+        colorText: Colors.white,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final c = controller;
+
+      Widget content;
+      if (c.isTemplatesLoading.value) {
+        content = const MarketingState(
+          icon: Icons.dashboard_customize_outlined,
+          message: 'Loading templates...',
+          loading: true,
+        );
+      } else if (c.templatesError.value != null) {
+        content = MarketingState(
+          icon: Icons.error_outline,
+          message: c.templatesError.value!,
+          onRetry: () => c.loadTemplates(c.templatePage.value.page),
+        );
+      } else if (c.templates.isEmpty) {
+        content = MarketingState(
+          icon: Icons.auto_awesome,
+          message: c.templateSearch.value.isEmpty
+              ? 'No templates yet.\nTap "New with AI" to create one.'
+              : 'No templates match "${c.templateSearch.value}"',
+        );
+      } else {
+        content = LayoutBuilder(
+          builder: (_, box) {
+            final columns = box.maxWidth >= 900
+                ? 3
+                : box.maxWidth >= 560
+                ? 2
+                : 1;
+            final width = (box.maxWidth - 12 * (columns - 1)) / columns;
+
+            return Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                for (final t in c.templates)
+                  SizedBox(
+                    width: width,
+                    child: _TemplateCard(
+                      template: t,
+                      deleting: c.deletingTemplateId.value == t.id,
+                      onUse: () => EmailActions.compose(c, template: t),
+                      onEdit: () => EmailActions.newAiTemplate(c, edit: t),
+                      onDelete: () => _delete(context, t),
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
+      }
+
+      return RefreshIndicator(
+        onRefresh: () => c.loadTemplates(c.templatePage.value.page),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
           children: [
-            Text(
-              campaign.subject,
-              style: TextStyle(
-                color: p.text,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+            TextField(
+              onChanged: c.searchTemplates,
+              decoration: const InputDecoration(
+                isDense: true,
+                hintText: 'Search templates',
+                prefixIcon: Icon(Icons.search, size: 18),
               ),
             ),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
+            const SizedBox(height: 12),
+            content,
+            if (c.templates.isNotEmpty) ...[
+              const Divider(),
+              PagerBar(
+                page: c.templatePage.value,
+                shown: c.templates.length,
+                onPage: c.loadTemplates,
+              ),
+            ],
+          ],
+        ),
+      );
+    });
+  }
+}
+
+class _TemplateCard extends StatelessWidget {
+  const _TemplateCard({
+    required this.template,
+    required this.deleting,
+    required this.onUse,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final EmailTemplate template;
+  final bool deleting;
+  final VoidCallback onUse;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = SettingPalette(context);
+    final t = template;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: p.card,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: p.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Chhota preview (sirf dekhne ke liye, tap = Use)
+          InkWell(
+            onTap: onUse,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: IgnorePointer(
+                child: EmailHtmlPreview(html: t.html, maxHeight: 170),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 2, 4, 4),
+            child: Row(
               children: [
-                StatusPill(status: campaign.status),
-                Text(
-                  '${campaign.recipientCount} recipients  •  '
-                  '${formatDateTime(campaign.createdAt)}',
-                  style: TextStyle(color: p.subText, fontSize: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.name.isEmpty ? 'Untitled template' : t.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: p.text,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13.5,
+                        ),
+                      ),
+                      Text(
+                        t.subject.isEmpty ? '-' : t.subject,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: p.subText, fontSize: 12),
+                      ),
+                      if (t.updatedAt != null)
+                        Text(
+                          'Updated ${formatDateTime(t.updatedAt)}',
+                          style: TextStyle(color: p.subText, fontSize: 10.5),
+                        ),
+                    ],
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  enabled: !deleting,
+                  icon: Icon(
+                    deleting ? Icons.hourglass_top_rounded : Icons.more_vert,
+                    color: p.subText,
+                  ),
+                  onSelected: (v) => switch (v) {
+                    'use' => onUse(),
+                    'edit' => onEdit(),
+                    'delete' => onDelete(),
+                    _ => null,
+                  },
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(
+                      value: 'use',
+                      child: ListTile(
+                        leading: Icon(Icons.send_outlined),
+                        title: Text('Use in email'),
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: ListTile(
+                        leading: Icon(Icons.auto_awesome),
+                        title: Text('Edit with AI'),
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: ListTile(
+                        leading: Icon(Icons.delete_outline, color: Colors.red),
+                        title: Text(
+                          'Delete',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            if (campaign.fromEmail.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                'From: ${campaign.fromEmail}',
-                style: TextStyle(color: p.subText, fontSize: 12),
-              ),
-            ],
-            const SizedBox(height: 14),
-            LayoutBuilder(
-              builder: (_, box) {
-                final columns = box.maxWidth > 500 ? 6 : 3;
-                final width = (box.maxWidth - 8 * (columns - 1)) / columns;
-
-                return Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final (label, key, color) in stats)
-                      SizedBox(
-                        width: width,
-                        child: StatTile(
-                          label: label,
-                          value: campaign.stat(key),
-                          color: color,
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Email content',
-              style: TextStyle(color: p.text, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: p.inner,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: SelectableText(
-                campaign.text.isEmpty ? '-' : campaign.text,
-                style: TextStyle(color: p.text, fontSize: 13, height: 1.5),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

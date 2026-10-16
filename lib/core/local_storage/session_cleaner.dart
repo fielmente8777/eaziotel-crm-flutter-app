@@ -4,14 +4,16 @@ import 'package:eazotel/features/Calls%20Management/controller/calls_controller.
 import 'package:eazotel/features/dashboard_screen/controllers/bottom_nav_controller.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/headerLocationController.dart';
-import 'package:eazotel/features/dashboard_screen/controllers/lead_details_filter_controller.dart';
-import 'package:eazotel/features/dashboard_screen/controllers/lead_notes_api_controller.dart';
-import 'package:eazotel/features/dashboard_screen/controllers/leads_controller.dart';
+import 'package:eazotel/features/leads/controller/lead_details_filter_controller.dart';
+import 'package:eazotel/features/leads/controller/lead_notes_api_controller.dart';
+import 'package:eazotel/features/leads/controller/leads_controller.dart';
 import 'package:eazotel/features/googleAnalytis/controller/analytisController.dart';
+import 'package:eazotel/features/notifications/controller/notification_controller.dart';
 import 'package:eazotel/features/whatsapp/controller/WhatsappImageController.dart.dart';
 import 'package:eazotel/features/whatsapp/controller/whatsappController.dart';
 import 'package:eazotel/features/whatsapp/controller/whatsappTemplateController.dart';
 import 'package:eazotel/features/whatsapp/controller/whatsapp_lead_filter_controller.dart';
+import 'package:eazotel/features/whatsapp/controller/whatsapp_handling_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
@@ -44,11 +46,15 @@ class SessionCleaner {
       Get.find<DashboardController>().clearDashboardData();
     }
 
+    // Notifications pehle (ye hi WhatsappController ko chalata hai)
+    _delete<NotificationController>();
+
     // WhatsappController band hote hi socket bhi disconnect ho jata hai
     _delete<WhatsappController>();
     _delete<Whatsapptemplatecontroller>();
     _delete<WhatsappLeadFilterController>();
     _delete<WhatsappMediaController>();
+    WhatsappHandlingController.clearCache();
 
     _delete<CallsController>();
     _delete<AnalytisController>();

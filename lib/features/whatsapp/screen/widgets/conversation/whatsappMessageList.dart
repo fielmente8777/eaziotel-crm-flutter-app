@@ -4,6 +4,7 @@ import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappEr
 import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappMessageBubble.dart';
 import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappMessageItem.dart';
 import 'package:eazotel/features/whatsapp/screen/widgets/conversation/whatsappMessageMerger.dart';
+import 'package:eazotel/features/whatsapp/screen/widgets/whatsapp_ui.dart';
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -58,13 +59,8 @@ class WhatsappMessageList extends StatelessWidget {
       // LOADING
       // ------------------------------------------------------------
       if (whatsappController.isMessagesLoading.value) {
-        return const Center(
-          child: SizedBox(
-            width: 28,
-            height: 28,
-            child: CircularProgressIndicator(strokeWidth: 2.5),
-          ),
-        );
+        // Gol loader nahi: chat jaise bubbles ka shimmer
+        return const WaChatShimmer();
       }
 
       // ------------------------------------------------------------
@@ -100,9 +96,7 @@ class WhatsappMessageList extends StatelessWidget {
       // EMPTY
       // ------------------------------------------------------------
       if (messages.isEmpty) {
-        return const Center(
-          child: Text('No messages', style: TextStyle(fontSize: 13)),
-        );
+        return const _EmptyChat();
       }
 
       // ------------------------------------------------------------
@@ -324,8 +318,15 @@ class _DateHeader extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xff182229) : const Color(0xffe1f2fb),
+            color: isDark ? const Color(0xff182229) : Colors.white,
             borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0 : .06),
+                blurRadius: 3,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
           child: Text(
             label,
@@ -365,7 +366,7 @@ class _NewMessageDivider extends StatelessWidget {
               child: Divider(
                 height: 1,
                 thickness: 1,
-                color: Colors.grey.shade400,
+                color: WaPalette.green.withValues(alpha: .4),
               ),
             ),
 
@@ -375,14 +376,14 @@ class _NewMessageDivider extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
+                  color: WaPalette.green,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  count > 99 ? '99+' : '$count  unread Message',
+                  '${count > 99 ? '99+' : count} unread message${count == 1 ? '' : 's'}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onPrimary,
-                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -394,7 +395,44 @@ class _NewMessageDivider extends StatelessWidget {
               child: Divider(
                 height: 1,
                 thickness: 1,
-                color: Colors.grey.shade400,
+                color: WaPalette.green.withValues(alpha: .4),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ==================================================================
+// EMPTY CHAT
+// ==================================================================
+
+class _EmptyChat extends StatelessWidget {
+  const _EmptyChat();
+
+  @override
+  Widget build(BuildContext context) {
+    final p = WaPalette(context);
+
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: p.isDark ? const Color(0xff182229) : const Color(0xFFFFF5C4),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.chat_bubble_outline_rounded, size: 16, color: p.subText),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                'No messages yet. Say hello!',
+                style: TextStyle(color: p.subText, fontSize: 13),
               ),
             ),
           ],

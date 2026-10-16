@@ -94,6 +94,14 @@ mixin WhatsappStateMixin on GetxController {
 
   final RxString currentConversationId = ''.obs;
 
+  /// Naya incoming message aaya (aur wo chat khuli nahi hai).
+  /// App ke notifications (bell + banner) isse sunte hain.
+  void Function(
+    WhatsappConversationModel chat,
+    WhatsappSocketMessageModel message,
+  )?
+  onIncomingMessage;
+
   // ============================================================
   // API MESSAGES
   // ============================================================

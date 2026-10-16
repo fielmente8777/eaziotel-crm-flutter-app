@@ -108,7 +108,7 @@ _Slice _sourceSlice(String? rawId, int count, int i) {
 Color _stageColor(String id, int i) {
   switch (id) {
     case 'open':
-      return const Color(0xFF6366F1);
+      return const Color.fromARGB(255, 183, 184, 202);
     case 'hot':
       return const Color(0xFFEF4444);
     case 'potential':
@@ -194,12 +194,14 @@ class LeadsInsightsSection extends StatelessWidget {
         if (count <= 0) continue;
         final id = (rawStages[i].id ?? '').trim().toLowerCase();
         stageIds.add(id);
-        stages.add(_Slice(
-          key: id.isEmpty ? '__none' : id,
-          label: id.isEmpty ? 'No status' : _titleCase(id),
-          count: count,
-          color: _stageColor(id, i),
-        ));
+        stages.add(
+          _Slice(
+            key: id.isEmpty ? '__none' : id,
+            label: id.isEmpty ? 'No status' : _titleCase(id),
+            count: count,
+            color: _stageColor(id, i),
+          ),
+        );
       }
 
       // groups (Active / Won / Lost / No status)
@@ -374,22 +376,22 @@ class _Card extends StatelessWidget {
 }
 
 Widget _loader() => const Padding(
-      padding: EdgeInsets.symmetric(vertical: 48),
-      child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-    );
+  padding: EdgeInsets.symmetric(vertical: 48),
+  child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+);
 
 Widget _empty(AnalyticsPalette c, String msg) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(Icons.insights_outlined, color: c.subText, size: 28),
-            const SizedBox(height: 8),
-            Text(msg, style: TextStyle(color: c.subText)),
-          ],
-        ),
-      ),
-    );
+  padding: const EdgeInsets.symmetric(vertical: 40),
+  child: Center(
+    child: Column(
+      children: [
+        Icon(Icons.insights_outlined, color: c.subText, size: 28),
+        const SizedBox(height: 8),
+        Text(msg, style: TextStyle(color: c.subText)),
+      ],
+    ),
+  ),
+);
 
 Widget _segmented<T>({
   required AnalyticsPalette c,
@@ -415,8 +417,10 @@ Widget _segmented<T>({
               onTap: () => onChanged(e.key),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: value == e.key
                       ? accent.withValues(alpha: 0.18)
@@ -483,36 +487,36 @@ class _SourceDistributionCardState extends State<_SourceDistributionCard> {
       child: widget.loading
           ? _loader()
           : total == 0
-              ? _empty(c, 'No leads yet')
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _strip(c, total),
-                    const SizedBox(height: 18),
-                    for (int i = 0; i < sources.length; i++)
-                      _row(c, i, sources[i], total),
-                    const SizedBox(height: 14),
-                    _insight(c, sources.first, total),
-                  ],
-                ),
+          ? _empty(c, 'No leads yet')
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _strip(c, total),
+                const SizedBox(height: 18),
+                for (int i = 0; i < sources.length; i++)
+                  _row(c, i, sources[i], total),
+                const SizedBox(height: 14),
+                _insight(c, sources.first, total),
+              ],
+            ),
     );
   }
 
   Widget _totalChip(AnalyticsPalette c, int total) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: _accent.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          '$total leads',
-          style: const TextStyle(
-            color: _accent,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    decoration: BoxDecoration(
+      color: _accent.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Text(
+      '$total leads',
+      style: const TextStyle(
+        color: _accent,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+      ),
+    ),
+  );
 
   /// 100% stacked strip
   Widget _strip(AnalyticsPalette c, int total) {
@@ -552,7 +556,8 @@ class _SourceDistributionCardState extends State<_SourceDistributionCard> {
                             right: i == widget.sources.length - 1 ? 0 : 2,
                           ),
                           color: widget.sources[i].color.withValues(
-                            alpha: active == null ||
+                            alpha:
+                                active == null ||
                                     active == widget.sources[i].key
                                 ? 1
                                 : 0.25,
@@ -704,8 +709,7 @@ class _SourceDistributionCardState extends State<_SourceDistributionCard> {
                                 boxShadow: isActive
                                     ? [
                                         BoxShadow(
-                                          color:
-                                              s.color.withValues(alpha: 0.5),
+                                          color: s.color.withValues(alpha: 0.5),
                                           blurRadius: 10,
                                         ),
                                       ]
@@ -729,8 +733,7 @@ class _SourceDistributionCardState extends State<_SourceDistributionCard> {
   Widget _insight(AnalyticsPalette c, _Slice top, int total) {
     final s = _active == null
         ? top
-        : widget.sources.firstWhere((e) => e.key == _active,
-            orElse: () => top);
+        : widget.sources.firstWhere((e) => e.key == _active, orElse: () => top);
     final isTop = s.key == top.key;
 
     return AnimatedSwitcher(
@@ -755,7 +758,11 @@ class _SourceDistributionCardState extends State<_SourceDistributionCard> {
             Expanded(
               child: Text.rich(
                 TextSpan(
-                  style: TextStyle(color: c.subText, fontSize: 12.5, height: 1.4),
+                  style: TextStyle(
+                    color: c.subText,
+                    fontSize: 12.5,
+                    height: 1.4,
+                  ),
                   children: [
                     TextSpan(
                       text: s.label,
@@ -765,9 +772,7 @@ class _SourceDistributionCardState extends State<_SourceDistributionCard> {
                       ),
                     ),
                     TextSpan(
-                      text: isTop
-                          ? ' is your top source — '
-                          : ' brings ',
+                      text: isTop ? ' is your top source — ' : ' brings ',
                     ),
                     TextSpan(
                       text: '${s.count} of $total leads',
@@ -776,9 +781,7 @@ class _SourceDistributionCardState extends State<_SourceDistributionCard> {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    TextSpan(
-                      text: ' (${_pct(s.count, total, digits: 1)})',
-                    ),
+                    TextSpan(text: ' (${_pct(s.count, total, digits: 1)})'),
                   ],
                 ),
               ),
@@ -861,52 +864,49 @@ class _StagesBreakdownCardState extends State<_StagesBreakdownCard> {
       child: widget.loading
           ? _loader()
           : total == 0
-              ? _empty(c, 'No pipeline data')
-              : LayoutBuilder(
-                  builder: (context, box) {
-                    final wide = box.maxWidth >= 520;
-                    final size = wide
-                        ? (box.maxWidth * 0.38).clamp(190.0, 250.0).toDouble()
-                        : (box.maxWidth * 0.68).clamp(180.0, 240.0).toDouble();
+          ? _empty(c, 'No pipeline data')
+          : LayoutBuilder(
+              builder: (context, box) {
+                final wide = box.maxWidth >= 520;
+                final size = wide
+                    ? (box.maxWidth * 0.38).clamp(190.0, 250.0).toDouble()
+                    : (box.maxWidth * 0.68).clamp(180.0, 240.0).toDouble();
 
-                    final donut = _donut(c, slices, total, size);
-                    final legend = _legend(c, slices, total);
+                final donut = _donut(c, slices, total, size);
+                final legend = _legend(c, slices, total);
 
-                    final body = wide
-                        ? Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              donut,
-                              const SizedBox(width: 24),
-                              Expanded(child: legend),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              Center(child: donut),
-                              const SizedBox(height: 20),
-                              legend,
-                            ],
-                          );
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (widget.winRate != null) ...[
-                          _winRateChip(c),
-                          const SizedBox(height: 14),
+                final body = wide
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          donut,
+                          const SizedBox(width: 24),
+                          Expanded(child: legend),
                         ],
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 250),
-                          child: KeyedSubtree(
-                            key: ValueKey(_view),
-                            child: body,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                      )
+                    : Column(
+                        children: [
+                          Center(child: donut),
+                          const SizedBox(height: 20),
+                          legend,
+                        ],
+                      );
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (widget.winRate != null) ...[
+                      _winRateChip(c),
+                      const SizedBox(height: 14),
+                    ],
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      child: KeyedSubtree(key: ValueKey(_view), child: body),
+                    ),
+                  ],
+                );
+              },
+            ),
     );
   }
 
@@ -950,8 +950,7 @@ class _StagesBreakdownCardState extends State<_StagesBreakdownCard> {
     final active = _active;
     final activeSlice = active == null
         ? null
-        : slices.firstWhere((s) => s.key == active,
-            orElse: () => slices.first);
+        : slices.firstWhere((s) => s.key == active, orElse: () => slices.first);
 
     final base = size * 0.15;
     final grow = size * 0.19;
@@ -971,8 +970,9 @@ class _StagesBreakdownCardState extends State<_StagesBreakdownCard> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: (activeSlice?.color ?? _accent)
-                      .withValues(alpha: c.isDark ? 0.25 : 0.14),
+                  color: (activeSlice?.color ?? _accent).withValues(
+                    alpha: c.isDark ? 0.25 : 0.14,
+                  ),
                   blurRadius: 44,
                   spreadRadius: -8,
                 ),
@@ -997,10 +997,13 @@ class _StagesBreakdownCardState extends State<_StagesBreakdownCard> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [s.color, _darker(s.color)]
-                          .map((col) => col.withValues(
-                                alpha:
-                                    active == null || active == s.key ? 1 : 0.25,
-                              ))
+                          .map(
+                            (col) => col.withValues(
+                              alpha: active == null || active == s.key
+                                  ? 1
+                                  : 0.25,
+                            ),
+                          )
                           .toList(),
                     ),
                   ),
@@ -1084,10 +1087,7 @@ class _StagesBreakdownCardState extends State<_StagesBreakdownCard> {
                             ),
                             Text(
                               '${activeSlice.count} leads',
-                              style: TextStyle(
-                                color: c.subText,
-                                fontSize: 11,
-                              ),
+                              style: TextStyle(color: c.subText, fontSize: 11),
                             ),
                           ],
                         ),
@@ -1198,8 +1198,9 @@ class _StagesBreakdownCardState extends State<_StagesBreakdownCard> {
                             fontStyle: s.label == 'No status'
                                 ? FontStyle.italic
                                 : FontStyle.normal,
-                            fontWeight:
-                                isActive ? FontWeight.w700 : FontWeight.w500,
+                            fontWeight: isActive
+                                ? FontWeight.w700
+                                : FontWeight.w500,
                           ),
                         ),
                       ),

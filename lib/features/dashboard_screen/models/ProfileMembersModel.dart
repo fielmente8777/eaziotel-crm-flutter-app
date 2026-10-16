@@ -2,29 +2,19 @@ class UserResponseModel {
   final bool? status;
   final List<UserModel> data;
 
-  UserResponseModel({
-    this.status,
-    this.data = const [],
-  });
+  UserResponseModel({this.status, this.data = const []});
 
   factory UserResponseModel.fromJson(Map<String, dynamic> json) {
     return UserResponseModel(
       status: json['Status'],
       data: json['data'] != null
-          ? List<UserModel>.from(
-              json['data'].map(
-                (x) => UserModel.fromJson(x),
-              ),
-            )
+          ? List<UserModel>.from(json['data'].map((x) => UserModel.fromJson(x)))
           : [],
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'Status': status,
-      'data': data.map((x) => x.toJson()).toList(),
-    };
+    return {'Status': status, 'data': data.map((x) => x.toJson()).toList()};
   }
 }
 
@@ -50,7 +40,7 @@ class UserModel {
     this.accesskey,
     this.createdAt,
     this.displayName,
-    this.emailId, 
+    this.emailId,
     this.googleId,
     this.isAdmin,
     this.ndid,
@@ -112,8 +102,7 @@ class UserModel {
       'role': role,
       'userName': userName,
       'phone': phone,
-      'assigned_location':
-          assignedLocation.map((x) => x.toJson()).toList(),
+      'assigned_location': assignedLocation.map((x) => x.toJson()).toList(),
     };
   }
 }
@@ -122,14 +111,9 @@ class AssignedLocationModel {
   final AccessScopeModel? accessScope;
   final String? hid;
 
-  AssignedLocationModel({
-    this.accessScope,
-    this.hid,
-  });
+  AssignedLocationModel({this.accessScope, this.hid});
 
-  factory AssignedLocationModel.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory AssignedLocationModel.fromJson(Map<String, dynamic> json) {
     return AssignedLocationModel(
       accessScope: json['accessScope'] != null
           ? AccessScopeModel.fromJson(
@@ -141,10 +125,7 @@ class AssignedLocationModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'accessScope': accessScope?.toJson(),
-      'hid': hid,
-    };
+    return {'accessScope': accessScope?.toJson(), 'hid': hid};
   }
 }
 
@@ -197,28 +178,21 @@ class AccessScopeModel {
     this.whatsappmarketing = false,
   });
 
-  factory AccessScopeModel.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory AccessScopeModel.fromJson(Map<String, dynamic> json) {
     return AccessScopeModel(
-      analyticsandreporting:
-          json['analyticsandreporting'] ?? false,
+      analyticsandreporting: json['analyticsandreporting'] ?? false,
       bookingEngine: json['bookingEngine'] ?? false,
       channelManager: json['channelManager'] ?? false,
       cms: json['cms'] ?? false,
-      conversationaltool:
-          json['conversationaltool'] ?? false,
+      conversationaltool: json['conversationaltool'] ?? false,
       eazobot: json['eazobot'] ?? false,
       emailmarketing: json['emailmarketing'] ?? false,
-      enquiriesManagement:
-          json['enquiriesManagement'] ?? false,
+      enquiriesManagement: json['enquiriesManagement'] ?? false,
       foodManager: json['foodManager'] ?? false,
       frontDesk: json['frontDesk'] ?? false,
       gatewayManager: json['gatewayManager'] ?? false,
-      guestRequestManagement:
-          json['guestRequestManagement'] ?? false,
-      humanResourceManagement:
-          json['humanResourceManagement'] ?? false,
+      guestRequestManagement: json['guestRequestManagement'] ?? false,
+      humanResourceManagement: json['humanResourceManagement'] ?? false,
       leadgenform: json['leadgenform'] ?? false,
       reservationDesk: json['reservationDesk'] ?? false,
       seoManager: json['seoManager'] ?? false,
@@ -227,8 +201,7 @@ class AccessScopeModel {
       themes: json['themes'] ?? false,
       usermanagement: json['usermanagement'] ?? false,
       whatsapp: json['whatsapp'] ?? false,
-      whatsappmarketing:
-          json['whatsappmarketing'] ?? false,
+      whatsappmarketing: json['whatsappmarketing'] ?? false,
     );
   }
 

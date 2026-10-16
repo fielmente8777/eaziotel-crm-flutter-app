@@ -4,12 +4,11 @@ import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_cont
 import 'package:eazotel/features/dashboard_screen/controllers/headerLocationController.dart';
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/leads_insights_section.dart';
-import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/LeadsScreenWidget/lead_card.dart';
-import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/LeadsScreenWidget/leads_empty_state.dart';
+import 'package:eazotel/features/leads/screen/widgets/lead_card.dart';
+import 'package:eazotel/features/leads/screen/widgets/leads_empty_state.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/dashboardwidget/callAnalytis.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/dashboardwidget/dashboard_card.dart';
-import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/dashboardwidget/greeting_text.dart';
-import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/dashboardwidget/hotle_name.dart';
+import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/dashboardwidget/dashboard_hero.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/drawerScreen/drawerScreen.dart';
 import 'package:eazotel/features/googleAnalytis/controller/analytisController.dart';
 import 'package:eazotel/features/googleAnalytis/screen/analytics_line_chart.dart';
@@ -53,7 +52,7 @@ class DashboardScreen extends StatelessWidget {
         // ======================================================
         // APP BAR - FIXED
         // ======================================================
-        appBar: dashboardAppBar(context),
+        // Upar ka hissa ab scroll ke saath (DashboardHero), alag app bar nahi
 
         // ======================================================
         // BODY
@@ -156,6 +155,18 @@ class DashboardScreen extends StatelessWidget {
 
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
           return [
+            SliverToBoxAdapter(
+              child: DashboardHero(
+                onMenu: () => _scaffoldKey.currentState?.openEndDrawer(),
+              ),
+            ),
+            // const SliverToBoxAdapter(child: DashboardQuickActions()),
+            const SliverToBoxAdapter(
+              child: DashboardSectionTitle(
+                title: 'Overview',
+                subtitle: 'Your leads at a glance',
+              ),
+            ),
             SliverToBoxAdapter(child: dashboardBody()),
             // SliverToBoxAdapter(child: _analyticsSection(context)),
             // SliverToBoxAdapter(child: CallInsightsSection()),
@@ -169,101 +180,6 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
   }
-  // ============================================================
-  // APP BAR
-  // ============================================================
-
-  PreferredSizeWidget dashboardAppBar(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return AppBar(
-      automaticallyImplyLeading: false,
-      toolbarHeight: 130,
-      backgroundColor: theme.scaffoldBackgroundColor,
-      elevation: 0,
-
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          greetingWidget(context),
-
-          VSpace(height: 6),
-
-          hotelNameWidget(context),
-
-          VSpace(height: 8),
-
-          // Reusable widget (defined at the bottom of this file)
-          const LocationSelector(),
-        ],
-      ),
-
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 30),
-
-          child: InkWell(
-            onTap: () {
-              // controller.changeTab(3);
-
-              _scaffoldKey.currentState?.openEndDrawer();
-            },
-            borderRadius: BorderRadius.circular(22),
-            child: Obx(() {
-              final hotelName =
-                  locationController.selectedHotel.value?.local.trim() ?? '';
-
-              final lastWord = hotelName.split(RegExp(r'\s+')).first;
-
-              final profileName = lastWord.isNotEmpty
-                  ? lastWord[0].toUpperCase()
-                  : '';
-
-              return Container(
-                width: 55,
-                height: 55,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Color(0xFF3B82F6)
-                      : Color(0xFF3B82F6),
-                  borderRadius: BorderRadius.circular(22),
-                ),
-                child: profileName.trim().isEmpty
-                    ? const Icon(Icons.person, color: Colors.white, size: 20)
-                    : Text(
-                        profileName,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              );
-            }),
-          ),
-          // child: IconButton(
-          //   icon: const Icon(Icons.menu),
-          //   onPressed: () {
-          //     Scaffold.of(context).openDrawer();
-          //   },
-          // ),
-        ),
-      ],
-      // actions: [
-      //   Padding(
-      //     padding: const EdgeInsets.only(right: 30),
-      //     child: IconButton(
-      //       icon: const Icon(Icons.menu, size: 28),
-      //       onPressed: () {
-      //         _scaffoldKey.currentState?.openEndDrawer();
-      //       },
-      //     ),
-      //   ),
-      // ],
-    );
-  }
-
   // ============================================================
   // HOTEL SELECTOR
   // ============================================================
@@ -417,43 +333,24 @@ class DashboardScreen extends StatelessWidget {
 
       Widget header() {
         return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Recent Leads',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+          padding: const EdgeInsets.only(bottom: 10),
+          child: DashboardSectionTitle(
+            title: 'Recent Leads',
+            subtitle: 'New in the last 24 hours',
+            action: TextButton(
+              onPressed: () => controller.changeTab(1),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'See all',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  SizedBox(width: 2),
+                  Icon(Icons.arrow_forward_ios_rounded, size: 13),
+                ],
               ),
-
-              GestureDetector(
-                onTap: () {
-                  controller.changeTab(1);
-                },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'See All Leads',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-
-                    const SizedBox(width: 4),
-
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 14,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
         );
       }

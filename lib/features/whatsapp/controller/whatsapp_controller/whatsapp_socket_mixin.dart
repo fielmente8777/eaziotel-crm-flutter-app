@@ -70,6 +70,15 @@ mixin WhatsappSocketMixin
       // 3
       _upsertConversationFromSocket(raw, message, ndid);
 
+      // 3b. Notification (sirf customer ka message, aur chat khuli na ho)
+      if (_isIncomingSocket(message) &&
+          currentConversationId.value != conversationId) {
+        final index = _conversationIndex(conversationId);
+        if (index != -1) {
+          onIncomingMessage?.call(conversations[index], message);
+        }
+      }
+
       // 4
       if (currentConversationId.value == conversationId) {
         _addSocketMessageToOpenChat(message);

@@ -12,14 +12,24 @@
 import 'dart:convert';
 
 import 'package:eazotel/core/api/api_clint_servic.dart';
+import 'package:eazotel/core/api/apiexception/api_exception.dart';
 import 'package:eazotel/core/constants/api_base_url.dart';
 import 'package:eazotel/core/constants/api_endpoints.dart';
+import 'package:eazotel/features/setting_screen/whatsapp/models/whatsapp_action_response.dart';
 import 'package:flutter/foundation.dart';
 
 import '../models/marketing_models.dart';
 
 class MarketingService {
   MarketingService._();
+
+  /// Galti ka saaf message: server ka ho to wahi, warna [fallback]
+  static String errorText(Object e, String fallback) {
+    if (e is ApiException) return WhatsappActionResponse.errorOf(e, fallback);
+
+    final text = '$e'.replaceFirst('Exception: ', '').trim();
+    return text.isEmpty || text.length > 200 ? fallback : text;
+  }
 
   // ============================================================
   // WHATSAPP
@@ -89,10 +99,16 @@ class MarketingService {
     required String hid,
     required int page,
     int limit = 50,
+    String search = '',
   }) async {
     final json = await _get(
       'EMAIL RECIPIENTS',
-      '${MarketingApiEndpoint.emailRecipients}?hid=$hid&page=$page&limit=$limit',
+      _url(MarketingApiEndpoint.emailRecipients, {
+        'hid': hid,
+        'page': '$page',
+        'limit': '$limit',
+        'search': search.trim(),
+      }),
     );
 
     final result = _map(json['result']);
@@ -138,6 +154,421 @@ class MarketingService {
           : <EmailCampaign>[],
       page: MarketingPage.fromJson(result['pagination']),
     );
+  }
+
+  // ============================================================
+  // WHATSAPP: NAYA CAMPAIGN
+  // ============================================================
+
+  /// Kitne contacts tak campaign jayega ('' source = sab)
+  static Future<int> getCampaignAudience({
+    required String hid,
+    String source = '',
+  }) async {
+    final json = await _get(
+      'CAMPAIGN AUDIENCE',
+      _url(MarketingApiEndpoint.whatsappCampaignAudience, {
+        'hid': hid,
+        'source': source,
+      }),
+    );
+
+    final total = _map(json['result'])['totalUsers'];
+    return total is num ? total.toInt() : int.tryParse('$total') ?? 0;
+  }
+
+  /// [template] = templateId, templateName, templateCategory,
+  /// templateLanguage, templateParams, templateParamsHeader
+  static Future<void> createWhatsappCampaign({
+    required String hid,
+    required String name,
+    required Map<String, dynamic> template,
+    String source = '',
+  }) async {
+    await _send(
+      'CREATE WHATSAPP CAMPAIGN',
+      'POST',
+      _url(MarketingApiEndpoint.whatsappCreateCampaign, {'hid': hid}),
+      {
+        'campaignName': name,
+        'template': template,
+        if (source.isNotEmpty) 'source': source,
+      },
+    );
+  }
+
+  // ============================================================
+  // EMAIL: RECIPIENT BATCH (kisko bhejna hai)
+  // Teeno ka jawab: result.doc { recipientBatchId, count }
+  // ============================================================
+
+  static Future<({String batchId, int count})> createBatchFromLeads({
+    required String hid,
+    required List<String> leadIds,
+  }) => _batch('LEADS BATCH', MarketingApiEndpoint.emailBatchLeads, {
+    'hid': hid,
+    'leadIds': leadIds,
+  });
+
+  /// Search se milne wale SAARE lead (sirf is page ke nahi)
+  static Future<({String batchId, int count})> createBatchFromSearch({
+    required String hid,
+    required String search,
+  }) => _batch('ALL LEADS BATCH', MarketingApiEndpoint.emailBatchAllLeads, {
+    'hid': hid,
+    'search': search.trim(),
+  });
+
+  static Future<({String batchId, int count})> createBatchFromEmails({
+    required String hid,
+    required List<String> emails,
+  }) => _batch('MANUAL BATCH', MarketingApiEndpoint.emailBatchManual, {
+    'hid': hid,
+    'emails': emails,
+  });
+
+  static Future<({String batchId, int count})> _batch(
+    String tag,
+    String endpoint,
+    Map<String, dynamic> body,
+  ) async {
+    final json = await _send(tag, 'POST', endpoint, body);
+    final doc = _map(_map(json['result'])['doc']);
+    final count = doc['count'];
+
+    return (
+      batchId: '${doc['recipientBatchId'] ?? ''}',
+      count: count is num ? count.toInt() : 0,
+    );
+  }
+
+  // ============================================================
+  // EMAIL: CAMPAIGN BANAO + BHEJO
+  // ============================================================
+
+  /// Multipart (attachments ke saath). Jawab: result.doc.campaign._id
+  static Future<String> createEmailCampaign({
+    required String hid,
+    required String name,
+    required String subject,
+    required String html,
+    required String text,
+    required String fromEmail,
+    String fromName = '',
+    required List<String> batchIds,
+    List<String> attachmentPaths = const [],
+  }) async {
+    const tag = 'CREATE EMAIL CAMPAIGN';
+    const endpoint = MarketingApiEndpoint.emailCampaigns;
+
+    try {
+      final response = await ApiClient.multipart(
+        endpoint,
+        fields: {
+          'hid': hid,
+          'name': name,
+          'subject': subject,
+          'html': html,
+          'text': text,
+          'fromName': fromName,
+          'fromEmail': fromEmail,
+          'recipientBatchIds': jsonEncode(batchIds),
+        },
+        files: [
+          for (final path in attachmentPaths)
+            ApiUploadFile(field: 'attachments', path: path),
+        ],
+        authenticated: true,
+        baseUrl: BaseUrl.production2,
+      );
+
+      _log(tag, endpoint, response.statusCode, response.body);
+
+      final json = _map(jsonDecode(response.body));
+      final campaign = _map(_map(_map(json['result'])['doc'])['campaign']);
+
+      return '${campaign['_id'] ?? ''}';
+    } catch (e, stackTrace) {
+      _logError(tag, e, stackTrace);
+      rethrow;
+    }
+  }
+
+  static Future<void> sendEmailCampaign({
+    required String hid,
+    required String campaignId,
+  }) async {
+    await _send(
+      'SEND EMAIL CAMPAIGN',
+      'POST',
+      MarketingApiEndpoint.emailCampaignSend(campaignId),
+      {'hid': hid},
+    );
+  }
+
+  // ============================================================
+  // EMAIL: CAMPAIGN DETAIL
+  // ============================================================
+
+  static Future<EmailCampaign?> getEmailCampaign({
+    required String hid,
+    required String id,
+  }) async {
+    final json = await _get(
+      'EMAIL CAMPAIGN',
+      _url(MarketingApiEndpoint.emailCampaign(id), {'hid': hid}),
+      logBody: false,
+    );
+
+    final doc = _map(json['result'])['doc'];
+    return doc is Map
+        ? EmailCampaign.fromJson(Map<String, dynamic>.from(doc))
+        : null;
+  }
+
+  static Future<({List<EmailCampaignRecipient> items, MarketingPage page})>
+  getEmailCampaignRecipients({
+    required String hid,
+    required String id,
+    required int page,
+    int limit = 50,
+    String status = '',
+  }) async {
+    final json = await _get(
+      'EMAIL CAMPAIGN RECIPIENTS',
+      _url(MarketingApiEndpoint.emailCampaignRecipients(id), {
+        'hid': hid,
+        'page': '$page',
+        'limit': '$limit',
+        'status': status,
+      }),
+    );
+
+    final result = _map(json['result']);
+    final list = result['doc'];
+
+    return (
+      items: list is List
+          ? list
+                .whereType<Map>()
+                .map(
+                  (e) => EmailCampaignRecipient.fromJson(
+                    Map<String, dynamic>.from(e),
+                  ),
+                )
+                .toList()
+          : <EmailCampaignRecipient>[],
+      page: MarketingPage.fromJson(result['pagination']),
+    );
+  }
+
+  // ============================================================
+  // EMAIL: TEMPLATES
+  // ============================================================
+
+  static Future<({List<EmailTemplate> items, MarketingPage page})>
+  getEmailTemplates({
+    required String hid,
+    required int page,
+    int limit = 12,
+    String search = '',
+  }) async {
+    final json = await _get(
+      'EMAIL TEMPLATES',
+      _url(MarketingApiEndpoint.emailTemplates, {
+        'hid': hid,
+        'page': '$page',
+        'limit': '$limit',
+        'search': search.trim(),
+      }),
+      logBody: false,
+    );
+
+    final result = _map(json['result']);
+    final list = result['doc'];
+
+    return (
+      items: list is List
+          ? list
+                .whereType<Map>()
+                .map(
+                  (e) => EmailTemplate.fromJson(Map<String, dynamic>.from(e)),
+                )
+                .toList()
+          : <EmailTemplate>[],
+      page: MarketingPage.fromJson(result['pagination']),
+    );
+  }
+
+  /// Naya ya purana (id ho to update). Jawab: saved template
+  static Future<EmailTemplate> saveEmailTemplate({
+    required String hid,
+    required EmailTemplate template,
+  }) async {
+    final json = template.isSaved
+        ? await _send(
+            'UPDATE EMAIL TEMPLATE',
+            'PATCH',
+            _url(MarketingApiEndpoint.emailTemplate(template.id), {'hid': hid}),
+            {'hid': hid, ...template.toPayload()},
+          )
+        : await _send(
+            'CREATE EMAIL TEMPLATE',
+            'POST',
+            _url(MarketingApiEndpoint.emailTemplates, {'hid': hid}),
+            {'hid': hid, ...template.toPayload()},
+          );
+
+    final doc = _map(_map(json['result'])['doc']);
+
+    return doc.isEmpty
+        ? template
+        : EmailTemplate.fromJson(doc).copyWith(
+            // Server html na bheje to apna rakho
+            html: '${doc['html'] ?? ''}'.isEmpty ? template.html : null,
+          );
+  }
+
+  static Future<void> deleteEmailTemplate({
+    required String hid,
+    required String id,
+  }) async {
+    await _send(
+      'DELETE EMAIL TEMPLATE',
+      'DELETE',
+      _url(MarketingApiEndpoint.emailTemplate(id), {'hid': hid}),
+      {'hid': hid},
+    );
+  }
+
+  /// AI se email banao. [previous] diya to usi ko badalta hai (refine).
+  /// 20-60 second lag sakte hain.
+  static Future<EmailTemplate> generateEmailTemplate({
+    required String hid,
+    required String prompt,
+    required String tone,
+    String brandName = '',
+    String primaryColor = '',
+    String logoUrl = '',
+    String ctaText = '',
+    String ctaUrl = '',
+    EmailTemplate? previous,
+  }) async {
+    final json = await _send(
+      'AI EMAIL TEMPLATE',
+      'POST',
+      _url(MarketingApiEndpoint.emailTemplateGenerate, {'hid': hid}),
+      {
+        'hid': hid,
+        'prompt': prompt,
+        'tone': tone,
+        'brandName': brandName,
+        'primaryColor': primaryColor,
+        'logoUrl': logoUrl,
+        'ctaText': ctaText,
+        'ctaUrl': ctaUrl,
+        if (previous != null)
+          'previousTemplate': {
+            'subject': previous.subject,
+            'html': previous.html,
+          },
+      },
+      timeout: const Duration(seconds: 120),
+    );
+
+    final doc = _map(_map(json['result'])['doc']);
+    if ('${doc['html'] ?? ''}'.isEmpty) {
+      throw Exception('The AI returned an empty template. Please try again.');
+    }
+
+    return EmailTemplate.fromJson(doc);
+  }
+
+  // ============================================================
+  // COMMON: URL (khali value hata kar)
+  // ============================================================
+
+  static String _url(String path, Map<String, String> query) => Uri(
+    path: path,
+    queryParameters: {
+      for (final e in query.entries)
+        if (e.value.isNotEmpty) e.key: e.value,
+    },
+  ).toString();
+
+  static void _log(String tag, String endpoint, int status, String body) {
+    debugPrint('');
+    debugPrint('==================================================');
+    debugPrint('📣 MARKETING: $tag API');
+    debugPrint('==================================================');
+    debugPrint('URL: ${BaseUrl.production2}$endpoint');
+    debugPrint('STATUS: $status');
+    debugPrint(
+      'BODY: ${body.length > 1500 ? '${body.substring(0, 1500)}…' : body}',
+    );
+    debugPrint('==================================================');
+  }
+
+  static void _logError(String tag, Object e, StackTrace stackTrace) {
+    debugPrint('');
+    debugPrint('==================================================');
+    debugPrint('❌ MARKETING: $tag API ERROR');
+    debugPrint('==================================================');
+    debugPrint('ERROR: $e');
+    debugPrint('STACK: $stackTrace');
+    debugPrint('==================================================');
+  }
+
+  // ============================================================
+  // COMMON: POST / PATCH / DELETE + log + JSON
+  // ============================================================
+
+  static Future<Map<String, dynamic>> _send(
+    String tag,
+    String method,
+    String endpoint,
+    Map<String, dynamic> body, {
+    Duration? timeout,
+  }) async {
+    try {
+      final response = switch (method) {
+        'PATCH' => await ApiClient.patch(
+          endpoint,
+          body: body,
+          authenticated: true,
+          baseUrl: BaseUrl.production2,
+        ),
+        'DELETE' => await ApiClient.delete(
+          endpoint,
+          body: body,
+          authenticated: true,
+          baseUrl: BaseUrl.production2,
+        ),
+        _ => await ApiClient.post(
+          endpoint,
+          body: body,
+          authenticated: true,
+          baseUrl: BaseUrl.production2,
+          timeout: timeout,
+        ),
+      };
+
+      _log(tag, endpoint, response.statusCode, response.body);
+
+      final json = _map(jsonDecode(response.body));
+
+      // Kuch API 200 ke saath bhi success:false bhejti hain
+      if (json['success'] == false) {
+        throw Exception(
+          '${json['message'] ?? json['responseMessage'] ?? 'Request failed'}',
+        );
+      }
+
+      return json;
+    } catch (e, stackTrace) {
+      _logError(tag, e, stackTrace);
+      rethrow;
+    }
   }
 
   // ============================================================

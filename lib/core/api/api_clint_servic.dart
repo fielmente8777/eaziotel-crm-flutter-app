@@ -46,8 +46,12 @@ class ApiClient {
     String? filePath,
     bool formData = false,
     void Function(int sent, int total)? onUploadProgress,
+
+    /// Default 30 sec. Lambi request (jaise AI) ke liye zyada do.
+    Duration? timeout,
   }) {
     return _request(
+      timeout: timeout,
       method: 'POST',
       endpoint: endpoint,
       body: body,
@@ -147,6 +151,7 @@ class ApiClient {
 
   static Future<http.Response> _request({
     required String method,
+    Duration? timeout,
     required String endpoint,
     Map<String, dynamic>? body,
     bool authenticated = true,
@@ -208,6 +213,7 @@ class ApiClient {
 
       final response = await _sendRequest(
         method: method,
+        timeout: timeout,
         url: url,
         headers: headers,
         body: body,
@@ -242,6 +248,7 @@ class ApiClient {
           // Retry original request only once
           return _request(
             method: method,
+            timeout: timeout,
             endpoint: endpoint,
             body: body,
             authenticated: true,
@@ -393,6 +400,7 @@ class ApiClient {
 
   static Future<http.Response> _sendRequest({
     required String method,
+    Duration? timeout,
     required Uri url,
     required Map<String, String> headers,
     Map<String, dynamic>? body,
@@ -519,7 +527,7 @@ class ApiClient {
       case 'POST':
         return _client
             .post(url, headers: headers, body: encodedBody)
-            .timeout(const Duration(seconds: 30));
+            .timeout(timeout ?? const Duration(seconds: 30));
 
       // ----------------------------------------------------------
       // PUT

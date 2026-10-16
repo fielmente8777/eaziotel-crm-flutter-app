@@ -1,9 +1,20 @@
+// ============================================================
+// DASHBOARD BOTTOM NAV
+//
+//   Home | Leads | WhatsApp | Profile
+//
+// Chuna hua tab: rangeen "pill" ke andar bhara (filled) icon.
+// Profile yahin hai (theme, logout, hotel badalna), isliye drawer me
+// alag "Profile" nahi; drawer ke upar "View profile" se yahi khulta hai.
+// ============================================================
+
 import 'package:eazotel/features/dashboard_screen/controllers/bottom_nav_controller.dart';
-import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/dashboard_screen.dart';
-import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/leads_screen.dart';
+import 'package:eazotel/features/leads/screen/leads_screen.dart';
+import 'package:eazotel/features/notifications/controller/notification_controller.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/profile_screen.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/whatsapp_screen.dart';
+import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
@@ -11,130 +22,124 @@ import 'package:get/get.dart';
 class DashboardBottomNav extends StatelessWidget {
   const DashboardBottomNav({super.key});
 
-  // Abhi sabhi icons ke liye pehli image use ho rahi hai.
-  // Baad mein har icon ka apna path yahan badal dena.
-  static const String _dashboardIcon =
-      'assets/bottomNavigationIcon/Dashboard.svg';
-  static const String _leadsIcon =
-      'assets/bottomNavigationIcon/profile-circle-svgrepo-com.svg';
   static const String _whatsappIcon =
       'assets/bottomNavigationIcon/whatsapp.svg';
-  static const String _profileIcon =
-      'assets/bottomNavigationIcon/setting-svgrepo-com.svg';
 
-  // WhatsApp green (light aur dark dono theme mein same)
-  // static const Color _whatsappGreen = Color(0xFF25D366);
-
-  Widget _navIcon(BuildContext context, String assetPath, {Color? fixedColor}) {
-    return Builder(
-      builder: (iconContext) {
-        // fixedColor diya ho to wahi use hoga, warna theme ka color
-        final color = fixedColor ?? IconTheme.of(iconContext).color;
-        return SvgPicture.asset(
-          assetPath,
-          width: 24,
-          height: 24,
-          colorFilter: color == null
-              ? null
-              : ColorFilter.mode(color, BlendMode.srcIn),
-        );
-      },
-    );
-  }
+  Widget _svg(String asset, Color color) => SvgPicture.asset(
+    asset,
+    width: 22,
+    height: 22,
+    colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+  );
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(BottomNavController());
 
+    // App khulte hi: WhatsApp socket judta hai + notifications shuru
+    // (WhatsApp tab kholne ka intezaar nahi)
+    if (!Get.isRegistered<NotificationController>()) {
+      Get.put(NotificationController(), permanent: true);
+    }
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final barColor = isDark ? TAppColors.darkCard : TAppColors.lightCard;
+    final border = isDark ? TAppColors.darkBorder : TAppColors.lightBorder;
+    final idle = isDark
+        ? TAppColors.darkSecondaryText
+        : TAppColors.lightSecondaryText;
+    // Dark theme: chamakdar indigo pill + safed icon + lavender label
+    // Light theme: pehle jaisa primary
+    final pill = isDark
+        ? const Color(0xFF6366F1)
+        : TAppColors.primary.withValues(alpha: .12);
+    final activeIcon = isDark ? Colors.white : TAppColors.primary;
+    final activeLabel = isDark ? const Color(0xFFC7D2FE) : TAppColors.primary;
+
     return SafeArea(
       child: Scaffold(
         body: Obx(() {
           switch (controller.selectedIndex.value) {
-            case 0:
-              return DashboardScreen(controller: controller);
-
             case 1:
               return LeadsScreen(controller: controller);
-
             case 2:
               return whatsapp(controller: controller);
-
             case 3:
               return ProfileScreen(controller: controller);
-
             default:
               return DashboardScreen(controller: controller);
           }
         }),
-
         bottomNavigationBar: Container(
-          height: 65,
+          decoration: BoxDecoration(
+            color: barColor,
+            border: Border(top: BorderSide(color: border)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? .3 : .06),
+                blurRadius: 16,
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
           child: Obx(
-            () => BottomNavigationBar(
-              backgroundColor: Theme.of(
-                context,
-              ).bottomNavigationBarTheme.backgroundColor,
-
-              selectedItemColor: Theme.of(
-                context,
-              ).bottomNavigationBarTheme.selectedItemColor,
-
-              unselectedItemColor: Theme.of(
-                context,
-              ).bottomNavigationBarTheme.unselectedItemColor,
-
-              selectedLabelStyle: Theme.of(
-                context,
-              ).bottomNavigationBarTheme.selectedLabelStyle,
-
-              unselectedLabelStyle: Theme.of(
-                context,
-              ).bottomNavigationBarTheme.unselectedLabelStyle,
-
-              selectedIconTheme: Theme.of(
-                context,
-              ).bottomNavigationBarTheme.selectedIconTheme,
-
-              unselectedIconTheme: Theme.of(
-                context,
-              ).bottomNavigationBarTheme.unselectedIconTheme,
-
-              type:
-                  Theme.of(context).bottomNavigationBarTheme.type ??
-                  BottomNavigationBarType.fixed,
-
-              elevation:
-                  Theme.of(context).bottomNavigationBarTheme.elevation ?? 0,
-
-              currentIndex: controller.selectedIndex.value,
-
-              onTap: (index) {
-                controller.changeTab(index);
-              },
-
-              items: [
-                BottomNavigationBarItem(
-                  icon: _navIcon(context, _dashboardIcon),
-                  label: "Dashboard",
+            () => NavigationBarTheme(
+              data: NavigationBarThemeData(
+                backgroundColor: barColor,
+                surfaceTintColor: Colors.transparent,
+                indicatorColor: pill,
+                indicatorShape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                BottomNavigationBarItem(
-                  // icon: _navIcon(context, _leadsIcon),
-                  icon: Icon(Icons.people_outline),
-                  label: "Leads",
-                ),
-                BottomNavigationBarItem(
-                  icon: _navIcon(
-                    context,
-                    _whatsappIcon,
-                    // fixedColor: _whatsappGreen,
+                labelTextStyle: WidgetStateProperty.resolveWith(
+                  (states) => TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: states.contains(WidgetState.selected)
+                        ? FontWeight.w700
+                        : FontWeight.w500,
+                    color: states.contains(WidgetState.selected)
+                        ? activeLabel
+                        : idle,
                   ),
-                  label: "Whatsapp",
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person),
-                  label: "Profile",
+                iconTheme: WidgetStateProperty.resolveWith(
+                  (states) => IconThemeData(
+                    size: 24,
+                    color: states.contains(WidgetState.selected)
+                        ? activeIcon
+                        : idle,
+                  ),
                 ),
-              ],
+              ),
+              child: NavigationBar(
+                height: 66,
+                elevation: 0,
+                selectedIndex: controller.selectedIndex.value,
+                labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                onDestinationSelected: controller.changeTab,
+                destinations: [
+                  const NavigationDestination(
+                    icon: Icon(Icons.space_dashboard_outlined),
+                    selectedIcon: Icon(Icons.space_dashboard_rounded),
+                    label: 'Home',
+                  ),
+                  const NavigationDestination(
+                    icon: Icon(Icons.people_outline_rounded),
+                    selectedIcon: Icon(Icons.people_alt_rounded),
+                    label: 'Leads',
+                  ),
+                  NavigationDestination(
+                    icon: _svg(_whatsappIcon, idle),
+                    selectedIcon: _svg(_whatsappIcon, activeIcon),
+                    label: 'WhatsApp',
+                  ),
+                  const NavigationDestination(
+                    icon: Icon(Icons.person_outline_rounded),
+                    selectedIcon: Icon(Icons.person_rounded),
+                    label: 'Profile',
+                  ),
+                ],
+              ),
             ),
           ),
         ),

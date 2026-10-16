@@ -136,17 +136,24 @@ class CampaignRecipient {
 // ============================================================
 
 class EmailRecipient {
-  const EmailRecipient({required this.name, required this.email});
+  const EmailRecipient({this.id = '', required this.name, required this.email});
 
+  /// Lead ki id (select karke bhejne me lagti hai)
+  final String id;
   final String name;
   final String email;
 
-  factory EmailRecipient.fromJson(Map<String, dynamic> json) =>
-      EmailRecipient(name: _str(json['name']), email: _str(json['email']));
+  factory EmailRecipient.fromJson(Map<String, dynamic> json) => EmailRecipient(
+    id: _str(json['id'] ?? json['_id']),
+    name: _str(json['name']),
+    email: _str(json['email']),
+  );
 }
 
 class EmailCampaign {
   const EmailCampaign({
+    this.id = '',
+    this.html = '',
     required this.subject,
     required this.status,
     required this.fromEmail,
@@ -156,6 +163,10 @@ class EmailCampaign {
     this.createdAt,
   });
 
+  final String id;
+
+  /// Email ka poora HTML (detail me preview)
+  final String html;
   final String subject;
   final String status;
   final String fromEmail;
@@ -174,6 +185,8 @@ class EmailCampaign {
     final raw = json['stats'];
 
     return EmailCampaign(
+      id: _str(json['_id']),
+      html: _str(json['html']),
       subject: _str(json['subject']).isNotEmpty
           ? _str(json['subject'])
           : _str(json['name']),
@@ -193,4 +206,120 @@ class EmailCampaign {
       createdAt: _date(json['createdAt']),
     );
   }
+}
+
+/// Email campaign ka ek recipient (detail screen)
+class EmailCampaignRecipient {
+  const EmailCampaignRecipient({
+    required this.email,
+    required this.name,
+    required this.status,
+    this.sentAt,
+    this.error = '',
+  });
+
+  final String email;
+  final String name;
+
+  /// pending / sending / sent / delivered / failed / opened / clicked
+  final String status;
+  final DateTime? sentAt;
+  final String error;
+
+  factory EmailCampaignRecipient.fromJson(Map<String, dynamic> json) {
+    final error = json['error'];
+
+    return EmailCampaignRecipient(
+      email: _str(json['email']),
+      name: _str(json['name']),
+      status: _str(json['status']).toLowerCase(),
+      sentAt: _date(json['sentAt']),
+      error: error is Map
+          ? _str(error['message'] ?? error['title'])
+          : _str(error),
+    );
+  }
+}
+
+/// Saved / AI se bana email template
+class EmailTemplate {
+  const EmailTemplate({
+    this.id = '',
+    required this.name,
+    required this.subject,
+    required this.html,
+    this.previewText = '',
+    this.prompt = '',
+    this.updatedAt,
+  });
+
+  final String id;
+  final String name;
+  final String subject;
+  final String html;
+  final String previewText;
+
+  /// AI ko diya gaya brief (dobara banane / badalne ke liye)
+  final String prompt;
+  final DateTime? updatedAt;
+
+  bool get isSaved => id.isNotEmpty;
+
+  factory EmailTemplate.fromJson(Map<String, dynamic> json) => EmailTemplate(
+    id: _str(json['_id']),
+    name: _str(json['name']),
+    subject: _str(json['subject']),
+    html: _str(json['html']),
+    previewText: _str(json['previewText']),
+    prompt: _str(json['prompt']),
+    updatedAt: _date(json['updatedAt'] ?? json['createdAt']),
+  );
+
+  EmailTemplate copyWith({
+    String? id,
+    String? name,
+    String? subject,
+    String? html,
+    String? previewText,
+  }) => EmailTemplate(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    subject: subject ?? this.subject,
+    html: html ?? this.html,
+    previewText: previewText ?? this.previewText,
+    prompt: prompt,
+    updatedAt: updatedAt,
+  );
+
+  Map<String, dynamic> toPayload() => {
+    'name': name.trim().isEmpty ? 'Untitled template' : name.trim(),
+    'subject': subject.trim(),
+    'previewText': previewText,
+    'html': html,
+    'prompt': prompt.trim(),
+  };
+}
+
+/// Lead kahan se aaya (WhatsApp campaign ki audience)
+class LeadSource {
+  const LeadSource(this.value, this.label);
+
+  final String value;
+  final String label;
+
+  /// Web dashboard jaisi list. '' = All sources
+  static const all = [
+    LeadSource('', 'All sources'),
+    LeadSource('eazbot', 'Eazbot'),
+    LeadSource('webform', 'Webform'),
+    LeadSource('whatsapp', 'WhatsApp'),
+    LeadSource('facebook', 'Facebook'),
+    LeadSource('google', 'Google'),
+    LeadSource('visitors', 'Visitors'),
+    LeadSource('exotel', 'Exotel'),
+    LeadSource('insta_ad_dm', 'Insta - Ad & DM'),
+    LeadSource('front_desk', 'Front desk'),
+    LeadSource('booking_engine', 'Booking Engine'),
+    LeadSource('email', 'Email'),
+  ];
 }

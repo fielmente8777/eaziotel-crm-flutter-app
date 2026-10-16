@@ -21,14 +21,22 @@ Future<void> main() async {
   // Phir seedhi Login ya Dashboard khulti hai, beech me koi splash page nahi.
   final home = await AppStart.firstScreen();
 
-  // Device Preview sirf debug me. Release (Play Store) build me band.
+  // Device Preview (computer par alag-alag phone ka frame) ab default BAND.
+  // Asli phone par ye kaam ka nahi tha aur har tap par
+  // "FocusScopeNode was used after being disposed" error deta tha.
+  // Chahiye to aise chalao:
+  //   flutter run -d windows --dart-define=DEVICE_PREVIEW=true
   runApp(
     DevicePreview(
-      enabled: kDebugMode,
+      enabled: _devicePreview,
       builder: (context) => MyApp(home: home),
     ),
   );
 }
+
+/// Sirf debug + --dart-define=DEVICE_PREVIEW=true par
+const bool _devicePreview =
+    kDebugMode && bool.fromEnvironment('DEVICE_PREVIEW');
 
 /// App khulte hi SharedPreferences me saved access token console me dikhata hai.
 /// Sirf debug build me (release me token log nahi hota).
@@ -67,6 +75,10 @@ class MyApp extends StatelessWidget {
         darkTheme: TAppTheme.darkTheme,
 
         themeMode: themeController.themeMode.value,
+
+        // Device Preview chalu ho tabhi uska frame / language lagao
+        locale: _devicePreview ? DevicePreview.locale(context) : null,
+        builder: _devicePreview ? DevicePreview.appBuilder : null,
 
         home: home,
         routes: AppRoutes.routes,
