@@ -60,7 +60,7 @@ Each feature folder follows the same idea: **screen → controller → service �
    ```
    flutter pub get
    ```
-3. Get the local keys file `lib/core/config/app_secrets.dart` from the project owner and put it in that folder. It is in `.gitignore`, so it never goes to GitHub.
+3. Get the local config files `lib/core/config/app_env.dart` and `lib/core/config/app_secrets.dart` from the project owner and put them in that folder. They are in `.gitignore`, so they never go to GitHub. The app does not build without them.
 4. Run the app:
    ```
    flutter run

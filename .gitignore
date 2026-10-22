@@ -53,7 +53,8 @@ app.*.map.json
 .env.*
 *.env
 
-# App keys (Razorpay key etc.) and its example copy
+# App keys / config (Razorpay key etc.)
+lib/core/config/app_env.dart
 lib/core/config/app_secrets.dart
 lib/core/config/app_secrets.example.dart
 
