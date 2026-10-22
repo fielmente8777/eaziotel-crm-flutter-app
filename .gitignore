@@ -48,13 +48,14 @@ app.*.map.json
 # SECRETS / KEYS - never push these to GitHub (the repo is public)
 # ============================================================
 
-# Environment files
+# Environment files (all of them, including .env.example)
 .env
 .env.*
-!.env.example
+*.env
 
-# App keys (Razorpay key etc.). Copy app_secrets.example.dart to create it.
+# App keys (Razorpay key etc.) and its example copy
 lib/core/config/app_secrets.dart
+lib/core/config/app_secrets.example.dart
 
 # Android signing: keystore + its passwords
 *.jks
