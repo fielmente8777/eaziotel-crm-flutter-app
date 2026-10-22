@@ -25,8 +25,8 @@ class WhatsappLocationMessage extends StatelessWidget {
     r'(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)',
   );
 
-  /// Text message jo sirf ek Google Maps link (+ chhota sa label) ho,
-  /// use location map me badalta hai. Aam text ke liye null.
+  /// A text message that is only a Google Maps link (+ a short label)
+  /// is turned into a location map. null for normal text.
   static Map<String, dynamic>? parseMapsLink(String body) {
     final match = _mapsLinkRegex.firstMatch(body);
     if (match == null) return null;
@@ -35,7 +35,7 @@ class WhatsappLocationMessage extends StatelessWidget {
     final longitude = double.tryParse(match.group(2)!);
     if (latitude == null || longitude == null) return null;
 
-    // Link ke alawa lamba text ho to wo normal message hai
+    // If there is long text besides the link, it is a normal message
     final rest = body.replaceFirst(match.group(0)!, '').trim();
     if (rest.contains('\n') || rest.length > 80) return null;
 
@@ -96,8 +96,8 @@ class WhatsappLocationMessage extends StatelessWidget {
     }
   }
 
-  // Chhota Google map (touch band — tap poore card ka hai).
-  // liteMode: Android par halka static map, chat list ke liye sahi.
+  // Small Google map (touch disabled — the tap belongs to the whole card).
+  // liteMode: a light static map on Android, right for the chat list.
   Widget _mapPreview(double latitude, double longitude) {
     final point = LatLng(latitude, longitude);
 
@@ -128,7 +128,7 @@ class WhatsappLocationMessage extends StatelessWidget {
 
     final hasCoordinates = latitude != null && longitude != null;
 
-    // Text bubble jaise hi colors (light / dark theme)
+    // Same colors as the text bubble (light / dark theme)
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final bubbleColor = isIncoming

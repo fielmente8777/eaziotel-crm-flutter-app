@@ -1,14 +1,14 @@
 // ============================================================
-// LOCATIONS CARD  (Settings > Profile)   web dashboard jaisa
+// LOCATIONS CARD  (Settings > Profile)   same as the web dashboard
 //
 //   Locations · 3                                  [+ Add location]
 //   Each location has its own website, bookings and leads.
 //   ┌──────────────────────┐ ┌──────────────────────┐
 //   │ 📍 Pouchanki [Current]│ │ 📍 Georgpool     ✎ 🗑 │  <- tap = isi
-//   │ Charkhi Dadri, Haryana│ │ South Delhi, India   │     location par
+//   │ Charkhi Dadri, Haryana│ │ South Delhi, India   │     on the location
 //   └──────────────────────┘ └──────────────────────┘     switch
 //
-// Add / edit / delete sirf admin. Abhi wali location delete nahi hoti.
+// Only an admin can add / edit / delete. The current location cannot be deleted.
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
@@ -273,7 +273,7 @@ class HotelFormDialog extends StatefulWidget {
 
   final ProfileSettingController controller;
 
-  /// null = naya, warna isi ko badlo
+  /// null = new, otherwise edit this one
   final HotelModel? hotel;
 
   static Future<void> open(

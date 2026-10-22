@@ -1,14 +1,14 @@
 // ============================================================
 // TEAM MANAGEMENT SERVICE
 //
-// Settings > Team Management ki API calls. Sirf yahi file server se baat karti hai.
+// API calls for Settings > Team Management. Only this file talks to the server.
 //
 //   createUser : POST /user/create/<token>
 //   editUser   : POST /user/edit/<token>
 //   deleteUser : POST /user/delete/<emailId>
 //
-// Members ki list alag API se nahi aati: wo dashboard ki
-// GET /user/<token> (DashboardController.getUserDetails) se aati hai.
+// The members list does not come from a separate API: it comes from the dashboard's
+// GET /user/<token> (DashboardController.getUserDetails).
 // ============================================================
 
 import 'dart:convert';
@@ -52,11 +52,11 @@ class TeamManagementService {
   }
 
   // ============================================================
-  // TEENO KA SAANJHA POST
+  // SHARED POST FOR ALL THREE
   //
   // Jawab: {"Message": "...", "Status": true / false}
-  // Status false ho (jaise "User already exists with this email id")
-  // to wahi Message error ban kar aage jata hai.
+  // If Status is false (like "User already exists with this email id")
+  // that Message is passed on as the error.
   // ============================================================
 
   static Future<String> _post(

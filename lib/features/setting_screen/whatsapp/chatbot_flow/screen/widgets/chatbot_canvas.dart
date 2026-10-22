@@ -1,14 +1,14 @@
 // ============================================================
-// CHATBOT CANVAS  (web ke React Flow jaisa)
+// CHATBOT CANVAS  (like the web's React Flow)
 //
-//   - har step ek card (upar rangeen patti = kheench kar jagah badlo)
-//   - card par tap = editor khulta hai
-//   - right side ke gole = rasta (button / option / next),
-//     wahan se agle step tak teer
-//   - do ungli / mouse wheel se zoom, khali jagah se pan
+//   - each step is a card (colored strip on top = drag to move it)
+//   - tap a card = the editor opens
+//   - the dots on the right side = paths (button / option / next),
+//     an arrow from there to the next step
+//   - zoom with two fingers / mouse wheel, pan from empty space
 //
-// Card ki height fix hisaab se banti hai (ChatbotLayout), taaki teer
-// theek gole se shuru ho.
+// The card height is calculated in a fixed way (ChatbotLayout), so the arrow
+// starts exactly at the dot.
 // ============================================================
 
 import 'dart:math' as math;
@@ -32,11 +32,11 @@ class ChatbotLayout {
   static double heightOf(ChatbotNode n) =>
       header + summary + n.outputs.length * output + bottom;
 
-  /// Rasta (output) ka gola: card ke right kinare par
+  /// The path (output) dot: on the right edge of the card
   static Offset portOf(ChatbotNode n, int index) =>
       Offset(n.x + width, n.y + header + summary + index * output + output / 2);
 
-  /// Teer yahan aakar lagta hai: card ke left kinare par
+  /// The arrow ends here: on the left edge of the card
   static Offset inputOf(ChatbotNode n) => Offset(n.x, n.y + header / 2);
 }
 
@@ -55,8 +55,8 @@ class ChatbotCanvas extends StatelessWidget {
       final edges = c.edges.toList();
       final selected = c.selectedId.value;
 
-      // Canvas ka size: sab card + jagah. Minus position wale card ke liye
-      // sab ko thoda right / neeche khiska kar dikhate hain.
+      // Canvas size: all cards + spacing. For cards with negative positions
+      // everything is shifted a little right / down.
       double minX = 0, minY = 0, maxX = 1200, maxY = 800;
       for (final n in nodes) {
         minX = math.min(minX, n.x);
@@ -112,7 +112,7 @@ class ChatbotCanvas extends StatelessWidget {
   }
 }
 
-/// Ek step ka card (canvas par fix size, list me poori chaudai)
+/// Card for one step (fixed size on the canvas, full width in the list)
 class ChatbotNodeCard extends StatelessWidget {
   const ChatbotNodeCard({
     super.key,
@@ -129,10 +129,10 @@ class ChatbotNodeCard extends StatelessWidget {
   final VoidCallback onOpen;
   final bool selected;
 
-  /// null = kheench nahi sakte (list view)
+  /// null = cannot drag (list view)
   final ValueChanged<Offset>? onDrag;
 
-  /// List view: poori chaudai, height apne aap
+  /// List view: full width, automatic height
   final bool expand;
 
   @override
@@ -228,7 +228,7 @@ class ChatbotNodeCard extends StatelessWidget {
         child: Container(
           width: expand ? double.infinity : ChatbotLayout.width,
           height: expand ? null : ChatbotLayout.heightOf(node),
-          // Border upar se (andar jagah na le, warna height bigad jaati)
+          // Border from the top (so it takes no inner space, otherwise the height breaks)
           foregroundDecoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
@@ -317,7 +317,7 @@ class _OutputRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
-          // Rasta ka gola (teer yahin se nikalta hai)
+          // The path dot (the arrow starts here)
           Container(
             width: 10,
             height: 10,
@@ -400,7 +400,7 @@ class _EdgePainter extends CustomPainter {
           ..strokeWidth = 2,
       );
 
-      // Teer ki nok
+      // Arrow tip
       final arrow = Path()
         ..moveTo(b.dx, b.dy)
         ..lineTo(b.dx - 9, b.dy - 5)

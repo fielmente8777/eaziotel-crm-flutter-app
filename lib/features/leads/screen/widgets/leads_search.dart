@@ -1,7 +1,7 @@
 // ============================================================
-// LEADS SEARCH  (naam, phone, source)
-// Likhte hi 0.5 sec baad search (LeadsController.updateSearch),
-// x se saaf.
+// LEADS SEARCH  (name, phone, source)
+// Searches 0.5 sec after typing (LeadsController.updateSearch),
+// cleared with x.
 // ============================================================
 
 import 'package:eazotel/features/leads/controller/leads_controller.dart';
@@ -20,7 +20,7 @@ class LeadsSearch extends StatefulWidget {
 }
 
 class _LeadsSearchState extends State<LeadsSearch> {
-  // Tab badal kar wapas aao to likha hua search dikhta rahe
+  // The typed search stays when you switch tabs and come back
   late final TextEditingController textController = TextEditingController(
     text: widget.controller.searchText.value,
   );

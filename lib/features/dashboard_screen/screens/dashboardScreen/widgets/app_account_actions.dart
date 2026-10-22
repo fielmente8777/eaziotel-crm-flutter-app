@@ -1,11 +1,11 @@
 // ============================================================
-// APP ACCOUNT ACTIONS  (Profile tab + Drawer dono me same)
+// APP ACCOUNT ACTIONS  (same in the Profile tab + Drawer)
 //
 //   AppThemeSwitch  : [System] [Light] [Dark]
-//   AppLogoutButton : "Log out?" pooch kar logout
+//   AppLogoutButton : asks "Log out?" and then logs out
 //   AppVersionText  : "Version 1.2.0 (12)"
 //
-// Ek hi jagah bane hain, taaki dono screen par ek jaisa kaam kare.
+// Built in one place so they work the same on both screens.
 // ============================================================
 
 import 'package:eazotel/features/auth/controllers/login_controller.dart';
@@ -23,7 +23,7 @@ class AppThemeSwitch extends StatelessWidget {
 
   final double height;
 
-  /// false = sirf icon (bahut kam jagah ho tab)
+  /// false = icon only (when there is very little space)
   final bool showLabels;
 
   @override
@@ -151,11 +151,11 @@ class _ThemeOption extends StatelessWidget {
 class AppLogoutButton extends StatelessWidget {
   const AppLogoutButton({super.key, this.expand = false});
 
-  /// true = poori chaudai
+  /// true = full width
   final bool expand;
 
-  /// Pakka? phir logout. [context] khula rehna chahiye (logout isi se
-  /// Login screen kholta hai), isliye drawer pehle band nahi karte.
+  /// Sure? then logout. [context] must stay open (logout opens the
+  /// Login screen from it), so the drawer is not closed first.
   static Future<void> confirmAndLogout(BuildContext context) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -211,7 +211,7 @@ class AppVersionText extends StatelessWidget {
 
   final TextAlign textAlign;
 
-  /// Ek hi baar padhte hain (har screen par dobara nahi)
+  /// Read only once (not again on every screen)
   static final Future<PackageInfo> _info = PackageInfo.fromPlatform();
 
   @override

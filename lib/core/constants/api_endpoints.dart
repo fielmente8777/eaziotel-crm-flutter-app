@@ -13,29 +13,29 @@ class AuthApiEndpoint {
 
   static const String resendOtp = '/auth/resend-otp';
 
-  /// POST { email } -> 6 digit code email par (BaseUrl.production2, bina login)
+  /// POST { email } -> 6-digit code by email (BaseUrl.production2, no login)
   static const String forgotPassword = '/api/v1/auth/forgot-password';
 
-  /// POST { email, otp, password } (BaseUrl.production2, bina login)
+  /// POST { email, otp, password } (BaseUrl.production2, no login)
   static const String resetPassword = '/api/v1/auth/reset-password';
 
   static const String getUserProfile = '/eazotel/getuser';
 
   static const String UserProfile = '/user';
 
-  // Login kiye hue user ki details (User.emailId) — Bearer token ke saath
+  // Details of the logged-in user (User.emailId) — with Bearer token
   static const String userDetails = '/user/user-details';
 
-  /// Owner: saare client accounts (data[])
+  /// Owner: all client accounts (data[])
   static const String allClients = '/admin/get-all-clients';
 
-  /// Owner: client account me jao. POST { Email } -> { Status, Token }
+  /// Owner: go into a client account. POST { Email } -> { Status, Token }
   static const String switchAccount = '/admin/switch-account';
 
   static const String updateProfile = '/auth/profile';
 
-  /// Hotel location (gian). POST = naya, PUT/DELETE = /<hotelId>
-  /// Jawab: result.hotels = { hotelId: { local, city, ... } } (poori nayi list)
+  /// Hotel location (gian). POST = new, PUT/DELETE = /<hotelId>
+  /// Answer: result.hotels = { hotelId: { local, city, ... } } (the full new list)
   static const String profileHotels = '/api/v1/profile/hotels';
 
   static String profileHotel(String hotelId) =>
@@ -120,13 +120,13 @@ class WhatsappApiEndpoint {
       '/api/v1/whatsapp/conversations?hid=';
   static const String flow = '/api/v1/whatsapp/flow/get?hid=';
 
-  // Chat: kaun reply karega (AI ya team ka banda)
+  // Chat: who will reply (AI or a team member)
   static String takeOver(String conversationId) =>
       '/api/v1/whatsapp/conversations/$conversationId/takeover';
   static String release(String conversationId) =>
       '/api/v1/whatsapp/conversations/$conversationId/release';
 
-  // Chat: automated flow (form) chal raha hai ya nahi
+  // Chat: whether an automated flow (form) is running
   static const String flowSession = '/api/v1/whatsapp/flow-session';
 
   // Settings > WhatsApp tab
@@ -156,10 +156,10 @@ class WhatsappApiEndpoint {
   /// POST {flowName, screens, category} (?hid=)
   static const String createFlow = '/api/v1/whatsapp/flow/create';
 
-  /// WhatsApp Flow (chatbot) me upload hui photo dekhne ke liye (?ndid=)
+  /// To view a photo uploaded in a WhatsApp Flow (chatbot) (?ndid=)
   static String media(String mediaId) => '/api/v1/whatsapp/media/$mediaId';
 
-  /// Carousel card ki photo upload (form-data "file") -> result.doc.imageUrl
+  /// Upload a carousel card photo (form-data "file") -> result.doc.imageUrl
   static const String imageUpload = '/api/v1/image/upload';
 }
 
@@ -171,7 +171,7 @@ class MetaApiEndpoint {
   static const String pageOverview = '/api/v1/meta/page/overview';
 }
 
-/// Drawer > Social Media: bahar ka portal (browser me khulta hai)
+/// Drawer > Social Media: external portal (opens in the browser)
 class SocialMediaLinks {
   SocialMediaLinks._();
 
@@ -214,7 +214,7 @@ class CallApiEndpoint {
   // PUT: stage / segregation / guestType / priority badalna
   static String updateCall(String id) => '/api/v1/call/update-call/$id';
 
-  // GET: call ki recording (audio). sid = call ka "sid"
+  // GET: call recording (audio). sid = the call's "sid"
   static String recording(String sid) => '/api/v1/call/recording/$sid';
 }
 
@@ -224,7 +224,7 @@ class SubscriptionApiEndpoint {
   /// GET /api/v1/subscription/my   (baseUrl: BaseUrl.production2)
   static const String mySubscription = '/api/v1/subscription/my';
 
-  /// GET -> result.data { plans[], apps[] }  (login ki zarurat nahi)
+  /// GET -> result.data { plans[], apps[] }  (no login needed)
   static const String plans = '/api/v1/subscription/plans';
 
   /// POST { planId, appIds, validFor, discount, teamCount, teamCost, gst }
@@ -278,7 +278,7 @@ class IntegrationApiEndpoint {
 class EazbotApiEndpoint {
   EazbotApiEndpoint._();
 
-  /// POST ?hid=  -> bot banata ya update karta hai
+  /// POST ?hid=  -> creates or updates the bot
   static const String create = '/leadeazbot/create';
 }
 
@@ -297,26 +297,26 @@ class MarketingApiEndpoint {
   static const String emailRecipients = '/api/v1/email-marketing/recipients';
 
   /// GET ?hid=&page=&limit=  -> result.doc (list) + result.pagination
-  /// POST multipart (naya campaign banao)
+  /// POST multipart (create a new campaign)
   static const String emailCampaigns = '/api/v1/email-marketing/campaigns';
 
-  // ---------- WhatsApp: naya campaign ----------
+  // ---------- WhatsApp: new campaign ----------
 
   /// POST ?hid=  { campaignName, template, source? }
   static const String whatsappCreateCampaign =
       '/api/v1/whatsapp/campaign/create';
 
-  /// GET ?hid=&source=  -> result.totalUsers (kitne logon tak jayega)
+  /// GET ?hid=&source=  -> result.totalUsers (how many people it will reach)
   static const String whatsappCampaignAudience =
       '/api/v1/whatsapp/campaign/users';
 
-  // ---------- Email: recipient batch (kisko bhejna hai) ----------
+  // ---------- Email: recipient batch (who to send to) ----------
 
   /// POST { hid, leadIds }
   static const String emailBatchLeads =
       '/api/v1/email-marketing/recipient-batches/leads';
 
-  /// POST { hid, search }  (search se milne wale saare lead)
+  /// POST { hid, search }  (all leads matching the search)
   static const String emailBatchAllLeads =
       '/api/v1/email-marketing/recipient-batches/leads/all';
 
@@ -355,7 +355,7 @@ class MarketingApiEndpoint {
 class GoogleAdsApiEndpoint {
   GoogleAdsApiEndpoint._();
 
-  /// Google se taaza data DB me lata hai (?startDate=&endDate=&targetAccountId=)
+  /// Pulls fresh data from Google into the DB (?startDate=&endDate=&targetAccountId=)
   static const String sync = '/api/v1/google-ads/sync';
   static const String accounts = '/api/v1/google-ads/accounts';
   static String campaigns(String accountId) =>
@@ -372,13 +372,13 @@ class GoogleAdsApiEndpoint {
 }
 
 /// SEO (drawer > SEO > Local Seo / Website Seo). Base: BaseUrl.production2
-/// hid nahi chahiye, token se user pehchana jaata hai.
+/// No hid needed; the user is identified from the token.
 class SeoApiEndpoint {
   SeoApiEndpoint._();
 
   static const String _base = '/api/v1/seo/seo-intelligence';
 
-  /// GET: saare keywords + local config + geo grid + trend
+  /// GET: all keywords + local config + geo grid + trend
   static const String intelligence = _base;
 
   /// GET: credits (balance) + pricing
@@ -395,7 +395,7 @@ class SeoApiEndpoint {
   /// POST {businessName, lat, lng, radiusKm, city, district, ...}
   static const String onboarding = '$_base/onboarding';
 
-  /// POST {} (map coverage dobara scan)
+  /// POST {} (scan the map coverage again)
   static const String triggerGridScan = '$_base/trigger-grid-scan';
 
   /// POST {radiusKm}
@@ -406,7 +406,7 @@ class SeoApiEndpoint {
 
   // ---------- Website SEO ----------
 
-  /// POST {websiteUrl} (ek baar, badal nahi sakte)
+  /// POST {websiteUrl} (only once, cannot be changed)
   static const String setWebsite = '$_base/set-website';
 
   /// POST {country}
@@ -415,7 +415,7 @@ class SeoApiEndpoint {
   /// POST {keywords}
   static const String trackLink = '$_base/track-link';
 
-  // ---------- Dono ----------
+  // ---------- Both ----------
 
   /// POST {keyword}
   static const String refreshKeyword = '$_base/refresh-keyword';
@@ -426,22 +426,22 @@ class SeoApiEndpoint {
 }
 
 // ============================================================
-// ONBOARDING (naya account, abhi koi hotel nahi) - web OnboardingForm jaisa
+// ONBOARDING (new account, no hotel yet) - like the web OnboardingForm
 // ============================================================
 
 class OnboardingApiEndpoint {
   OnboardingApiEndpoint._();
 
-  /// POST (BaseUrl.production). Token body me jata hai.
-  /// Hotel profile + website + pehli location banata hai.
+  /// POST (BaseUrl.production). The token goes in the body.
+  /// Creates the hotel profile + website + first location.
   /// -> { Status, hId, Message }
   static const String createWebsite = '/eazotel/createwebsite';
 
   /// POST { propertyDetails } (BaseUrl.production2, Bearer)
-  /// 14 din ka free trial shuru. Pehle hi ho chuka ho to 409.
+  /// Starts the 14-day free trial. Returns 409 if already done.
   static const String complete = '/api/v1/onboarding';
 
-  /// Country / state / city ki list (web bhi yahi use karta hai)
+  /// Country / state / city lists (the web uses the same)
   static const String placesUrl =
       'https://countriesnow.space/api/v0.1/countries';
 }

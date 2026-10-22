@@ -20,7 +20,7 @@ class DashboardStatCard extends StatefulWidget {
   final Color iconColor;
   final Color? valueColor;
 
-  /// 0..1 — diya ho to pill ki jagah progress bar
+  /// 0..1 — if given, a progress bar instead of the pill
   final double? progress;
 
   final VoidCallback? onTap;

@@ -1,10 +1,10 @@
 // ============================================================
-// WHATSAPP: NAYA CAMPAIGN  (web dashboard ka "New campaign" jaisa)
+// WHATSAPP: NEW CAMPAIGN  (like "New campaign" in the web dashboard)
 //
-//   1. Naam
+//   1. Name
 //   2. Message : Marketing / Utility -> approved template -> {{1}} {{2}} values
-//   3. Audience: contact source -> kitne log + andaazan kharcha
-//                (1000 / din se zyada ho to chetavni)
+//   3. Audience: contact source -> how many people + estimated cost
+//                (warning if more than 1000 / day)
 //   -> Create campaign
 // ============================================================
 
@@ -18,7 +18,7 @@ import 'package:get/get.dart';
 
 import '../services/marketing_service.dart';
 
-/// Template ka type (web ke TEMPLATE_CATEGORIES)
+/// Template type (the web's TEMPLATE_CATEGORIES)
 enum CampaignCategory {
   marketing('Marketing', 0.10),
   utility('Utility', 0.05);
@@ -27,12 +27,12 @@ enum CampaignCategory {
 
   final String label;
 
-  /// Ek message ka andaazan kharcha (₹)
+  /// Estimated cost of one message (₹)
   final double pricePerMessage;
 }
 
 class WhatsappCampaignCreateController extends GetxController {
-  /// Meta ka tier-1 limit: 24 ghante me itne alag contacts
+  /// Meta's tier-1 limit: this many different contacts in 24 hours
   static const int dailySendLimit = 1000;
 
   static final RegExp _placeholder = RegExp(r'\{\{\s*\d+\s*\}\}');
@@ -51,10 +51,10 @@ class WhatsappCampaignCreateController extends GetxController {
   final category = CampaignCategory.marketing.obs;
   final template = Rxn<WhatsappTemplate>();
 
-  /// {{1}} {{2}} ... ki values (body)
+  /// Values of {{1}} {{2}} ... (body)
   final bodyValues = <String>[].obs;
 
-  /// Header ka {{1}} (zyada se zyada ek)
+  /// The header's {{1}} (at most one)
   final headerValues = <String>[].obs;
 
   /// '' = All sources
@@ -86,7 +86,7 @@ class WhatsappCampaignCreateController extends GetxController {
   // GETTERS
   // ============================================================
 
-  /// Sirf APPROVED + chuni hui category ke template
+  /// Only APPROVED templates of the selected category
   List<WhatsappTemplate> get templates => allTemplates.where((t) {
     final status = (t.status ?? '').toUpperCase();
     final approved = status.isEmpty || status == 'APPROVED';
@@ -97,7 +97,7 @@ class WhatsappCampaignCreateController extends GetxController {
 
   bool get overLimit => audience.value > dailySendLimit;
 
-  /// Pehli cheez jo abhi baaki hai (null = sab theek, bhej sakte hain)
+  /// The first thing still missing (null = all good, can send)
   String? get missing {
     if (name.value.trim().isEmpty) return 'Give the campaign a name';
     if (template.value == null) return 'Choose a template';
@@ -123,7 +123,7 @@ class WhatsappCampaignCreateController extends GetxController {
   static int placeholderCount(String? text) =>
       _placeholder.allMatches(text ?? '').length;
 
-  /// {{1}} ki jagah value (khali ho to {{1}} hi rehne do)
+  /// Value in place of {{1}} (if empty, keep {{1}})
   static String fill(String text, List<String> values) {
     var i = 0;
     return text.replaceAllMapped(_placeholder, (m) {
@@ -144,7 +144,7 @@ class WhatsappCampaignCreateController extends GetxController {
     headerValues.clear();
   }
 
-  /// Template chuna: sample values se shuru
+  /// Template selected: start with the sample values
   void chooseTemplate(WhatsappTemplate? value) {
     template.value = value;
 
@@ -208,7 +208,7 @@ class WhatsappCampaignCreateController extends GetxController {
   Future<void> loadAudience() async {
     if (hid.isEmpty) return;
 
-    // Jaldi jaldi source badla to sirf aakhri wala jawab rakho
+    // If the source changes quickly, keep only the latest answer
     final request = ++_audienceRequest;
     isAudienceLoading.value = true;
 
@@ -230,7 +230,7 @@ class WhatsappCampaignCreateController extends GetxController {
   // CREATE
   // ============================================================
 
-  /// true = ban gaya. Galti ho to [onError] me server ka message.
+  /// true = created. On error, the server's message goes to [onError].
   Future<bool> create({required void Function(String) onError}) async {
     final t = template.value;
     if (missing != null || t == null || isCreating.value) return false;
@@ -242,7 +242,7 @@ class WhatsappCampaignCreateController extends GetxController {
         hid: hid,
         name: name.value.trim(),
         source: source.value,
-        // Web jaisa: header ki value ek string jaati hai (header me ek hi {{1}})
+        // Same as web: the header value is sent as one string (only one {{1}} in the header)
         template: {
           'templateId': t.id,
           'templateName': t.name,

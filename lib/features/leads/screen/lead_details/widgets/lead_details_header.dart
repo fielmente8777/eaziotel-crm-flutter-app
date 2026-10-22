@@ -18,7 +18,7 @@ Container leads_detail_header(
     width: double.infinity,
     padding: const EdgeInsets.fromLTRB(15, 10, 15, 18),
     decoration: const BoxDecoration(
-      // App ka brand gradient (Home ke header jaisa)
+      // The app's brand gradient (like the Home header)
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -66,7 +66,7 @@ Container leads_detail_header(
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                // Naam ke hisaab se rang (list ke card jaisa)
+                // Color based on the name (like the list card)
                 color: LeadsStyle.avatar(name),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
@@ -114,7 +114,7 @@ Container leads_detail_header(
                         const SizedBox(width: 8),
                       ],
 
-                      // Stage ka apna rang (Hot = laal, Converted = hara ...)
+                      // Each stage's own color (Hot = red, Converted = green ...)
                       _headerChip(
                         context,
                         status,
@@ -385,7 +385,7 @@ Future<void> _deleteLead(BuildContext context, LeadModel leads) async {
 // HEADER CHIP
 // ============================================================
 
-/// Header ka chhota chip: safed kaanch jaisa, [icon] ya rangeen [dot]
+/// Small chip in the header: frosted white, [icon] or a colored [dot]
 Widget _headerChip(
   BuildContext context,
   String text, {

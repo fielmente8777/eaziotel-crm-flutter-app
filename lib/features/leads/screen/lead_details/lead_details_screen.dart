@@ -27,8 +27,8 @@ class LeadsDetails extends StatelessWidget {
 
     final phone = leads.contact?.trim() ?? '';
 
-    // Header me naam ke neeche: "Added 2 days ago · +91 98765 43210"
-    // (pehle yahan " ₹ estimated value" likha aata tha)
+    // Under the name in the header: "Added 2 days ago · +91 98765 43210"
+    // (earlier " ₹ estimated value" was shown here)
     final added = formatTimelineDate(leads.createdAtDate ?? leads.createdAt);
     final estimatedValue = [
       if (added.isNotEmpty) 'Added $added',
@@ -43,7 +43,7 @@ class LeadsDetails extends StatelessWidget {
     // STATUS BAR
     // ============================================================
 
-    // Header ke upar ka rang; icon safed (dark header par dark icon nahi dikhte)
+    // Color at the top of the header; white icons (dark icons do not show on a dark header)
     const headerTopColor = Color(0xFF4338CA);
 
     return PopScope(

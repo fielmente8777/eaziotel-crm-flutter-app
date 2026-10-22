@@ -3,7 +3,7 @@ part of '../whatsappController.dart';
 // ============================================================
 // WHATSAPP SOCKET MIXIN
 //
-// Socket ke live events:
+// Live events from the socket:
 //   WHATSAPP_NEW_MESSAGE      -> handleNewMessage
 //   WHATSAPP_NEW_CONVERSATION -> handleNewConversation
 //   WHATSAPP_MESSAGE_STATUS   -> handleMessageStatus
@@ -37,10 +37,10 @@ mixin WhatsappSocketMixin
 
   // ============================================================
   // NEW MESSAGE
-  //   1. NDID lead list me nahi -> chhod do
-  //   2. socket message save (dobara nahi)
-  //   3. list me chat update / nayi, dono upar
-  //   4. wahi chat khuli hai -> usme bhi jodo
+  //   1. NDID not in the lead list -> skip
+  //   2. save the socket message (not twice)
+  //   3. update the chat in the list / add a new one, both on top
+  //   4. that same chat is open -> add it there too
   // ============================================================
 
   void handleNewMessage(Map<String, dynamic> raw) {
@@ -70,7 +70,7 @@ mixin WhatsappSocketMixin
       // 3
       _upsertConversationFromSocket(raw, message, ndid);
 
-      // 3b. Notification (sirf customer ka message, aur chat khuli na ho)
+      // 3b. Notification (only for a customer's message, and only if the chat is not open)
       if (_isIncomingSocket(message) &&
           currentConversationId.value != conversationId) {
         final index = _conversationIndex(conversationId);
@@ -111,7 +111,7 @@ mixin WhatsappSocketMixin
 
     final index = _conversationIndex(conversationId);
 
-    // Purani chat -> badlo + upar
+    // Existing chat -> update + move to top
     if (index != -1) {
       final old = conversations[index];
 
@@ -124,7 +124,7 @@ mixin WhatsappSocketMixin
       return;
     }
 
-    // Nayi chat -> banao + upar.
+    // New chat -> create it + put it on top.
     // Incoming: customer = from. Outgoing: customer = to.
     conversations.insert(
       0,
@@ -158,7 +158,7 @@ mixin WhatsappSocketMixin
 
     final old = _openMessages;
 
-    // Khuli chat kisi aur conversation ki ho to kuch mat karo
+    // If the open chat belongs to another conversation, do nothing
     final otherChat = old.any(
       (m) =>
           m.conversationId != null &&
@@ -206,8 +206,8 @@ mixin WhatsappSocketMixin
 
   // ============================================================
   // NEW CONVERSATION
-  //   NDID lead list me nahi -> chhod do
-  //   list me hai -> badlo + upar, warna nayi + upar
+  //   NDID not in the lead list -> skip
+  //   in the list -> update + move to top, otherwise new + top
   // ============================================================
 
   void handleNewConversation(Map<String, dynamic> data) {
@@ -267,7 +267,7 @@ mixin WhatsappSocketMixin
 
   // ============================================================
   // MESSAGE STATUS (sent / delivered / read)
-  // Teen jagah badalta hai: khuli chat, socket messages, list ka last_message
+  // Changes three places: the open chat, socket messages, the list's last_message
   // ============================================================
 
   void handleMessageStatus(Map<String, dynamic> data) {
@@ -330,7 +330,7 @@ mixin WhatsappSocketMixin
         }
       }
 
-      // 3. List ka last_message (sirf jab usme message_id saved ho)
+      // 3. The list's last_message (only when its message_id is saved)
       final convIndex = _conversationIndexByLastMessageId(messageId);
 
       if (convIndex != -1) {

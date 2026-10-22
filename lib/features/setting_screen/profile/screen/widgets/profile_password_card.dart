@@ -16,7 +16,7 @@ class SettingPasswordCard extends StatelessWidget {
       icon: Icons.key_rounded,
       title: 'Change Password',
       subtitle: 'Set a new password for your account.',
-      // Bade screen par field poori width na le
+      // On big screens the field should not take the full width
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 380),
         child: Column(

@@ -1,16 +1,16 @@
 // ============================================================
 // LOCAL SEO CONTROLLER
 //
-//   Screen  --->  ye controller  --->  SeoService  --->  API
+//   Screen  --->  this controller  --->  SeoService  --->  API
 //                      |
 //                      +--> intelligenceResponse (keywords, config, grid)
-//                      +--> tokenResponse        (credits, mixin se)
+//                      +--> tokenResponse        (credits, from the mixin)
 //
-// Web dashboard (SeoIntelligenceDashboard.tsx) jaisa logic:
-//   1. SETUP      : config nahi / onboarding adhoora -> setup wizard
-//   2. VISIBILITY : kitne keyword Map 3-Pack (top 3) me
-//   3. MAP GRID   : radius, grid keyword, re-scan (scan ke time har 5 sec check)
-//   4. KEYWORDS   : jodo, rank taaza karo, hatao
+// Same logic as the web dashboard (SeoIntelligenceDashboard.tsx):
+//   1. SETUP      : no config / onboarding incomplete -> setup wizard
+//   2. VISIBILITY : how many keywords are in the Map 3-Pack (top 3)
+//   3. MAP GRID   : radius, grid keyword, re-scan (checks every 5 sec during a scan)
+//   4. KEYWORDS   : add, refresh rank, remove
 // ============================================================
 
 import 'dart:async';
@@ -32,7 +32,7 @@ class LocalSeoController extends GetxController with SeoTokenMixin {
 
   final intelligenceResponse = Rxn<SeoIntelligenceResponse>();
 
-  // ---------- Screen ke liye seedhe getters ----------
+  // ---------- Direct getters for the screen ----------
 
   SeoIntelligence get data =>
       intelligenceResponse.value?.result ?? const SeoIntelligence();
@@ -41,7 +41,7 @@ class LocalSeoController extends GetxController with SeoTokenMixin {
   SeoGridMeta get gridMeta => data.gridMeta;
   List<SeoKeyword> get keywords => data.localKeywords;
 
-  /// Pehli baar: setup wizard dikhao
+  /// First time: show the setup wizard
   bool get needsSetup =>
       intelligenceResponse.value != null &&
       (config == null || !config!.onboardingComplete);
@@ -56,13 +56,13 @@ class LocalSeoController extends GetxController with SeoTokenMixin {
   final isSaving = false.obs;
   final addError = ''.obs;
 
-  /// Kis keyword ka refresh chal raha hai
+  /// Which keyword is being refreshed
   final refreshingKeyword = RxnString();
 
   /// Keyword -> error ("Need 2 tokens (have 1)")
   final keywordErrors = <String, String>{}.obs;
 
-  /// Kaunsa keyword khula hai (detail)
+  /// Which keyword is open (detail)
   final expandedKeyword = RxnString();
 
   final isTriggeringScan = false.obs;
@@ -91,7 +91,7 @@ class LocalSeoController extends GetxController with SeoTokenMixin {
     await Future.wait([_fetch(), loadTokens()]);
   }
 
-  /// [silent] = loading shimmer mat dikhao (refresh / polling)
+  /// [silent] = do not show the loading shimmer (refresh / polling)
   Future<void> _fetch({bool silent = false}) async {
     if (!silent) isLoading.value = true;
 
@@ -113,7 +113,7 @@ class LocalSeoController extends GetxController with SeoTokenMixin {
   }
 
   // ============================================================
-  // 2. VISIBILITY (web jaisa hisaab)
+  // 2. VISIBILITY (calculated the same way as web)
   // ============================================================
 
   int get inPack => keywords
@@ -128,7 +128,7 @@ class LocalSeoController extends GetxController with SeoTokenMixin {
     return total / ranked.length;
   }
 
-  /// 0 - 100: kitne % keyword Map 3-Pack me
+  /// 0 - 100: what % of keywords are in the Map 3-Pack
   double get visibility =>
       keywords.isEmpty ? 0 : inPack / keywords.length * 100;
 
@@ -142,7 +142,7 @@ class LocalSeoController extends GetxController with SeoTokenMixin {
       gridMeta.status == 'scanning' ||
       (gridMeta.status == 'pending' && watchingGridScan.value);
 
-  /// Scan chal raha ho to har 5 second naya data
+  /// While a scan runs, fresh data every 5 seconds
   void _syncPolling() {
     final status = gridMeta.status;
 
@@ -219,7 +219,7 @@ class LocalSeoController extends GetxController with SeoTokenMixin {
 
   int costFor(int count) => count * pricing.localPerKeyword;
 
-  /// Return: jud gaye ya nahi (nahi to addError me wajah)
+  /// Return: whether they were added (if not, the reason is in addError)
   Future<bool> addKeywords(List<String> list) async {
     if (list.isEmpty) return false;
 
@@ -264,7 +264,7 @@ class LocalSeoController extends GetxController with SeoTokenMixin {
     }
   }
 
-  /// Return: hata diya ya nahi
+  /// Return: whether it was removed
   Future<bool> untrackKeyword(String keyword) async {
     try {
       await SeoService.untrackKeyword(keyword: keyword);

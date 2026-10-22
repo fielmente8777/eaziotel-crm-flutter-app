@@ -1,12 +1,12 @@
 // ============================================================
 // EMAIL COMPOSE SCREEN  (EazoMail > Compose / Send to selected)
 //
-//   From        : bhejne wala email (+ naam)
-//   To          : likho  -> ya upar "Sending to 120 recipients" (batch)
+//   From        : sender's email (+ name)
+//   To          : type  -> or "Sending to 120 recipients" on top (batch)
 //   Subject
-//   Message     : apna text  ya  template (Saved / AI) + preview
+//   Message     : your own text  or  a template (Saved / AI) + preview
 //   Attachments : kai files
-//   [Send]      : batch -> campaign -> send (web jaisa)
+//   [Send]      : batch -> campaign -> send (same as web)
 //
 // Bhej diya -> Get.back(result: true)
 // ============================================================
@@ -32,11 +32,11 @@ class EmailComposeScreen extends StatefulWidget {
     this.template,
   });
 
-  /// Pehle se chune log (null = "To" me likho)
+  /// People already chosen (null = type them in "To")
   final String? batchId;
   final int recipientCount;
 
-  /// Template ke saath kholna (Templates > Use)
+  /// Open with a template (Templates > Use)
   final EmailTemplate? template;
 
   @override
@@ -87,7 +87,7 @@ class _EmailComposeScreenState extends State<EmailComposeScreen> {
     _toast('Email queued', 'Your email is on its way.');
   }
 
-  /// Template laga do; subject khali ho to template ka subject bhi
+  /// Apply the template; if the subject is empty, use the template's subject too
   void _apply(EmailTemplate t) {
     c.useTemplate(t);
     if (_subject.text.trim().isEmpty) _subject.text = c.subject.value;

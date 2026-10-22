@@ -14,8 +14,8 @@ class WhatsappTemplateScreen extends StatefulWidget {
   final String sendLabel; // <-- NEW
   final ValueChanged<dynamic>? onTemplateSelected;
 
-  /// Send dabane par selected template ke saath call hoga.
-  /// true return karo to popup band ho jayega.
+  /// Pressing Send calls this with the selected template.
+  /// Return true to close the popup.
   final Future<bool> Function(dynamic template)? onSend;
 
   final Whatsapptemplatecontroller? controller;

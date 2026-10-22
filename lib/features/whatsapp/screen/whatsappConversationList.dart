@@ -84,10 +84,10 @@ class _WhatsappScreenState extends State<WhatsappScreen> {
     controller = Get.find<WhatsappController>();
   }
 
-  // NOTE: dispose me WhatsappController ab delete nahi hota.
-  // Wo app khulte hi ban jaata hai (NotificationController) taaki socket
-  // hamesha jude rahe aur dusre tab par bhi naye message ki notification aaye.
-  // Hotel badalne / logout par wahi use band karta hai.
+  // NOTE: WhatsappController is no longer deleted in dispose.
+  // It is created when the app opens (NotificationController) so the socket
+  // stays connected and new message notifications come on other tabs too.
+  // That same controller closes it on hotel change / logout.
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +96,7 @@ class _WhatsappScreenState extends State<WhatsappScreen> {
 
     return Obx(() {
       // ------------------------------------------------------------
-      // INTEGRATION LOADING (gol loader nahi, shimmer)
+      // INTEGRATION LOADING (shimmer, no spinner)
       // ------------------------------------------------------------
       if (controller.isIntegrationLoading.value ||
           controller.whatsappIntegration.value == null) {
@@ -121,7 +121,7 @@ class _WhatsappScreenState extends State<WhatsappScreen> {
       final int selectedCount = controller.selectedConversationIds.length;
 
       return PopScope(
-        // Selection mode me back dabane par pehle selection clear hoga
+        // In selection mode, pressing back clears the selection first
         canPop: !selectionMode,
         onPopInvokedWithResult: (didPop, result) {
           if (!didPop) controller.clearConversationSelection();
@@ -196,7 +196,7 @@ class _WhatsappScreenState extends State<WhatsappScreen> {
                   ),
             actions: [
               if (deleting)
-                // Delete ho raha hai: chhota hourglass (gol loader nahi)
+                // Deleting: small hourglass (no spinner)
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Icon(
@@ -267,7 +267,7 @@ class _WhatsappScreenState extends State<WhatsappScreen> {
 }
 
 // ================================================================
-// CONNECT WHATSAPP CARD (integration nahi hai)
+// CONNECT WHATSAPP CARD (no integration)
 // ================================================================
 
 class _ConnectWhatsappCard extends StatelessWidget {
@@ -294,7 +294,7 @@ class _ConnectWhatsappCard extends StatelessWidget {
         ? const Color(0xFFA9C5B6)
         : const Color(0xFF527064);
 
-    // Phone par 82% chaudai, tablet / desktop par 420 se bada nahi
+    // 82% width on phones, not more than 420 on tablet / desktop
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -450,7 +450,7 @@ class ConversationList extends StatelessWidget {
       }
 
       // ----------------------------------------------------------
-      // SELECTION STATE (itemBuilder lazy hai, isliye yahan read)
+      // SELECTION STATE (itemBuilder is lazy, so read it here)
       // ----------------------------------------------------------
       final bool selectionMode = controller.isConversationSelectMode.value;
       final Set<String> selectedIds = controller.selectedConversationIds
@@ -525,7 +525,7 @@ class ConversationList extends StatelessWidget {
             isSelected: isSelected,
             onLongPress: () => controller.toggleConversationSelection(chat.id),
             onTap: () {
-              // Selection mode me tap = select / unselect
+              // In selection mode, tap = select / unselect
               if (selectionMode) {
                 controller.toggleConversationSelection(chat.id);
                 return;
@@ -733,11 +733,11 @@ class Search extends StatelessWidget {
 }
 
 // ================================================================
-// CHAT TILE (ek conversation ka card)
+// CHAT TILE (card for one conversation)
 //
 //   (R)  Rahul Sharma                       10:42 AM
 //        +91 98765 43210
-//        Hello, room available hai?            (3)
+//        Hello, is a room available?           (3)
 //        [● Active]
 // ================================================================
 
@@ -797,7 +797,7 @@ class _ChatTile extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ================= AVATAR (+ tick jab select ho) =================
+                // ================= AVATAR (+ tick when selected) =================
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -864,7 +864,7 @@ class _ChatTile extends StatelessWidget {
                         ],
                       ),
 
-                      // PHONE (naam alag ho tab hi)
+                      // PHONE (only when the name is different)
                       if (phone.isNotEmpty && phone != name) ...[
                         const SizedBox(height: 2),
                         Text(
@@ -973,7 +973,7 @@ class _ChatTile extends StatelessWidget {
 }
 
 // ================================================================
-// STATE MESSAGE (khali list / error)
+// STATE MESSAGE (empty list / error)
 // ================================================================
 
 class _StateMessage extends StatelessWidget {

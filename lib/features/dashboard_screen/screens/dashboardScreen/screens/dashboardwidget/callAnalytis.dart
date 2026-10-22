@@ -1082,7 +1082,7 @@ class _TrendChartState extends State<_TrendChart> {
               isStrokeCapRound: true,
               dotData: FlDotData(show: pts.length == 1),
               belowBarData: BarAreaData(
-                show: i == 0, // sirf Total ke neeche gradient
+                show: i == 0, // gradient only under Total
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,

@@ -2,7 +2,7 @@
 // STEP 2: PROFILE
 //
 // Bot Name, Contact, Email, Description.
-// Wide screen par Name + Contact ek line me.
+// On wide screens Name + Contact in one row.
 // ============================================================
 
 import 'package:flutter/material.dart';

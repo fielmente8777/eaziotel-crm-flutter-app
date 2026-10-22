@@ -175,7 +175,7 @@ class WhatsappMessageSand {
   }
 
   // ============================================================
-  // SEND IMAGE (file multipart, baaki sab text/template jaisa)
+  // SEND IMAGE (file multipart, everything else like text/template)
   // ============================================================
 
   static Future<dynamic> sendWhatsappImage({

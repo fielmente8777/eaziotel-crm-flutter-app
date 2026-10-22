@@ -1,11 +1,11 @@
 // ============================================================
 // EAZBOT SETTING TAB  (Settings > Eazbot)
 //
-//   upar   : Publish button + 1-2-3-4 stepper
-//   beech  : chuna hua step (widgets/ folder me)
-//   neeche : Previous / Next
+//   top    : Publish button + 1-2-3-4 stepper
+//   middle : the selected step (in the widgets/ folder)
+//   bottom : Previous / Next
 //
-// Data controller/ me, API services/ me.
+// Data is in controller/, APIs in services/.
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive_builder.dart';
@@ -23,7 +23,7 @@ import 'widgets/eazbot_profile_step.dart';
 class EazbotSettingTab extends StatelessWidget {
   const EazbotSettingTab({super.key});
 
-  /// Publish purana bot badal deta hai, isliye pehle pooch lo
+  /// Publish replaces the old bot, so ask first
   Future<void> _confirmPublish(
     BuildContext context,
     EazbotSettingController controller,

@@ -3,10 +3,10 @@
 //
 //   [Create Template] [Template Library]
 //
-//   Create : form (naam, content, variable sample, buttons) + preview
-//            window / bade tablet par preview right side me,
-//            phone par form ke neeche
-//   Library: search + category, card par tap -> form bhar jaata hai
+//   Create : form (name, content, variable samples, buttons) + preview
+//            on a window / big tablet, the preview on the right,
+//            on phones, below the form
+//   Library: search + category, tap a card -> the form gets filled
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive.dart';
@@ -62,7 +62,7 @@ class _CreateView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Preview right side me tabhi jab jagah ho
+    // Preview on the right only when there is space
     final sideBySide = r.width >= 900;
     const gap = SizedBox(height: 14);
 
@@ -651,7 +651,7 @@ class _ButtonFields extends StatelessWidget {
   Widget build(BuildContext context) => Obx(() => _content(context));
 
   Widget _content(BuildContext context) {
-    // Dono yahin padhe jaate hain, taaki likhte hi galti hat jaaye
+    // Both are read here, so the error goes away while typing
     final problem = c.buttonError(b);
     final error = c.showErrors.value ? problem : null;
 

@@ -1,7 +1,7 @@
 // ============================================================
-// NOTIFICATION BELL  (Home ke upar, avatar ke paas)
+// NOTIFICATION BELL  (top of Home, next to the avatar)
 //
-//   🔔(3)   3 = bina padhi notifications. Tap = Notifications page.
+//   🔔(3)   3 = unread notifications. Tap = Notifications page.
 // ============================================================
 
 import 'package:eazotel/features/notifications/controller/notification_controller.dart';

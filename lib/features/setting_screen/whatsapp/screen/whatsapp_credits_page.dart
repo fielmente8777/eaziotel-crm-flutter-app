@@ -1,12 +1,12 @@
 // ============================================================
 // WHATSAPP CREDITS PAGE  (Settings > WhatsApp > Credits & Usage)
 //
-// Upar do tab: Overview | Transactions
-// Neeche chune hue tab ka content:
+// Two tabs on top: Overview | Transactions
+// Content of the selected tab below:
 //   Overview      -> widgets/credits_overview.dart
 //   Transactions  -> widgets/credits_transactions.dart
 //
-// Data WhatsappCreditsController me hai.
+// The data is in WhatsappCreditsController.
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive_builder.dart';
@@ -53,7 +53,7 @@ class WhatsappCreditsPage extends StatelessWidget {
   }
 }
 
-/// Overview | Transactions (chune hue tab ke neeche line)
+/// Overview | Transactions (line under the selected tab)
 class _CreditsTabs extends StatelessWidget {
   const _CreditsTabs({required this.controller});
 

@@ -1,12 +1,12 @@
 // ============================================================
 // LEAD SOURCE LIST
 //
-// Webform / Eazbot / Whatsapp / Facebook / Google ki lines.
-// Har line me: naam, chune hue members (chip) aur on / off switch.
-// [channel] tay karta hai ki WhatsApp (number) dikhe ya Email.
+// Lines for Webform / Eazbot / Whatsapp / Facebook / Google.
+// Each line has: name, chosen members (chips) and an on / off switch.
+// [channel] decides whether WhatsApp (number) or Email is shown.
 //
-//   phone           : naam + switch upar, chips neeche poori chaudai me
-//   tablet / window : naam baaye, chips + switch daaye
+//   phone           : name + switch on top, chips below at full width
+//   tablet / window : name on the left, chips + switch on the right
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive.dart';
@@ -33,7 +33,7 @@ class LeadSourceList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      // team aane par chips me naam aa jayein
+      // when the team arrives, names show in the chips
       controller.dashboard.userNameResponse.value;
 
       return Column(
@@ -123,7 +123,7 @@ class _SourceRow extends StatelessWidget {
   }
 }
 
-/// Chune hue members ke chip + neeche ka teer. Dabane par picker khulta hai.
+/// Chips of the chosen members + a down arrow. Pressing it opens the picker.
 class _RecipientField extends StatelessWidget {
   const _RecipientField({
     required this.source,

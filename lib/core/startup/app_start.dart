@@ -1,13 +1,13 @@
 // ============================================================
 // APP START
 //
-// App khulte hi kaunsi screen dikhe:
-//   token saved hai -> Dashboard
-//   warna           -> Login
+// Which screen shows when the app opens:
+//   token saved -> Dashboard
+//   otherwise   -> Login
 //
-// Isse pehle alag Flutter splash screen thi jo ek extra page aur
-// navigation karti thi. Ab phone ka native splash (logo) tab tak
-// dikhta hai jab tak ye check ho raha hai, phir seedhi sahi screen.
+// Before this there was a separate Flutter splash screen that added an
+// extra page and navigation. Now the phone's native splash (logo) stays
+// while this check runs, then the right screen opens directly.
 // ============================================================
 
 import 'package:eazotel/core/local_storage/token_storage.dart';
@@ -24,7 +24,7 @@ class AppStart {
     return hasToken ? const DashboardBottomNav() : const LoginScreen();
   }
 
-  /// Saari purani screens hata kar shuru wali screen kholo (jaise "Try Again")
+  /// Remove all old screens and open the start screen (like "Try Again")
   static Future<void> restart(BuildContext context) async {
     final screen = await firstScreen();
 

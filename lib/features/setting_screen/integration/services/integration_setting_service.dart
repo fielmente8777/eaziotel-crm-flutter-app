@@ -1,7 +1,7 @@
 // ============================================================
 // INTEGRATION SETTING SERVICE
 //
-// Settings > Integration tab ki API calls. Sirf yahi file server se baat karti hai.
+// API calls for the Settings > Integration tab. Only this file talks to the server.
 //
 //   getGoogleStatus    : GET  /google/status/<hid>
 //   getGaPropertyId    : GET  /google/analytics-data/<hid>  -> activePropertyId
@@ -10,7 +10,7 @@
 //   getGoogleAdsAuthUrl: GET  /api/v1/google-ads/auth/google/start?ndid=
 //   connectExotel      : POST /api/v1/call/auth/connect
 //
-// Pehle se bani service dobara use hoti hai (dobara nahi likhi):
+// An existing service is reused (not written again):
 //   WhatsappApiService.getWhatsappIntegration -> /api/v1/integration/get
 // ============================================================
 
@@ -28,7 +28,7 @@ import '../models/integration_item.dart';
 class IntegrationSettingService {
   IntegrationSettingService._();
 
-  /// integration/get -> result.docs  (jaise {"exotel": true, "meta": true ...})
+  /// integration/get -> result.docs  (like {"exotel": true, "meta": true ...})
   static Future<Map<String, dynamic>> getIntegrations({
     required String hid,
   }) async {
@@ -81,7 +81,7 @@ class IntegrationSettingService {
   // SEARCH CONSOLE
   // ============================================================
 
-  /// Hotel ki Google Analytics property id. Na mile (GA juda nahi) to null.
+  /// The hotel's Google Analytics property id. null if not found (GA not connected).
   static Future<String?> getGaPropertyId({required String hid}) async {
     final today = DateTime.now().toIso8601String().substring(0, 10);
 
@@ -134,7 +134,7 @@ class IntegrationSettingService {
   }
 
   // ============================================================
-  // GOOGLE ADS  (Google login ka link, browser me khulta hai)
+  // GOOGLE ADS  (Google login link, opens in the browser)
   // ============================================================
 
   static Future<String> getGoogleAdsAuthUrl({required String ndid}) async {
@@ -157,7 +157,7 @@ class IntegrationSettingService {
   // ============================================================
   // EXOTEL
   // body: {apiKey, authToken, subDomain, accountSID, virtualNumber}
-  // Server credentials encrypt karke save karta hai.
+  // The server encrypts and saves the credentials.
   // ============================================================
 
   static Future<void> connectExotel({
@@ -171,7 +171,7 @@ class IntegrationSettingService {
         baseUrl: BaseUrl.production2,
         body: body,
       ),
-      // Body me encrypt hui keys aati hain, log me mat dikhao
+      // The body has encrypted keys, do not show them in the log
       logBody: false,
     );
 

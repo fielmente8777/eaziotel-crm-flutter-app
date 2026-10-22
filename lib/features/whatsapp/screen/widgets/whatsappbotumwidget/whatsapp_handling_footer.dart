@@ -1,10 +1,10 @@
 // ============================================================
-// WHATSAPP HANDLING FOOTER  (chat ke neeche: message box ya "Take over")
+// WHATSAPP HANDLING FOOTER  (below the chat: message box or "Take over")
 //
 //   🤖 The AI is replying to this guest.          [ Take over ]
 //   ⚙️ An automated flow is replying to this guest. [ Take over ]
 //   👤 A teammate is replying to this conversation.
-//   warna: message box  (+ upar chhota "Hand back to AI" jab maine liya ho)
+//   otherwise: message box  (+ a small "Hand back to AI" on top when I took over)
 // ============================================================
 
 import 'package:eazotel/features/whatsapp/controller/whatsapp_handling_controller.dart';
@@ -22,13 +22,13 @@ class WhatsappHandlingFooter extends StatelessWidget {
 
   final WhatsappHandlingController controller;
 
-  /// Asli message box (jab likhne ki ijazat ho)
+  /// The real message box (when typing is allowed)
   final Widget input;
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      // list badle (take over) to bhi dobara bane
+      // rebuild when the list changes too (take over)
       controller.whatsapp.conversations.length;
 
       switch (controller.mode) {
@@ -77,7 +77,7 @@ class WhatsappHandlingFooter extends StatelessWidget {
 }
 
 // ============================================================
-// BAR (message box ki jagah)
+// BAR (in place of the message box)
 // ============================================================
 
 class _HandlingBar extends StatelessWidget {
@@ -148,7 +148,7 @@ class _HandlingBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                // Gol loader nahi: chalte waqt hourglass
+                // No spinner: hourglass while running
                 icon: Icon(
                   busy
                       ? Icons.hourglass_top_rounded
@@ -169,7 +169,7 @@ class _HandlingBar extends StatelessWidget {
 }
 
 // ============================================================
-// HAND BACK TO AI (message box ke upar chhota sa)
+// HAND BACK TO AI (a small one above the message box)
 // ============================================================
 
 class _HandBackRow extends StatelessWidget {
@@ -289,7 +289,7 @@ class _ReplyingTextState extends State<_ReplyingText>
 }
 
 // ============================================================
-// LOADING (pata chal raha hai kaun reply karega)
+// LOADING (finding out who will reply)
 // ============================================================
 
 class _LoadingBar extends StatelessWidget {

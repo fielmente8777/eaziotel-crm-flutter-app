@@ -1,9 +1,9 @@
 // ============================================================
 // WIDGET CARD
 //
-// "WhatsApp Widget Integration" wala card.
-// Do code block dikhata hai (Option 1 aur Option 2), har ek ke saath
-// "Copy Code" button. Code WhatsappWidgetCode (models) se banta hai.
+// The "WhatsApp Widget Integration" card.
+// Shows two code blocks (Option 1 and Option 2), each with a
+// "Copy Code" button. The code is built by WhatsappWidgetCode (models).
 // ============================================================
 
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
@@ -19,7 +19,7 @@ class WhatsappWidgetCard extends StatelessWidget {
 
   final WhatsappSettingController controller;
 
-  /// "Configuration Options" box ki lines: naam -> matlab
+  /// Lines of the "Configuration Options" box: name -> meaning
   static const Map<String, String> _options = {
     'ndid': 'Visitor identifier.',
     'hid': 'Website identifier.',
@@ -37,7 +37,7 @@ class WhatsappWidgetCard extends StatelessWidget {
       title: 'WhatsApp Widget Integration',
       subtitle: 'Choose one of the integration methods below.',
       child: Obx(() {
-        // Phone number aane par code apne aap badal jata hai
+        // The code updates by itself when the phone number arrives
         final code = controller.widgetCode;
 
         return Column(
@@ -170,7 +170,7 @@ class _CodeBlock extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: p.border),
           ),
-          // Lambi line screen se bahar na jaye: side me scroll
+          // So a long line does not go off screen: scroll sideways
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: SelectableText(

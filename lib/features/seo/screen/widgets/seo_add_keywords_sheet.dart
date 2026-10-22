@@ -1,10 +1,10 @@
 // ============================================================
 // ADD KEYWORDS  (Local SEO + Website SEO)
 //
-// Phone par neeche se sheet, tablet / window par beech me dialog.
-//   - ek line / comma me ek keyword
-//   - type karte hi keyword chip ban kar dikhte hain (x se hatao)
-//   - kitne credit lagenge + kam ho to button band
+// A bottom sheet on phones, a centered dialog on tablet / window.
+//   - one keyword per line / comma
+//   - keywords show as chips while typing (remove with x)
+//   - how many credits it will cost + button disabled if not enough
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive.dart';
@@ -35,7 +35,7 @@ Future<void> showSeoAddKeywords(
   required RxBool saving,
   required RxString error,
 
-  /// Return: jud gaye (sheet band) ya nahi (error dikhao)
+  /// Return: added (sheet closes) or not (show the error)
   required Future<bool> Function(List<String> keywords) onAdd,
 }) async {
   error.value = '';
@@ -228,7 +228,7 @@ class _AddKeywordsFormState extends State<_AddKeywordsForm> {
               style: TextStyle(color: p.subText, fontSize: 11.5),
             ),
 
-            // Keyword chips (x se hatao)
+            // Keyword chips (remove with x)
             if (_keywords.isNotEmpty) ...[
               const SizedBox(height: 10),
               Wrap(

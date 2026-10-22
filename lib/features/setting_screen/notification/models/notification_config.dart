@@ -1,14 +1,14 @@
 // ============================================================
 // NOTIFICATION CONFIG (models)
 //
-// Settings > Notification tab ka data.
-// Server se aata hai: GET /api/v1/setting/get-config -> result.docs
+// Data of the Settings > Notification tab.
+// Comes from the server: GET /api/v1/setting/get-config -> result.docs
 //
-//   LeadSourceNotification : ek lead source (Webform, Eazbot ...) par kisko
-//                            WhatsApp aur kisko Email jaye
-//   CallMessage            : call na lagne par guest ko kya bheje
+//   LeadSourceNotification : for one lead source (Webform, Eazbot ...), who gets
+//                            WhatsApp and who gets the Email
+//   CallMessage            : what to send the guest when a call does not connect
 //                            (Not Answered / Missed Call / Busy)
-//   NotificationConfig     : upar ke dono ek saath
+//   NotificationConfig     : both of the above together
 // ============================================================
 
 List<String> _toStringList(dynamic value) {
@@ -38,21 +38,21 @@ class LeadSourceNotification {
     required this.isEmailAllowed,
   });
 
-  /// Server ka naam, jaise 'webform'
+  /// Server name, like 'webform'
   final String key;
 
-  /// Screen ka naam, jaise 'Webform'
+  /// Screen name, like 'Webform'
   final String label;
 
-  /// In numbers par WhatsApp notification jata hai
+  /// WhatsApp notifications go to these numbers
   List<String> phones;
   bool isPhoneAllowed;
 
-  /// In email par Email notification jata hai
+  /// Email notifications go to these emails
   List<String> emails;
   bool isEmailAllowed;
 
-  /// Paanch source, isi kram me dikhte hain
+  /// Five sources, shown in this order
   static const Map<String, String> sources = {
     'webform': 'Webform',
     'eazbot': 'Eazbot',
@@ -61,7 +61,7 @@ class LeadSourceNotification {
     'google': 'Google',
   };
 
-  /// Server ke `config` Map se paanchon source (na mile to khali + band)
+  /// All five sources from the server's `config` Map (empty + off if missing)
   static List<LeadSourceNotification> listFromJson(
     Map<String, dynamic> config,
   ) {
@@ -75,7 +75,7 @@ class LeadSourceNotification {
     ];
   }
 
-  /// Save API ke body ka hissa
+  /// Part of the save API body
   Map<String, dynamic> toJson() => {
     'email': emails,
     'phone': phones,
@@ -112,19 +112,19 @@ class CallMessage {
     this.message = '',
   });
 
-  /// Server ka naam: notAnswered / missedCall / busy
+  /// Server name: notAnswered / missedCall / busy
   final String key;
 
-  /// Screen ka naam: Not Answered / Missed Call / Busy
+  /// Screen name: Not Answered / Missed Call / Busy
   final String label;
 
   /// 'Template' ya 'Flow'
   String type;
 
-  /// Template ka naam ya flow ki id (kuch na chuna ho to null)
+  /// Template name or flow id (null if nothing is chosen)
   String? selection;
 
-  /// Server ka "message" field (screen par nahi dikhta, save me waisa hi jata hai)
+  /// The server's "message" field (not shown on screen, sent back as is on save)
   final String message;
 
   static const String typeTemplate = 'Template';
@@ -134,7 +134,7 @@ class CallMessage {
 
   bool get isFlow => type == typeFlow;
 
-  /// Teen haalat, isi kram me dikhti hain
+  /// Three states, shown in this order
   static const Map<String, String> cases = {
     'notAnswered': 'Not Answered',
     'missedCall': 'Missed Call',
@@ -152,8 +152,8 @@ class CallMessage {
     ];
   }
 
-  /// Save API ke body ka hissa.
-  /// [templateMeta] chune hue template ki jaankari (flow ho to null).
+  /// Part of the save API body.
+  /// [templateMeta] is info about the chosen template (null for a flow).
   Map<String, dynamic> toJson({Map<String, dynamic>? templateMeta}) => {
     'type': isFlow ? 'flow' : 'template',
     'templateName': isFlow ? null : selection,
@@ -196,15 +196,15 @@ class NotificationConfig {
 
   final List<LeadSourceNotification> sources;
 
-  /// "Call Notification" ka switch
+  /// The "Call Notification" switch
   final bool callEnabled;
 
   final List<CallMessage> callMessages;
 
-  /// Server ka callConfig._id (save me wapas bheja jata hai, web ki tarah)
+  /// The server's callConfig._id (sent back on save, like the web)
   final String? callConfigId;
 
-  /// [docs] = get-config ka `result.docs`
+  /// [docs] = `result.docs` of get-config
   factory NotificationConfig.fromJson(Map<String, dynamic> docs) {
     final call = _toMap(docs['callConfig']);
 
@@ -216,6 +216,6 @@ class NotificationConfig {
     );
   }
 
-  /// Data na aaye to sab khali aur band
+  /// If no data comes, everything is empty and off
   factory NotificationConfig.empty() => NotificationConfig.fromJson({});
 }

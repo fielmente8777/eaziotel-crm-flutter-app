@@ -1,13 +1,13 @@
 // ============================================================
 // NOTIFICATION RECIPIENT (model)
 //
-// Team ka ek member jise notification ja sakta hai.
-// Server sirf number / email rakhta hai, screen par member ka naam dikhta hai.
+// A team member who can receive notifications.
+// The server keeps only the number / email; the screen shows the member's name.
 //
 //   "9528295631"            -> "Abhijeet"
 //   "abhijeet@eazotel.com"  -> "Abhijeet"
 //
-// Jo number / email kisi member se na mile, wo jaisa hai waisa dikhta hai.
+// A number / email that matches no member is shown as it is.
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';

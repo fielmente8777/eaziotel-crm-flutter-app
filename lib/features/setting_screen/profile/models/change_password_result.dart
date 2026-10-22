@@ -1,12 +1,12 @@
-/// POST /eazotel/edit/password ka nateeja
+/// Result of POST /eazotel/edit/password
 class ChangePasswordResult {
   final bool success;
   final String? message;
 
   const ChangePasswordResult({required this.success, this.message});
 
-  /// Server 200 ke saath bhi "Status": false bhej sakta hai
-  /// (jaise purana password galat ho).
+  /// The server can send "Status": false even with a 200
+  /// (like when the old password is wrong).
   factory ChangePasswordResult.fromJson(Map<String, dynamic> json) {
     return ChangePasswordResult(
       success: json['Status'] != false && json['success'] != false,

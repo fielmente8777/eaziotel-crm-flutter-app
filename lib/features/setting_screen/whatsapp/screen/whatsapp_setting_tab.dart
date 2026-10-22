@@ -1,11 +1,11 @@
 // ============================================================
 // WHATSAPP SETTING TAB  (Settings > WhatsApp)
 //
-// Ye file sirf ye tay karti hai ki screen par KYA dikhe:
+// This file only decides WHAT shows on screen:
 //
-//   WhatsApp connected nahi  ->  _NotConnected (poori screen par message)
-//   data aa raha hai         ->  _Loading      (shimmer)
-//   menu = Overview          ->  _Overview     (saare card)
+//   WhatsApp not connected  ->  _NotConnected (full-screen message)
+//   data loading            ->  _Loading      (shimmer)
+//   menu = Overview          ->  _Overview     (all cards)
 //   menu = Credits & Usage   ->  WhatsappCreditsPage
 //   menu = Message Templates ->  MessageTemplatesPage (message_templates/)
 //   menu = Auto Message      ->  _AutoMessagePage
@@ -13,7 +13,7 @@
 //   menu = Quick Replies     ->  QuickRepliesPage (quick_replies/)
 //   menu = WhatsApp Flow     ->  ChatbotFlowPage (chatbot_flow/)
 //
-// Card khud widgets/ folder me hain, data controller/ me.
+// The cards themselves are in the widgets/ folder, data in controller/.
 // ============================================================
 
 import 'package:eazotel/features/setting_screen/whatsapp/screen/whatsapp_Flow_Page.dart';
@@ -48,7 +48,7 @@ class WhatsappSettingTab extends StatelessWidget {
     return Obx(() {
       final error = controller.errorMessage.value;
 
-      // WhatsApp connected nahi hai -> poori screen par sirf yahi message
+      // WhatsApp is not connected -> only this message on the full screen
       if (!controller.isLoading.value && error != null) {
         return _NotConnected(message: error, onRetry: controller.load);
       }
@@ -83,7 +83,7 @@ class WhatsappSettingTab extends StatelessWidget {
           }
         });
 
-        // Window: menu left side me. Phone / tablet: menu upar chips me.
+        // Window: menu on the left. Phone / tablet: menu as chips on top.
         if (r.isDesktop) {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,7 +126,7 @@ class _Overview extends StatelessWidget {
     final gap = r.gap + 6;
     final space = SizedBox(height: gap);
 
-    // Web jaisa: left me account + auto message + AI, right me profile + widget
+    // Same as web: account + auto message + AI on the left, profile + widget on the right
     final left = <Widget>[
       WhatsappAccountCard(controller: controller),
       space,
@@ -152,7 +152,7 @@ class _Overview extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Phone: sab ek ke neeche ek. Tablet / window: do column.
+            // Phone: everything stacked. Tablet / window: two columns.
             if (r.isPhone) ...[
               ...left,
               space,
@@ -188,7 +188,7 @@ class _Overview extends StatelessWidget {
 }
 
 // ============================================================
-// AUTO MESSAGE (alag page; Overview wala hi card, beech me)
+// AUTO MESSAGE (separate page; the same card as Overview, in the middle)
 // ============================================================
 
 class _AutoMessagePage extends StatelessWidget {
@@ -218,7 +218,7 @@ class _AutoMessagePage extends StatelessWidget {
   }
 }
 
-/// WhatsApp connected na ho to poori screen par dikhne wala message
+/// Full-screen message shown when WhatsApp is not connected
 class _NotConnected extends StatelessWidget {
   const _NotConnected({required this.message, required this.onRetry});
 

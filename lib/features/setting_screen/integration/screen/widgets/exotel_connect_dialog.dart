@@ -1,7 +1,7 @@
 // ============================================================
 // EXOTEL CONNECT DIALOG
 //
-// Exotel card par "Connect" dabane par khulta hai.
+// Opens when "Connect" is pressed on the Exotel card.
 //   API Key, Auth Token, Sub Domain, Account SID, Virtual Number
 //   Connect -> controller.connectExotel (POST /api/v1/call/auth/connect)
 // ============================================================

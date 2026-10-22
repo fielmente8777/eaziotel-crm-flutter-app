@@ -1,13 +1,13 @@
 // ============================================================
 // FLOW BUILDER VIEW  (Flows > Create Flow tab)
 //
-//   template nahi chuna -> do card (Lead Generation, Feedback Form)
-//                          tap -> naam ka dialog
-//   builder             -> upar naam + Publish
+//   no template chosen -> two cards (Lead Generation, Feedback Form)
+//                          tap -> name dialog
+//   builder             -> name + Publish on top
 //                          SCREENS (list / chips) | CONTENT | PREVIEW
-//      window : teeno ek line me
-//      tablet : screens upar chips, content + preview ek line me
-//      phone  : screens chips, content, preview ek ke neeche ek
+//      window : all three in one row
+//      tablet : screen chips on top, content + preview in one row
+//      phone  : screen chips, content, preview stacked
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive.dart';
@@ -38,7 +38,7 @@ class FlowBuilderView extends StatelessWidget {
 }
 
 // ============================================================
-// STEP 1 + 2: TEMPLATE + NAAM
+// STEP 1 + 2: TEMPLATE + NAME
 // ============================================================
 
 class _TemplatePicker extends StatelessWidget {
@@ -138,7 +138,7 @@ class _TemplatePicker extends StatelessWidget {
   }
 }
 
-/// Naam ka dialog. Controller khud rakhta hai, band hone ke baad hi chhodta hai.
+/// Name dialog. Its controller is kept and released only after it closes.
 class _FlowNameDialog extends StatefulWidget {
   const _FlowNameDialog({required this.option});
 
@@ -334,7 +334,7 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// Window: left side ki list
+/// Window: list on the left
 class _ScreenList extends StatelessWidget {
   const _ScreenList({required this.c});
 
@@ -345,7 +345,7 @@ class _ScreenList extends StatelessWidget {
     final p = SettingPalette(context);
 
     return Obx(() {
-      c.tick; // naam badalne par list bhi badle
+      c.tick; // the list changes too when the name changes
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -424,7 +424,7 @@ class _ScreenList extends StatelessWidget {
   }
 }
 
-/// Phone / tablet: upar chips
+/// Phone / tablet: chips on top
 class _ScreenChips extends StatelessWidget {
   const _ScreenChips({required this.c});
 

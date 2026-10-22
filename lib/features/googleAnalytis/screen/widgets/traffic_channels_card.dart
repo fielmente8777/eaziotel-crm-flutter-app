@@ -26,8 +26,8 @@ class TrafficChannelsCard extends StatefulWidget {
 
 class _TrafficChannelsCardState extends State<TrafficChannelsCard> {
   
-  int? _selected; // tap se
-  int? _hover; // mouse hover se (desktop)
+  int? _selected; // from a tap
+  int? _hover; // from mouse hover (desktop)
 
   int? get _active => _hover ?? _selected;
 
@@ -36,7 +36,7 @@ class _TrafficChannelsCardState extends State<TrafficChannelsCard> {
   @override
   void didUpdateWidget(covariant TrafficChannelsCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Naya data aaye (date range badli) to selection reset
+    // New data arrived (date range changed) -> reset the selection
     if (oldWidget.channels != widget.channels) {
       _selected = null;
       _hover = null;
@@ -167,7 +167,7 @@ class _TrafficChannelsCardState extends State<TrafficChannelsCard> {
     );
   }
 
-  /// Donut ke beech ka text
+  /// Text in the middle of the donut
   Widget _center(AnalyticsPalette c, int total, double holeDiameter) {
     final i = _active;
     final ch = (i != null && i < widget.channels.length)
@@ -217,7 +217,7 @@ class _TrafficChannelsCardState extends State<TrafficChannelsCard> {
     final channels = widget.channels;
     final active = _active;
 
-    // Screenshot ki tarah alphabetical order
+    // Alphabetical order, like the screenshot
     final order = List<int>.generate(channels.length, (i) => i)
       ..sort((a, b) => channels[a].channel.compareTo(channels[b].channel));
 

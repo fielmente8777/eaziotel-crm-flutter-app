@@ -34,9 +34,9 @@ class ApiClient {
 
   // ============================================================
   // POST
-  // (fileField + filePath dene par multipart/form-data bhejta hai,
-  //  body ke fields form fields ban jaate hain.
-  //  formData: true dene par bina file ke bhi form-data jata hai.)
+  // (With fileField + filePath it sends multipart/form-data,
+  //  and the body fields become form fields.
+  //  With formData: true, form-data is sent even without a file.)
   // ============================================================
 
   static Future<http.Response> post(
@@ -50,7 +50,7 @@ class ApiClient {
     bool formData = false,
     void Function(int sent, int total)? onUploadProgress,
 
-    /// Default 30 sec. Lambi request (jaise AI) ke liye zyada do.
+    /// Default 30 sec. Give more for long requests (like AI).
     Duration? timeout,
   }) {
     return _request(
@@ -126,9 +126,9 @@ class ApiClient {
   }
 
   // ============================================================
-  // MULTIPART (form-data + kitni bhi files, POST ya PUT)
-  // Jaise Quick Reply: title, text + 3 photo + 1 PDF
-  // (ek hi field naam "file" se kai files bhej sakte ho)
+  // MULTIPART (form-data + any number of files, POST or PUT)
+  // For example Quick Reply: title, text + 3 photos + 1 PDF
+  // (you can send many files under the same field name "file")
   // ============================================================
 
   static Future<http.Response> multipart(
@@ -367,7 +367,7 @@ class ApiClient {
   // ============================================================
 
   // ============================================================
-  // MULTIPART SEND (multipart() se aata hai)
+  // MULTIPART SEND (called from multipart())
   // ============================================================
 
   static Future<http.Response> _sendMultipart({
@@ -379,7 +379,7 @@ class ApiClient {
   }) async {
     final request = http.MultipartRequest(method, url);
 
-    // Content-Type hatao, boundary http package khud lagata hai
+    // Remove Content-Type; the http package adds the boundary itself
     request.headers.addAll(
       Map<String, String>.from(headers)
         ..removeWhere((key, _) => key.toLowerCase() == 'content-type'),
@@ -402,7 +402,7 @@ class ApiClient {
 
     final streamed = await _client
         .send(request)
-        // Video / kai file ho sakti hain, isliye zyada time
+        // There can be videos / many files, so allow more time
         .timeout(Duration(seconds: files.isEmpty ? 30 : 300));
 
     return http.Response.fromStream(streamed);
@@ -431,7 +431,7 @@ class ApiClient {
     }
 
     // ----------------------------------------------------------
-    // MULTIPART (file upload) - sirf POST par
+    // MULTIPART (file upload) - POST only
     // ----------------------------------------------------------
 
     if (method == 'POST' && fileField != null && filePath != null) {
@@ -441,7 +441,7 @@ class ApiClient {
         onProgress: onUploadProgress,
       );
 
-      // Content-Type hatao, multipart ka boundary http package khud lagata hai
+      // Remove Content-Type; the http package adds the multipart boundary itself
       final multipartHeaders = Map<String, String>.from(headers)
         ..removeWhere((key, _) => key.toLowerCase() == 'content-type');
 
@@ -470,7 +470,7 @@ class ApiClient {
         mimeType = 'image/webp';
         extension = 'webp';
       } else {
-        // .jpg, .jpeg ya extension na ho, teeno case me image/jpeg
+        // .jpg, .jpeg or no extension: image/jpeg in all three cases
         mimeType = 'image/jpeg';
         extension = 'jpg';
       }
@@ -486,20 +486,20 @@ class ApiClient {
       );
       final streamed = await _client
           .send(request)
-          // Video badi hoti hai, upload ko zyada time do
+          // Videos are large, so give the upload more time
           .timeout(Duration(seconds: isVideo ? 300 : 60));
 
       return http.Response.fromStream(streamed);
     }
 
     // ----------------------------------------------------------
-    // FORM DATA (bina file ke) - sirf POST par
+    // FORM DATA (without a file) - POST only
     // ----------------------------------------------------------
 
     if (method == 'POST' && formData) {
       final request = http.MultipartRequest('POST', url);
 
-      // Content-Type hatao, form ka boundary http package khud lagata hai
+      // Remove Content-Type; the http package adds the form boundary itself
       final formHeaders = Map<String, String>.from(headers)
         ..removeWhere((key, _) => key.toLowerCase() == 'content-type');
 
@@ -867,7 +867,7 @@ class ApiClient {
 // MULTIPART REQUEST WITH UPLOAD PROGRESS
 // ============================================================
 
-/// Body bhejte waqt kitne bytes ja chuke hain, wo [onProgress] me batata hai.
+/// Reports to [onProgress] how many bytes of the body have been sent.
 class _ProgressMultipartRequest extends http.MultipartRequest {
   _ProgressMultipartRequest(super.method, super.url, {this.onProgress});
 
@@ -902,21 +902,21 @@ class _ProgressMultipartRequest extends http.MultipartRequest {
 }
 
 // ============================================================
-// UPLOAD FILE (ApiClient.multipart ke liye)
+// UPLOAD FILE (for ApiClient.multipart)
 // ============================================================
 
 class ApiUploadFile {
   ApiUploadFile({required this.field, required this.path, String? fileName})
     : fileName = fileName ?? path.split(RegExp(r'[\/]')).last;
 
-  /// Form ka naam, jaise "file"
+  /// Form field name, like "file"
   final String field;
 
-  /// Phone / computer par file ka rasta
+  /// Path of the file on the phone / computer
   final String path;
   final String fileName;
 
-  /// Extension se type (jpg -> image/jpeg, pdf -> application/pdf ...)
+  /// Type from the extension (jpg -> image/jpeg, pdf -> application/pdf ...)
   String get mimeType {
     final ext = fileName.contains('.')
         ? fileName.split('.').last.toLowerCase()

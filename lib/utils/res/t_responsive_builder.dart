@@ -2,8 +2,8 @@ import 'package:eazotel/utils/res/t_breakpoints.dart';
 import 'package:eazotel/utils/res/t_responsive.dart';
  import 'package:flutter/material.dart';
 
-/// Parent se milne wali asli width par layout decide karta hai.
-/// Side navigation / split view / window resize mein bhi sahi chalta hai.
+/// Decides the layout from the real width the parent gives.
+/// Works correctly with side navigation / split view / window resize too.
 class TResponsiveBuilder extends StatelessWidget {
   final Widget Function(BuildContext context, TResponsive r) builder;
   const TResponsiveBuilder({super.key, required this.builder});
@@ -16,7 +16,7 @@ class TResponsiveBuilder extends StatelessWidget {
   }
 }
 
-/// Content ko center karke max width par rokta hai (desktop ke liye)
+/// Centers the content and limits it to a max width (for desktop)
 class TCenteredContent extends StatelessWidget {
   final Widget child;
   final double maxWidth;

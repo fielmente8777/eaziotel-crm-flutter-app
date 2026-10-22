@@ -1,14 +1,14 @@
 // ============================================================
 // ONBOARDING CONTROLLER  (web: pages/Onboarding/OnboardingForm.jsx)
 //
-// Naya account (koi hotel nahi) -> ye form:
-//   1. website + hotel banao   (createWebsite)
-//   2. free trial shuru        (complete)
-//   3. dashboard dobara load   (ab hotel hai -> seedha dashboard)
+// New account (no hotel) -> this form:
+//   1. create the website + hotel   (createWebsite)
+//   2. start the free trial    (complete)
+//   3. reload the dashboard   (now it has a hotel -> straight to the dashboard)
 //
-// Form ka draft phone me save rehta hai, taaki app band ho to bhara hua
-// data na jaye. Website ban chuki ho aur trial fail ho, to retry par
-// doosri website nahi banti.
+// The form draft is saved on the phone, so the filled data is not lost if
+// the app closes. If the website was created and the trial failed, a retry
+// does not create a second website.
 // ============================================================
 
 import 'dart:convert';
@@ -34,7 +34,7 @@ class OnboardingController extends GetxController {
   final hotelPhone = TextEditingController();
   final pinCode = TextEditingController();
 
-  /// Jab places API se list na mile, tab ye text box ban jate hain
+  /// When the places API returns no list, these become text boxes
   final countryText = TextEditingController();
   final stateText = TextEditingController();
   final cityText = TextEditingController();
@@ -45,7 +45,7 @@ class OnboardingController extends GetxController {
   final state = ''.obs;
   final city = ''.obs;
 
-  /// null = load ho raha hai, [] = API ke paas kuch nahi (text box dikhao)
+  /// null = loading, [] = the API has nothing (show a text box)
   final countries = Rxn<List<String>>();
   final states = Rxn<List<String>>();
   final cities = Rxn<List<String>>();
@@ -53,7 +53,7 @@ class OnboardingController extends GetxController {
   /// field name -> error text
   final errors = <String, String>{}.obs;
 
-  /// '' = khali. Warna button par yahi likha aata hai.
+  /// '' = idle. Otherwise this text is shown on the button.
   final submitting = ''.obs;
 
   bool get busy => submitting.value.isNotEmpty;
@@ -107,7 +107,7 @@ class OnboardingController extends GetxController {
     _saveDraft();
   }
 
-  /// Naye country ke apne states / cities
+  /// A new country has its own states / cities
   void setCountry(String value) {
     if (value == country.value) return;
     country.value = value;
@@ -142,7 +142,7 @@ class OnboardingController extends GetxController {
     final list = await OnboardingService.countries();
     countries.value = list;
     if (list.isEmpty) {
-      // list hi nahi mili: state / city bhi likh kar
+      // no list at all: state / city are typed too
       states.value = [];
       cities.value = [];
     } else if (country.value.isNotEmpty) {
@@ -155,10 +155,10 @@ class OnboardingController extends GetxController {
     final forCountry = country.value;
     if (forCountry.isEmpty) return;
     final list = await OnboardingService.states(forCountry);
-    if (forCountry != country.value) return; // beech me badal gaya
+    if (forCountry != country.value) return; // changed in the meantime
     states.value = list;
     if (list.isEmpty) {
-      cities.value = []; // city bhi likh kar
+      cities.value = []; // city is typed too
     } else if (state.value.isNotEmpty) {
       _loadCities();
     }
@@ -178,7 +178,7 @@ class OnboardingController extends GetxController {
   // DRAFT
   // ============================================================
 
-  /// Login token me account ka email hota hai, use type nahi karna padta
+  /// The login token has the account's email, so it does not need typing
   Future<String> _tokenEmail() async {
     try {
       final token = await TokenStorage.getAccessToken() ?? '';
@@ -217,7 +217,7 @@ class OnboardingController extends GetxController {
     stateText.text = read('state');
     cityText.text = read('city');
 
-    // countries pehle aa chuke ho to states abhi load karo
+    // if the countries have already arrived, load the states now
     if (countries.value?.isNotEmpty == true && country.value.isNotEmpty) {
       _loadStates();
     }
@@ -266,7 +266,7 @@ class OnboardingController extends GetxController {
   // SUBMIT
   // ============================================================
 
-  /// true = ho gaya (dashboard khud khul jata hai)
+  /// true = done (the dashboard opens by itself)
   Future<bool> submit() async {
     if (busy) return false;
     final form = _form;
@@ -289,12 +289,12 @@ class OnboardingController extends GetxController {
       await prefs.remove(_draftKey);
       await prefs.remove(_websiteCreatedKey);
 
-      // naya hotel hi chuna hua rahe
+      // keep the new hotel selected
       if (hid != null && hid != 'true') {
         await prefs.setString(DashboardController.hotelIdKey, hid);
       }
 
-      // Hotel ban gaya: dashboard dobara load -> gate khul jata hai
+      // Hotel created: reload the dashboard -> the gate opens
       final dashboard = Get.find<DashboardController>();
       await dashboard.getUser();
       dashboard.getUserDetails();

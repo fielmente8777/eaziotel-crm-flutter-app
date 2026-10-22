@@ -281,7 +281,7 @@ class _ReplyButtonTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Business side chat view hai, isliye buttons display-only hain.
+    // This is the business-side chat view, so the buttons are display-only.
     return SizedBox(
       width: double.infinity,
       height: 42,
@@ -309,7 +309,7 @@ class _ReplyButtonTile extends StatelessWidget {
 }
 
 // ============================================================
-// FLOW MESSAGE (business ne flow bheja)
+// FLOW MESSAGE (the business sent a flow)
 // ============================================================
 
 class _WhatsappFlowMessage extends StatelessWidget {
@@ -414,7 +414,7 @@ class _WhatsappFlowResponseMessage extends StatelessWidget {
 
     final bodyText = (interactive.body?.text ?? '').trim();
 
-    // flow_token internal hai, user ko dikhana nahi
+    // flow_token is internal, do not show it to the user
     final entries = (interactive.data ?? <String, dynamic>{})
         .entries
         .where((e) => e.key != 'flow_token')

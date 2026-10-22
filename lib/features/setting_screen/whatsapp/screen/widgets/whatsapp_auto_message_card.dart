@@ -1,18 +1,18 @@
 // ============================================================
-// AUTO MESSAGE CARD  (web ke AutoMessageCard jaisa)
+// AUTO MESSAGE CARD  (like the web AutoMessageCard)
 //
-// "Auto Messaging Configuration" wala card. Overview me bhi aur
-// "Auto Message" menu me bhi yahi card dikhta hai.
+// The "Auto Messaging Configuration" card. The same card shows in Overview
+// and in the "Auto Message" menu.
 //
-//   upar   : "Apply same config to all modules" (koi module chalu ho tabhi)
+//   top    : "Apply same config to all modules" (only when a module is on)
 //   module : Eazbot / Webform / Meta / Google / WhatsApp
-//            switch on -> type: Template / Text / Flow (Flow sirf WhatsApp)
-//              Template -> template chuno + poora preview
-//              Text     -> apna message
-//              Flow     -> chatbot flow chuno
-//   neeche : "Save Configuration" (sirf jab kuch badla ho)
+//            switch on -> type: Template / Text / Flow (Flow only for WhatsApp)
+//              Template -> choose a template + full preview
+//              Text     -> your own message
+//              Flow     -> choose a chatbot flow
+//   bottom : "Save Configuration" (only when something changed)
 //
-// [columns] 2 ho to module do column me (badi screen)
+// If [columns] is 2, modules show in two columns (big screen)
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -40,7 +40,7 @@ class WhatsappAutoMessageCard extends StatelessWidget {
 
     return SettingSectionCard(
       child: Obx(() {
-        // Ye sab yahin padhe jaate hain, taaki badalte hi card bane
+        // All of these are read here, so the card rebuilds as soon as they change
         final modules = controller.autoMessages.toList();
         final anyOn = controller.anyAutoMessageEnabled;
         final changed = controller.autoMessageChanged;
@@ -156,7 +156,7 @@ class WhatsappAutoMessageCard extends StatelessWidget {
   }
 }
 
-/// Ek module ka dabba
+/// Box for one module
 class _ModuleTile extends StatelessWidget {
   const _ModuleTile({required this.module, required this.controller});
 
@@ -188,7 +188,7 @@ class _ModuleTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ---------- Naam + switch ----------
+          // ---------- Name + switch ----------
           Row(
             children: [
               Expanded(
@@ -247,7 +247,7 @@ class _ModuleTile extends StatelessWidget {
             // ---------- Text ----------
             if (m.isText)
               TextFormField(
-                // Apply to all se dusre module ka text badle to box bhi badle
+                // When Apply to all changes another module's text, the box changes too
                 key: ValueKey('${m.key}-msg-${controller.applyToAll.value}'),
                 initialValue: m.message,
                 minLines: 3,
@@ -256,7 +256,7 @@ class _ModuleTile extends StatelessWidget {
                 onChanged: (v) => update((x) => x.message = v),
               ),
 
-            // ---------- Flow (sirf WhatsApp) ----------
+            // ---------- Flow (WhatsApp only) ----------
             if (m.isFlow)
               flows.isEmpty
                   ? Text(

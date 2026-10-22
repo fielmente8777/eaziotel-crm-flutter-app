@@ -1,9 +1,9 @@
 // ============================================================
 // FORGOT PASSWORD  (web: Login.jsx + ResetPassword.jsx)
 //
-//   1. email      -> POST /api/v1/auth/forgot-password  (6 digit code email par)
-//   2. reset      -> code + naya password -> POST /api/v1/auth/reset-password
-//   3. done       -> "Password updated" -> wapas Sign in
+//   1. email      -> POST /api/v1/auth/forgot-password  (6-digit code by email)
+//   2. reset      -> code + new password -> POST /api/v1/auth/reset-password
+//   3. done       -> "Password updated" -> back to Sign in
 // ============================================================
 
 import 'dart:async';
@@ -37,7 +37,7 @@ class ForgotPasswordController extends GetxController {
   final isResetting = false.obs;
   final showPassword = false.obs;
 
-  /// Naya password abhi tak (live checklist ke liye)
+  /// The new password so far (for the live checklist)
   final password = ''.obs;
 
   /// "Resend in 30s"
@@ -55,7 +55,7 @@ class ForgotPasswordController extends GetxController {
     );
   }
 
-  /// Web jaise hi niyam
+  /// Same rules as the web
   static final List<({String label, bool Function(String) test})> rules = [
     (label: 'At least 8 characters', test: (v) => v.length >= 8),
     (label: 'One letter', test: (v) => RegExp('[A-Za-z]').hasMatch(v)),
@@ -78,7 +78,7 @@ class ForgotPasswordController extends GetxController {
   // API
   // ============================================================
 
-  /// Server ka message nikaalo, warna fallback
+  /// Get the server's message, otherwise the fallback
   String _message(Object e, String fallback) {
     if (e is ApiException) {
       try {
@@ -129,7 +129,7 @@ class ForgotPasswordController extends GetxController {
   }
 
   // ============================================================
-  // 1. CODE BHEJO
+  // 1. SEND THE CODE
   // ============================================================
 
   Future<void> sendCode({bool resend = false}) async {
@@ -154,7 +154,7 @@ class ForgotPasswordController extends GetxController {
     _startCooldown();
   }
 
-  /// "Already have a code?" -> seedha code wala step
+  /// "Already have a code?" -> go straight to the code step
   void haveCode() {
     errors.clear();
     step.value = ForgotStep.reset;
@@ -174,7 +174,7 @@ class ForgotPasswordController extends GetxController {
   }
 
   // ============================================================
-  // 2. NAYA PASSWORD
+  // 2. NEW PASSWORD
   // ============================================================
 
   bool _validateReset() {

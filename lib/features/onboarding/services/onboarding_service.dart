@@ -3,7 +3,7 @@
 //
 //   createWebsite : POST /eazotel/createwebsite   (nexon)  -> { Status, hId }
 //   complete      : POST /api/v1/onboarding       (gian)   -> free trial
-//   countries / states / cities : countriesnow.space (bina login)
+//   countries / states / cities : countriesnow.space (no login)
 // ============================================================
 
 import 'dart:convert';
@@ -30,8 +30,8 @@ class OnboardingService {
     'cofeemaker', 'minibar', 'Evpoint', 'SaunaStream',
   ];
 
-  /// Web jaisa hi payload. Sirf form wale field asli hain, baaki default
-  /// (hotel baad me dashboard se badalta hai).
+  /// Same payload as the web. Only the form fields are real, the rest are defaults
+  /// (the hotel changes them later from the dashboard).
   static Map<String, dynamic> _websitePayload(
     String token,
     Map<String, String> f,
@@ -95,13 +95,13 @@ class OnboardingService {
   // 1. WEBSITE + HOTEL PROFILE
   // ============================================================
 
-  /// Naye hotel ka hId lautata hai ('' agar server ne nahi diya)
+  /// Returns the new hotel's hId ('' if the server did not send it)
   static Future<String> createWebsite(Map<String, String> form) async {
     final token = await TokenStorage.getAccessToken() ?? '';
 
     final response = await ApiClient.post(
       OnboardingApiEndpoint.createWebsite,
-      // token body me jata hai (web: skipAuth)
+      // the token goes in the body (web: skipAuth)
       authenticated: false,
       body: _websitePayload(token, form),
       timeout: const Duration(seconds: 60),
@@ -128,13 +128,13 @@ class OnboardingService {
         timeout: const Duration(seconds: 60),
       );
     } on ApiException catch (e) {
-      // 409: trial pehle se hai, kuch baaki nahi
+      // 409: the trial already exists, nothing left to do
       if (e.statusCode != 409) rethrow;
     }
   }
 
   // ============================================================
-  // COUNTRY / STATE / CITY  (na mile to [] -> field text box ban jata hai)
+  // COUNTRY / STATE / CITY  (if not found, [] -> the field becomes a text box)
   // ============================================================
 
   static Future<dynamic> _places(String path, [Map<String, String>? body]) async {

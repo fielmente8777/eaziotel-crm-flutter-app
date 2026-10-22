@@ -1,11 +1,11 @@
 // ============================================================
 // META INSIGHTS CONTROLLER  (Drawer > Meta Insights)
 //
-//   Screen  --->  ye controller  --->  MetaInsightsService  --->  API
+//   Screen  --->  this controller  --->  MetaInsightsService  --->  API
 //                      |
 //                      +--> overviewResponse (cards, charts, top posts)
 //
-// Period badlo -> naya data. Hotel badle -> naya data.
+// Period changed -> new data. Hotel changed -> new data.
 // ============================================================
 
 import 'dart:convert';
@@ -26,7 +26,7 @@ enum MetaPeriod {
 
   const MetaPeriod(this.value, this.label);
 
-  /// Server wala naam
+  /// Name used by the server
   final String value;
   final String label;
 }
@@ -54,13 +54,13 @@ class MetaInsightsController extends GetxController {
   final period = MetaPeriod.days28.obs;
   final isLoading = true.obs;
 
-  /// null = sab theek, warna screen par yahi message
+  /// null = all good, otherwise this message is shown on screen
   final errorMessage = RxnString();
 
   @override
   void onInit() {
     super.onInit();
-    // Hotel badle to dobara lao
+    // Load again when the hotel changes
     ever(dashboard.selectedHotelId, (_) => load());
     load();
   }
@@ -101,7 +101,7 @@ class MetaInsightsController extends GetxController {
     }
   }
 
-  /// Server ka message (jaise "Meta page not connected")
+  /// The server's message (like "Meta page not connected")
   String _message(Object e) {
     if (e is ApiException) {
       try {

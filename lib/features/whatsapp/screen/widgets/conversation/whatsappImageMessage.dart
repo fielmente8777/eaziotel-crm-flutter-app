@@ -105,7 +105,7 @@ class WhatsappImageMessage extends StatelessWidget {
                     onTap: downloading ? null : controller.download,
                   ),
 
-                // CAPTION (agar image ke saath text bheja ho)
+                // CAPTION (if text was sent with the image)
                 if (caption.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
@@ -125,7 +125,7 @@ class WhatsappImageMessage extends StatelessWidget {
                   createdAt: createdAt,
                   status: status,
                   isIncoming: isIncoming,
-                  // temp id = abhi upload ho rahi hai -> ghadi ka icon
+                  // temp id = still uploading -> clock icon
                   isPending: messageId.startsWith('temp_'),
                 ),
               ],
@@ -186,7 +186,7 @@ class _ImageStatusIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Upload chal raha hai -> ghadi
+    // Upload running -> clock
     if (isPending) {
       return const Icon(Icons.access_time, size: 14, color: Colors.grey);
     }

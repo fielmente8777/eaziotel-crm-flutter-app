@@ -5,10 +5,10 @@
 //   [ All (12) ] [ Unread (3) ]
 //   TODAY
 //     (R) Rahul Sharma                    2m   ●
-//         Hello, room available hai?
+//         Hello, is a room available?
 //   YESTERDAY ...
 //
-// Tap = WhatsApp chat khulti hai. Side me kheencho = hatao.
+// Tap = opens the WhatsApp chat. Swipe sideways = remove.
 // ============================================================
 
 import 'package:eazotel/features/notifications/controller/notification_controller.dart';
@@ -29,7 +29,7 @@ class NotificationScreen extends StatefulWidget {
 class _NotificationScreenState extends State<NotificationScreen> {
   final NotificationController controller = Get.find<NotificationController>();
 
-  /// false = All, true = sirf Unread
+  /// false = All, true = Unread only
   bool _onlyUnread = false;
 
   Future<void> _confirmClear() async {
@@ -110,7 +110,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         ],
       ),
       body: Center(
-        // Tablet / desktop par beech me, zyada chauda nahi
+        // Centered on tablet / desktop, not too wide
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 760),
           child: Obx(() {
@@ -161,7 +161,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     );
   }
 
-  /// Today / Yesterday / tareekh ke hisaab se heading
+  /// Heading by Today / Yesterday / date
   List<Widget> _grouped(BuildContext context, List<AppNotification> list) {
     final p = WaPalette(context);
     final widgets = <Widget>[];
@@ -214,7 +214,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
 }
 
 // ============================================================
-// EK NOTIFICATION
+// ONE NOTIFICATION
 // ============================================================
 
 class _NotificationTile extends StatelessWidget {
@@ -278,7 +278,7 @@ class _NotificationTile extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Avatar + chhota WhatsApp nishaan
+                  // Avatar + small WhatsApp badge
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
@@ -430,7 +430,7 @@ class _FilterChip extends StatelessWidget {
 }
 
 // ============================================================
-// KHALI
+// EMPTY
 // ============================================================
 
 class _Empty extends StatelessWidget {

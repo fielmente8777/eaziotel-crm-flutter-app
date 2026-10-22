@@ -1,12 +1,12 @@
 // ============================================================
 // CALL NOTIFICATION BOX
 //
-// "Call Notification" switch, aur teen haalat:
+// "Call Notification" switch, and three states:
 //   Not Answered | Missed Call | Busy
-// Har ek me: Template / Flow dropdown, kaunsa template / flow, aur preview.
+// Each has: Template / Flow dropdown, which template / flow, and a preview.
 //
-//   phone           : teeno ek ke neeche ek
-//   tablet / window : teeno ek line me
+//   phone           : all three stacked
+//   tablet / window : all three in one row
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive.dart';
@@ -41,7 +41,7 @@ class CallNotificationBox extends StatelessWidget {
       child: Obx(() {
         final enabled = controller.callEnabled.value;
 
-        // templates / flows aane par dropdown badlen
+        // update the dropdowns when templates / flows arrive
         controller.templates.length;
         controller.flowIds.length;
 
@@ -73,7 +73,7 @@ class CallNotificationBox extends StatelessWidget {
               ],
             ),
 
-            // Switch off ho to teeno column nahi dikhte
+            // If the switch is off, the three columns are hidden
             if (enabled) ...[
               const SizedBox(height: 8),
               if (r.isPhone)
@@ -102,7 +102,7 @@ class CallNotificationBox extends StatelessWidget {
   }
 }
 
-/// Ek haalat (jaise "Missed Call") ka dabba
+/// Box for one state (like "Missed Call")
 class _CallColumn extends StatelessWidget {
   const _CallColumn({required this.message, required this.controller});
 
@@ -187,7 +187,7 @@ class _Dropdown extends StatelessWidget {
     final p = SettingPalette(context);
 
     return DropdownButtonFormField<String>(
-      // key badalne par dropdown naya banta hai, warna purani value dikhti
+      // Changing the key rebuilds the dropdown, otherwise the old value would show
       key: ValueKey('$hint-$value-${options.length}'),
       initialValue: value,
       isExpanded: true,

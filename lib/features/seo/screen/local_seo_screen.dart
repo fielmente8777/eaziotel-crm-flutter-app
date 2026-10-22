@@ -1,15 +1,15 @@
 // ============================================================
 // LOCAL SEO SCREEN  (Drawer > SEO > Local Seo)
 //
-// Web dashboard ke "Local SEO Intelligence" jaisa:
+// Like "Local SEO Intelligence" in the web dashboard:
 //   setup adhoora   -> 3 step setup
-//   upar            -> property, radius (2/5/10 km), grid keyword
-//   visibility      -> gol meter + kitne keyword Map 3-Pack me
+//   top             -> property, radius (2/5/10 km), grid keyword
+//   visibility      -> round meter + how many keywords are in the Map 3-Pack
 //   map coverage    -> 5x5 grid (tap = detail), Re-scan
 //   insights, stat cards, rank trend, keywords (tap = detail)
 //
-// Phone: sab ek ke neeche ek, "Add keywords" neeche gol button.
-// Tablet / window: visibility + map ek line me, keywords table jaisa.
+// Phone: everything stacked, a round "Add keywords" button at the bottom.
+// Tablet / window: visibility + map in one row, keywords like a table.
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive.dart';
@@ -132,7 +132,7 @@ class _Dashboard extends StatelessWidget {
           r.pagePadding,
           r.pagePadding,
           r.pagePadding,
-          // FAB ke neeche content na chhupe
+          // So the content is not hidden under the FAB
           r.isPhone ? 96 : r.pagePadding,
         ),
         children: [
@@ -455,7 +455,7 @@ class _Visibility extends StatelessWidget {
 
   final LocalSeoController c;
 
-  /// Window par gauge upar, text neeche
+  /// On a window the gauge on top, the text below
   final bool vertical;
 
   @override

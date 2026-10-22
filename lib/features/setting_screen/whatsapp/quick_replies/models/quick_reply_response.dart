@@ -64,7 +64,7 @@ class QuickReply {
     this.items = const [],
   });
 
-  /// Message ka text ('' = sirf attachment)
+  /// Message text ('' = attachment only)
   String get text => items
       .firstWhere((i) => i.type == 'text', orElse: QuickReplyItem.empty)
       .text;
@@ -171,7 +171,7 @@ class QuickReplyMedia {
     );
   }
 
-  /// Edit me "media" field me wapas jaata hai (purani file rakhni hai)
+  /// On Edit it goes back in the "media" field (to keep the old file)
   Map<String, dynamic> toJson() => {
     'url': url,
     'fileName': fileName,

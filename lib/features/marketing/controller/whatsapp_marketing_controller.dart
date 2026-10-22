@@ -1,8 +1,8 @@
 // ============================================================
 // WHATSAPP MARKETING CONTROLLER
 //
-//   1. CAMPAIGN LIST   : saare campaign + All / Sent / Scheduled / In Progress
-//   2. CAMPAIGN DETAIL : ek campaign ke numbers (page by page) + filter + search
+//   1. CAMPAIGN LIST   : all campaigns + All / Sent / Scheduled / In Progress
+//   2. CAMPAIGN DETAIL : numbers of one campaign (page by page) + filter + search
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
@@ -46,7 +46,7 @@ class WhatsappMarketingController extends GetxController {
   final campaigns = <WhatsappCampaign>[].obs;
   final filter = CampaignFilter.all.obs;
 
-  /// Campaign ya template ke naam se dhoondo
+  /// Search by campaign or template name
   final search = ''.obs;
 
   List<WhatsappCampaign> get visibleCampaigns {
@@ -64,7 +64,7 @@ class WhatsappMarketingController extends GetxController {
   }
 
   // ============================================================
-  // SUMMARY (saare campaign ka jod, web jaisa)
+  // SUMMARY (total of all campaigns, same as web)
   // ============================================================
 
   int get totalSent => campaigns.fold(0, (sum, c) => sum + c.sent);
@@ -73,11 +73,11 @@ class WhatsappMarketingController extends GetxController {
 
   int get totalRead => campaigns.fold(0, (sum, c) => sum + c.read);
 
-  /// Bheje gaye me se kitne pahunche (%)
+  /// How many of the sent ones were delivered (%)
   int get deliveryRate =>
       totalSent == 0 ? 0 : (totalDelivered * 100 / totalSent).round();
 
-  /// Pahunche hue me se kitne padhe gaye (%)
+  /// How many of the delivered ones were read (%)
   int get readRate =>
       totalDelivered == 0 ? 0 : (totalRead * 100 / totalDelivered).round();
 
@@ -100,7 +100,7 @@ class WhatsappMarketingController extends GetxController {
     try {
       final list = await MarketingService.getWhatsappCampaigns(hid: hid);
 
-      // Nayi pehle
+      // Newest first
       list.sort(
         (a, b) =>
             (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0)),
@@ -126,7 +126,7 @@ class WhatsappMarketingController extends GetxController {
   final isDetailLoading = false.obs;
   final detailError = RxnString();
 
-  /// '' = All, warna sent / delivered / read / failed
+  /// '' = All, otherwise sent / delivered / read / failed
   final recipientFilter = ''.obs;
   final recipientSearch = ''.obs;
 
@@ -156,7 +156,7 @@ class WhatsappMarketingController extends GetxController {
         limit: pageSize,
       );
 
-      // Is beech koi aur campaign khul gaya
+      // Meanwhile another campaign was opened
       if (id != _openId) return;
 
       detail.value = result.campaign;
@@ -170,7 +170,7 @@ class WhatsappMarketingController extends GetxController {
     }
   }
 
-  /// Is page ke numbers, filter + search ke baad
+  /// Numbers on this page, after filter + search
   List<CampaignRecipient> get visibleRecipients {
     final query = recipientSearch.value.trim().toLowerCase();
 
@@ -187,7 +187,7 @@ class WhatsappMarketingController extends GetxController {
     }).toList();
   }
 
-  /// Is page par kisi status ke kitne number (filter chips ke liye)
+  /// How many numbers of each status on this page (for the filter chips)
   int countOf(String status) =>
       recipients.where((r) => r.status == status).length;
 }

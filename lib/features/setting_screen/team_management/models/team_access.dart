@@ -1,16 +1,16 @@
 // ============================================================
 // TEAM ACCESS (model)
 //
-// User ko kin modules ka access hai ("Access Control" ke checkbox).
+// Which modules the user can access (the "Access Control" checkboxes).
 //
-//   permissions : form me dikhne wale checkbox (API ka naam -> screen ka naam)
-//   buildScope  : server ke liye poora accessScope Map banata hai
+//   permissions : checkboxes shown in the form (API name -> screen name)
+//   buildScope  : builds the full accessScope Map for the server
 // ============================================================
 
 class TeamAccess {
   TeamAccess._();
 
-  /// Form me dikhne wale checkbox. key = API ka naam, value = screen ka naam.
+  /// Checkboxes shown in the form. key = API name, value = screen name.
   static const Map<String, String> permissions = {
     'cms': 'CMS',
     'frontDesk': 'Front Desk',
@@ -21,7 +21,7 @@ class TeamAccess {
     'gatewayManager': 'Payment Gateway',
   };
 
-  /// Server ko ye saari keys chahiye, chahe form me dikhe ya na dikhe
+  /// The server needs all these keys, whether they show in the form or not
   static const List<String> _allKeys = [
     'analyticsandreporting',
     'bookingEngine',
@@ -46,10 +46,10 @@ class TeamAccess {
     'whatsappmarketing',
   ];
 
-  /// Chuni hui keys true, baaki sab false.
+  /// Chosen keys are true, all others false.
   ///
-  /// [botKey]: server Create me "eazobot" aur Edit me "eazbot" maangta hai
-  /// (web bhi aisa hi bhejta hai), isliye naam bahar se aata hai.
+  /// [botKey]: the server wants "eazobot" on Create and "eazbot" on Edit
+  /// (the web sends it the same way), so the name comes from outside.
   static Map<String, bool> buildScope(
     Set<String> selected, {
     required String botKey,

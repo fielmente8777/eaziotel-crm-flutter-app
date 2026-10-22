@@ -1,10 +1,10 @@
 // ============================================================
-// BILLING MODELS  (plan + apps khareedna, web ke Billing page jaisa)
+// BILLING MODELS  (buying a plan + apps, like the web Billing page)
 //
 //   BillingPlan   : GET /api/v1/subscription/plans -> result.data.plans[]
 //   BillingApp    : GET /api/v1/subscription/plans -> result.data.apps[]
 //   BillingCycle  : Monthly / Quarterly / 6 Months / Yearly + discount
-//   BillingOrder  : POST create-order ka jawab (Razorpay ke liye)
+//   BillingOrder  : answer of POST create-order (for Razorpay)
 // ============================================================
 
 String _s(dynamic v) {
@@ -32,10 +32,10 @@ class BillingPlan {
   final String name;
   final num price;
 
-  /// Chalu modules (corePlatform, aiLayer ...)
+  /// Active modules (corePlatform, aiLayer ...)
   final List<String> modules;
 
-  /// null = server ne nahi bheja, -1 = Unlimited
+  /// null = the server did not send it, -1 = Unlimited
   final num? teamMembers;
   final num? aiCreditsMonthly;
   final num? maxLeadsPerMonth;
@@ -66,7 +66,7 @@ class BillingPlan {
 
   static String _limit(num v) => v < 0 ? 'Unlimited' : '${v.round()}';
 
-  /// "Includes" list: modules + limits + support (web jaisa)
+  /// "Includes" list: modules + limits + support (same as web)
   List<String> get includes => [
     for (final m in modules) _moduleLabels[m] ?? m,
     if (teamMembers != null) '${_limit(teamMembers!)} team members',
@@ -116,7 +116,7 @@ class BillingApp {
   );
 }
 
-/// Kitne mahine ka bill + kitni chhoot (web ke CYCLES jaisa)
+/// How many months are billed + how much discount (like the web CYCLES)
 enum BillingCycle {
   month('Monthly', 1, 5),
   quarter('Quarterly', 3, 10),
@@ -132,7 +132,7 @@ enum BillingCycle {
   final int discount;
 }
 
-/// create-order ka jawab: Razorpay checkout ke liye
+/// Answer of create-order: for the Razorpay checkout
 class BillingOrder {
   const BillingOrder({
     required this.orderId,
@@ -143,6 +143,6 @@ class BillingOrder {
   final String orderId;
   final int amountInPaise;
 
-  /// Server ne Razorpay Key ID bheji ho to (khaali = .env wali use karo)
+  /// If the server sent a Razorpay Key ID (empty = use the one from .env)
   final String keyId;
 }

@@ -27,12 +27,12 @@ part 'whatsapp_controller/whatsapp_socket_mixin.dart';
 // ============================================================
 // WHATSAPP CONTROLLER
 //
-// Ye file sirf jodti hai. Asli kaam whatsapp_controller/ ke mixins me hai:
-//   state             : saari Rx state
+// This file only joins things. The real work is in the mixins in whatsapp_controller/:
+//   state             : all Rx state
 //   helpers           : saanjhe helper, copy, lead NDID
 //   conversation_list : list, tab, search, delete, read
-//   chat              : khuli chat ke messages
-//   flow              : form (flow) bhejna
+//   chat              : messages of the open chat
+//   flow              : send a form (flow)
 //   socket            : live events
 // ============================================================
 
@@ -45,7 +45,7 @@ class WhatsappController extends GetxController
         WhatsappFlowMixin,
         WhatsappSocketMixin {
   // ============================================================
-  // HID (dynamic - screen se pass hota hai)
+  // HID (dynamic - passed from the screen)
   // ============================================================
 
   @override
@@ -63,7 +63,7 @@ class WhatsappController extends GetxController
 
     getflow();
 
-    // leadResponse kahin bhi set ho, NDID cache apne aap update ho jayega.
+    // Wherever leadResponse is set, the NDID cache updates by itself.
     _leadWorker = ever<LeadResponseModel?>(leadResponse, (_) {
       _rebuildLeadNdids();
     });

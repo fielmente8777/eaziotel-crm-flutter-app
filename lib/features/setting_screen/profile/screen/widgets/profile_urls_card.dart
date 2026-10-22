@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import '../../controller/profile_setting_controller.dart';
 import '../../../screen/widgets/setting_section_card.dart';
 
-/// Landing pages + websites ke links
+/// Links of landing pages + websites
 class SettingUrlsCard extends StatelessWidget {
   const SettingUrlsCard({super.key, required this.controller, required this.r});
 
@@ -18,11 +18,11 @@ class SettingUrlsCard extends StatelessWidget {
     final p = SettingPalette(context);
 
     return Obx(() {
-      // Profile available hone par uske URLs read karo.
+      // Read the profile's URLs once it is available.
       final profile = controller.profile?.urls;
 
       if (profile != null) {
-        // API se aaye URLs ko reactive lists mein sync karo.
+        // Sync the URLs from the API into the reactive lists.
         final landingUrls = profile.landingPages;
         final websiteUrls = profile.websites;
 
@@ -129,7 +129,7 @@ class _LinkListState extends State<_LinkList> {
     });
   }
 
-  /// Existing URL ko edit karne ke liye input mein lao.
+  /// Put an existing URL into the input to edit it.
   void _edit(String link) {
     widget.links.remove(link);
 

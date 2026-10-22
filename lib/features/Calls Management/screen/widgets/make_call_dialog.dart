@@ -8,7 +8,7 @@ import 'package:get/get.dart';
 
 import '../../services/call_service.dart';
 
-/// TESTING ke liye apni list
+/// Own list for TESTING
 final List<UserModel> _testUsers = [
   UserModel(displayName: 'Test User 1', phone: '+919225261746'),
   UserModel(displayName: 'Test User 2', phone: '+919876543210'),
@@ -16,10 +16,10 @@ final List<UserModel> _testUsers = [
 
 /// "Enter Number to make a call!" dialog.
 ///
-/// - Pehla field (From): team ka user chuno, uske phone se call lagti hai
-/// - Doosra field (To): [number] pehle se bhara aata hai, user badal sakta hai
+/// - First field (From): pick a team user; the call goes from their phone
+/// - Second field (To): [number] comes pre-filled; the user can change it
 ///
-/// "Call Now" par POST /api/v1/call/auth/make-call?hid=..
+/// "Call Now" sends POST /api/v1/call/auth/make-call?hid=..
 Future<void> showMakeCallDialog(BuildContext context, {String? number}) {
   return showDialog<void>(
     context: context,
@@ -208,7 +208,7 @@ class _MakeCallDialogState extends State<_MakeCallDialog> {
 
             const SizedBox(height: 14),
 
-            // ---------- From (team ka user) ----------
+            // ---------- From (a team user) ----------
             Obx(() {
               final users = _dashboard.userNameResponse.value?.data ?? [];
 
@@ -248,7 +248,7 @@ class _MakeCallDialogState extends State<_MakeCallDialog> {
 
             const SizedBox(height: 12),
 
-            // ---------- To (jisko call karni hai) ----------
+            // ---------- To (who to call) ----------
             TextField(
               controller: _toController,
               enabled: !_isCalling,
@@ -282,7 +282,7 @@ class _MakeCallDialogState extends State<_MakeCallDialog> {
                       ? null
                       : () => Navigator.of(context).pop(),
                   style: OutlinedButton.styleFrom(
-                    // App theme buttons ko poori width deta hai; Row me wo chalta nahi
+                    // The app theme makes buttons full width; that does not work in a Row
                     minimumSize: const Size(0, 42),
                     foregroundColor: TAppColors.error,
                     side: const BorderSide(color: TAppColors.error),

@@ -21,7 +21,7 @@ class GoogleAdsDeviceResponse {
     this.devices = const [],
   });
 
-  /// Device ke naam se clicks jodo (0 wale hata kar) -> donut chart
+  /// Add up clicks by device name (dropping zeros) -> donut chart
   List<GoogleAdsDevice> get grouped {
     final map = <String, double>{};
 
@@ -67,7 +67,7 @@ class GoogleAdsDeviceResponse {
 }
 
 class GoogleAdsDevice {
-  /// Google ka number ("2") ya naam ("Mobile")
+  /// Google's number ("2") or name ("Mobile")
   final String device;
   final double clicks;
 
@@ -81,7 +81,7 @@ class GoogleAdsDevice {
     '6': 'Other',
   };
 
-  /// "2" -> "Mobile" (pehle se naam ho to wahi)
+  /// "2" -> "Mobile" (keeps the name if it already has one)
   String get name =>
       _names[device] ?? (_names.containsValue(device) ? device : 'Other');
 

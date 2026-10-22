@@ -1,11 +1,11 @@
 // ============================================================
-// GOOGLE ADS COMMON (saare response model ke kaam ka)
+// GOOGLE ADS COMMON (used by all response models)
 //
-//   GoogleAdsRequest : response ka "request" hissa (method, basesurl, endpoint)
-//   AdsDropdownItem  : Account / Campaign / Ad Group / Ad dropdown ki ek line
-//   adsNum / adsStr  : JSON se number / text nikalna (null safe)
-//   adsIsEnabled     : web jaisa, sirf ENABLED ("2") wale dikhte hain
-//   adsList          : list "data" me ho ya "result.<key>" me, dono chalte hain
+//   GoogleAdsRequest : the "request" part of the response (method, basesurl, endpoint)
+//   AdsDropdownItem  : one line of the Account / Campaign / Ad Group / Ad dropdown
+//   adsNum / adsStr  : get a number / text from JSON (null safe)
+//   adsIsEnabled     : same as web, only ENABLED ("2") items are shown
+//   adsList          : works whether the list is in "data" or "result.<key>"
 // ============================================================
 
 double adsNum(dynamic v) =>
@@ -21,7 +21,7 @@ bool adsIsEnabled(dynamic status) {
   return s == 'ENABLED' || s == '2';
 }
 
-/// Web jaisa: `response.data` ya `response.result.<key>`
+/// Same as web: `response.data` or `response.result.<key>`
 List<Map<String, dynamic>> adsList(Map<String, dynamic> json, String key) {
   final result = json['result'];
   final raw = json['data'] ?? (result is Map ? result[key] : null);
@@ -31,7 +31,7 @@ List<Map<String, dynamic>> adsList(Map<String, dynamic> json, String key) {
       : [];
 }
 
-/// Dropdown me dikhne wali cheez
+/// What is shown in the dropdown
 abstract class AdsDropdownItem {
   String get id;
   String get label;
@@ -52,7 +52,7 @@ class GoogleAdsRequest {
     );
   }
 
-  /// "request" na ho to null
+  /// null if there is no "request"
   static GoogleAdsRequest? tryParse(dynamic json) => json is Map
       ? GoogleAdsRequest.fromJson(Map<String, dynamic>.from(json))
       : null;

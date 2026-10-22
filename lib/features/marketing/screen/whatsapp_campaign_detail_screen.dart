@@ -1,10 +1,10 @@
 // ============================================================
 // WHATSAPP CAMPAIGN DETAIL SCREEN
 //
-//   upar   : Audience / Sent / Delivered / Read / Failed + Delivery Funnel
+//   top    : Audience / Sent / Delivered / Read / Failed + Delivery Funnel
 //   neeche : numbers ki list (Name, Phone, Status, Sent, Delivered, Read,
 //            Failed At / Reason), filter + search + page
-// Number par tap -> app ke andar us number ki WhatsApp chat
+// Tap a number -> the in-app WhatsApp chat for that number
 // ============================================================
 
 import 'package:eazotel/features/whatsapp/services/whatsapp_chat_opener.dart';
@@ -133,7 +133,7 @@ class _Stats extends StatelessWidget {
   }
 }
 
-/// Read / Delivered / Failed / Pending ki ek patti
+/// One strip for Read / Delivered / Failed / Pending
 class _Funnel extends StatelessWidget {
   const _Funnel({required this.campaign});
 
@@ -235,7 +235,7 @@ class _Recipients extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Filter / search / page badalne par ye hissa dobara bane
+    // This part rebuilds when the filter / search / page changes
     return Obx(() {
       final p = SettingPalette(context);
       final list = controller.visibleRecipients;
@@ -287,7 +287,7 @@ class _Recipients extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ---------- Filter chips (is page ki ginti ke saath) ----------
+            // ---------- Filter chips (with this page's counts) ----------
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -470,7 +470,7 @@ class _RecipientRow extends StatelessWidget {
   }
 }
 
-/// Phone par ek number
+/// One number on phones
 class _RecipientTile extends StatelessWidget {
   const _RecipientTile({required this.recipient, required this.onTap});
 

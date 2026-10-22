@@ -147,8 +147,8 @@ class LeadsController extends GetxController {
     endDateTime.value = endDate;
 
     // IMPORTANT:
-    // Filter API ko jayega.
-    // Local filtering nahi hogi.
+    // Will be sent to the filter API.
+    // No local filtering.
 
     await dashboardController.applyLeadFilters(
       sources: selectedSources,
@@ -185,14 +185,14 @@ class LeadsController extends GetxController {
         endDateTime.value != null;
   }
 
-  /// Kitne filter lage hain (screen par badge me dikhta hai):
+  /// How many filters are applied (shown as a badge on screen):
   /// har source + har stage + date range (1)
   int get activeFilterCount =>
       selectedSources.length +
       selectedStages.length +
       (startDateTime.value != null || endDateTime.value != null ? 1 : 0);
 
-  /// Server ke hisaab se kul leads (filter / search ke baad)
+  /// Total leads according to the server (after filter / search)
   int? get totalLeads =>
       dashboardController.leadResponse.value?.result?.pagination?.total;
 

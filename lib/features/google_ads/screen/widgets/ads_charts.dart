@@ -1,10 +1,10 @@
 // ============================================================
 // ADS CHARTS  (fl_chart)
 //
-//   TwoLineChart        : do line (Clicks + Conversions, Cost + Conv. Value)
+//   TwoLineChart        : two lines (Clicks + Conversions, Cost + Conv. Value)
 //   FunnelBars          : Impressions -> Clicks -> Conversions
-//   DeviceDonut         : device ke hisaab se clicks
-//   ImpressionShareRing : Search Impression Share ka gol meter
+//   DeviceDonut         : clicks by device
+//   ImpressionShareRing : round meter for Search Impression Share
 // ============================================================
 
 import 'dart:math' as math;
@@ -37,12 +37,12 @@ class TwoLineChart extends StatelessWidget {
     this.filled = false,
   });
 
-  /// Neeche ki taareekh ("10-05")
+  /// Date at the bottom ("10-05")
   final List<String> labels;
   final List<ChartLine> lines;
   final bool money;
 
-  /// Line ke neeche halka rang (Engagement Trend jaisa)
+  /// Light color under the line (like Engagement Trend)
   final bool filled;
 
   String _fmt(double v) =>
@@ -54,7 +54,7 @@ class TwoLineChart extends StatelessWidget {
     final axis = TextStyle(color: p.subText, fontSize: 10.5);
     final count = labels.length;
 
-    // Neeche ~6 taareekh, zyada nahi
+    // About 6 dates at the bottom, not more
     final step = math.max(1, (count / 6).ceil()).toDouble();
 
     return Column(
@@ -147,7 +147,7 @@ class TwoLineChart extends StatelessWidget {
 class FunnelBars extends StatelessWidget {
   const FunnelBars({super.key, required this.steps});
 
-  /// (naam, ginti, rang)
+  /// (name, count, color)
   final List<(String, double, Color)> steps;
 
   @override

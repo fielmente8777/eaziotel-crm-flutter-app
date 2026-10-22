@@ -3,8 +3,8 @@
 //
 // Name | Email | Phone | Admin | Date Added | Action
 //
-// Column flex se bante hain, isliye bade screen par table poori chaudai
-// bharti hai. Jagah kam ho to _minWidth par ruk kar side me scroll hoti hai.
+// Columns use flex, so on big screens the table fills the full width.
+// When space is short it stops at _minWidth and scrolls sideways.
 // ============================================================
 
 import 'dart:math' as math;
@@ -18,10 +18,10 @@ import '../../models/team_member_display.dart';
 import 'team_delete_dialog.dart';
 import 'team_user_form_dialog.dart';
 
-/// Table ki sabse kam chaudai. Isse kam jagah ho to table scroll hoti hai.
+/// The table's minimum width. Below this the table scrolls.
 const double _minWidth = 760;
 
-// Column ki chaudai (heading aur har line me yahi)
+// Column width (the same in the heading and every row)
 const int _nameFlex = 3;
 const int _emailFlex = 5;
 const int _phoneFlex = 3;
@@ -74,7 +74,7 @@ class TeamMemberTable extends StatelessWidget {
   }
 }
 
-/// Table ki ek cell (flex wali)
+/// One table cell (with flex)
 Widget _cell(
   String text,
   int flex,
@@ -161,7 +161,7 @@ class _MemberRow extends StatelessWidget {
             width: _actionWidth,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              // Superadmin ko edit / delete nahi, sirf "-"
+              // No edit / delete for a superadmin, just "-"
               child: user.isSuperAdmin
                   ? Text('-', style: TextStyle(color: p.subText))
                   : Row(

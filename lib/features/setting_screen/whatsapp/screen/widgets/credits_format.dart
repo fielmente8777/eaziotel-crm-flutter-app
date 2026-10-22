@@ -1,8 +1,8 @@
 // ============================================================
 // CREDITS FORMAT
 //
-// Credits & Usage page par paise aur tareekh dikhane ke chhote helper.
-// Overview aur Transactions dono inhe use karte hain.
+// Small helpers to show money and dates on the Credits & Usage page.
+// Both Overview and Transactions use them.
 // ============================================================
 
 import 'package:intl/intl.dart';
@@ -12,8 +12,8 @@ final NumberFormat _rate = NumberFormat('0.####');
 
 /// 949.3999 -> "₹949.40"   |   1000 -> "₹1,000.00"
 ///
-/// Pehle paise tak round karte hain (web ki tarah: 52.485 -> 52.49),
-/// taaki app aur web par ek hi rakam dikhe. Phir hazaar ka comma lagta hai.
+/// First round to paise (like the web: 52.485 -> 52.49),
+/// so the app and web show the same amount. Then add thousands commas.
 String formatMoney(double value) {
   final paise = (value * 100).round(); // 100000
   final fixed = (paise / 100).toStringAsFixed(2); // "1000.00"
@@ -30,7 +30,7 @@ String formatRate(double value) => '₹${_rate.format(value)}';
 /// 1000 -> "1,000"
 String formatCount(int value) => _count.format(value);
 
-/// "7 Oct 2026"  (tareekh na ho to "-")
+/// "7 Oct 2026"  ("-" if there is no date)
 String formatDate(DateTime? date) {
   return date == null ? '-' : DateFormat('d MMM yyyy').format(date);
 }

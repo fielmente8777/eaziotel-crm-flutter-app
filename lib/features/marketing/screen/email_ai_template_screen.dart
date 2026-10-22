@@ -1,5 +1,5 @@
 // ============================================================
-// AI EMAIL TEMPLATE SCREEN  (web ke "AI template" jaisa)
+// AI EMAIL TEMPLATE SCREEN  (like the web "AI template")
 //
 //   BRIEF                         PREVIEW
 //   [suggestion chips]            < 2 / 3 >   Name / Subject
@@ -9,9 +9,9 @@
 //   [✨ Generate]                 "Change something..." [Refine]
 //                                 [Save]  [Save & use]
 //
-// Phone: Brief | Preview tab.  Tablet / window: dono saath.
-// forCompose = true  -> "Save & use" template wapas compose ko deta hai
-// forCompose = false -> Save ke baad wapas (Templates list taaza)
+// Phone: Brief | Preview tabs.  Tablet / window: both side by side.
+// forCompose = true  -> "Save & use" returns the template to compose
+// forCompose = false -> goes back after Save (Templates list refreshed)
 // ============================================================
 
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
@@ -31,7 +31,7 @@ class EmailAiTemplateScreen extends StatefulWidget {
     this.forCompose = false,
   });
 
-  /// Pehle se bana template (edit / refine ke liye)
+  /// An existing template (to edit / refine)
   final EmailTemplate? initial;
   final bool forCompose;
 
@@ -48,8 +48,8 @@ class _EmailAiTemplateScreenState extends State<EmailAiTemplateScreen>
     tag: _tag,
   );
 
-  // initState me banta hai (badi screen par tab nahi dikhte, phir bhi
-  // dispose me pehli baar banana crash karta hai)
+  // Created in initState (on big screens the tabs are not shown, but
+  // creating it for the first time in dispose crashes)
   late final TabController _tabs;
 
   late final _prompt = TextEditingController(text: c.prompt.value);
@@ -68,7 +68,7 @@ class _EmailAiTemplateScreenState extends State<EmailAiTemplateScreen>
       initialIndex: widget.initial == null ? 0 : 1,
     );
     _workers.addAll([
-      // AI ne naam / subject diya to box me bhi dikhe
+      // If the AI gave a name / subject, show it in the box too
       ever<String>(c.name, (v) {
         if (_name.text != v) _name.text = v;
       }),
@@ -282,7 +282,7 @@ class _BriefPane extends StatelessWidget {
   }
 }
 
-/// Brand naam, rang, logo + button (andar band, tap par khule)
+/// Brand name, color, logo + button (collapsed, opens on tap)
 class _BrandOptions extends StatelessWidget {
   const _BrandOptions({required this.c});
 
@@ -575,7 +575,7 @@ class _Banner extends StatelessWidget {
   }
 }
 
-/// AI likh raha hai: email jaisa shimmer (gol loader nahi)
+/// AI is writing: email-like shimmer (no spinner)
 class _PreviewShimmer extends StatelessWidget {
   const _PreviewShimmer();
 

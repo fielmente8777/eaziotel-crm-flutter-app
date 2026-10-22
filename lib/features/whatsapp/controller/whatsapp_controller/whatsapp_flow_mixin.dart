@@ -3,7 +3,7 @@ part of '../whatsappController.dart';
 // ============================================================
 // WHATSAPP FLOW MIXIN
 //
-// WhatsApp flow (form): list lana aur chat me bhejna.
+// WhatsApp flow (form): load the list and send it in the chat.
 // ============================================================
 
 mixin WhatsappFlowMixin
@@ -21,7 +21,7 @@ mixin WhatsappFlowMixin
         Map<String, dynamic>.from(decoded as Map),
       );
 
-      // Chuna hua flow ab list me nahi -> chunav hatao
+      // The chosen flow is no longer in the list -> clear the choice
       if (selectedFlow == null) selectedFlowId.value = '';
     } catch (e) {
       flowErrorMessage.value = e.toString();
@@ -31,8 +31,8 @@ mixin WhatsappFlowMixin
     }
   }
 
-  /// 1. chat me turant dikhao  2. API  3. temp id -> asli id
-  /// Fail hone par local message hata deta hai.
+  /// 1. show in the chat right away  2. API  3. temp id -> real id
+  /// On failure it removes the local message.
   Future<bool> sendFlowMessage({
     required String conversationId,
     required String phone,

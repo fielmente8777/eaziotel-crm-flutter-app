@@ -1,12 +1,12 @@
 // ============================================================
-// CLIENT ACCOUNTS  (sirf role = "owner")   web ke LocationSwitcher jaisa
+// CLIENT ACCOUNTS  (only role = "owner")   like the web LocationSwitcher
 //
 //   [🔍 Search client]
 //   (S) Sparv Hospitality        Mandrem, Goa, India     ›
 //   (P) Peace at Peak            India                   ›
 //
-// Tap -> "Switch to X?" -> switch-account -> naya token ->
-// client ka data khulta hai; original owner session alag rehta hai.
+// Tap -> "Switch to X?" -> switch-account -> new token ->
+// the client's data opens; the original owner session stays separate.
 // ============================================================
 
 import 'package:eazotel/core/local_storage/session_cleaner.dart';
@@ -63,7 +63,7 @@ class ClientAccountsList extends StatelessWidget {
         colorText: Colors.white,
         margin: const EdgeInsets.all(12),
       ),
-      // Purane account ka sab data hatao, phir naye token se shuru
+      // Clear all data of the old account, then start with the new token
       onSwitched: () async {
         if (!context.mounted) return;
         await _restartDashboard(context);

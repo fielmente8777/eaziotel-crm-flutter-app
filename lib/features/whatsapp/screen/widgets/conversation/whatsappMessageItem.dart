@@ -12,7 +12,7 @@ class WhatsappMessageItem {
   final String? status;
   final String? messageType;
 
-  /// Hamesha Map (ya null) - typed model ho to toJson() se convert hota hai.
+  /// Always a Map (or null) - a typed model is converted with toJson().
   final dynamic media;
   final dynamic location;
   final dynamic contacts;
@@ -80,7 +80,7 @@ class WhatsappMessageItem {
   }
 
   // ============================================================
-  // COPY WITH (status update ke liye)
+  // COPY WITH (for status updates)
   // ============================================================
 
   WhatsappMessageItem copyWith({String? status, String? updatedAt}) {
@@ -121,9 +121,9 @@ class WhatsappMessageItem {
   // STATUS RANK (sent < delivered < read < failed)
   // ============================================================
   //
-  // Isse status kabhi "peeche" nahi jayega — agar ek copy "read" hai
-  // aur dusri "sent" hai, "read" wali hamesha jeetegi, chahe uska
-  // updatedAt missing ya barabar ho.
+  // This way the status never goes "backwards" — if one copy is "read"
+  // and the other is "sent", the "read" one always wins, even if its
+  // updatedAt is missing or equal.
 
   int get statusRank {
     switch (status?.toLowerCase()) {
@@ -181,7 +181,7 @@ class WhatsappMessageItem {
   // HELPERS
   // ============================================================
 
-  /// message.location / message.contacts padhta hai (field na ho to null).
+  /// reads message.location / message.contacts (null if the field is missing).
   static dynamic _readProperty(dynamic object, String property) {
     try {
       if (object is Map) return object[property];
@@ -198,8 +198,8 @@ class WhatsappMessageItem {
   }
 
   /// Typed model (WhatsappMediaModel, WhatsappLocationModel,
-  /// WhatsappContactModel...) ko Map mein badalta hai, taaki UI aur
-  /// media controller ke `is Map` checks kaam karein.
+  /// WhatsappContactModel...) into a Map, so the UI and
+  /// so the media controller's `is Map` checks work.
   static dynamic _normalize(dynamic value) {
     if (value == null || value is Map || value is String || value is num) {
       return value;

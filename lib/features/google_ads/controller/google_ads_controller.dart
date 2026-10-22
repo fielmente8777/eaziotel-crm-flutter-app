@@ -1,18 +1,18 @@
 // ============================================================
 // GOOGLE ADS CONTROLLER
 //
-//   Screen  --->  ye controller  --->  GoogleAdsService  --->  API
+//   Screen  --->  this controller  --->  GoogleAdsService  --->  API
 //                      |
-//                      +--> har API ka Response model yahan store hota hai
+//                      +--> every API's response model is stored here
 //                           (accountResponse, campaignResponse, summaryResponse ...)
 //
-// Web dashboard (GoogleAdsInsights.jsx) jaisa logic:
-//   1. CONNECTED?  : Google Ads juda nahi -> "Connect Google Ads"
-//   2. RANGE       : 7D / 30D / 90D (sirf DB se)
+// Same logic as the web dashboard (GoogleAdsInsights.jsx):
+//   1. CONNECTED?  : Google Ads not connected -> "Connect Google Ads"
+//   2. RANGE       : 7D / 30D / 90D (from the DB only)
 //   3. FILTERS     : Account -> Campaign -> Ad Group -> Ad
 //   4. METRICS     : summary + pichhla range (badlav %) + devices
-//   5. COMPARISON  : har campaign ka summary, kharch ke hisaab se
-//   6. SYNC        : Google se 90 din ka taaza data
+//   5. COMPARISON  : summary of each campaign, by spend
+//   6. SYNC        : fresh 90 days of data from Google
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
@@ -45,11 +45,11 @@ class GoogleAdsController extends GetxController {
 
   String get hid => dashboard.selectedHotelId.value;
 
-  /// '' = "All ..." (dropdown ka pehla option)
+  /// '' = "All ..." (the first option of the dropdown)
   static const String all = '';
 
   // ============================================================
-  // API RESPONSE (model) - yahi asli data hai
+  // API RESPONSE (model) - this is the real data
   // ============================================================
 
   final accountResponse = Rxn<GoogleAdsAccountResponse>();
@@ -58,14 +58,14 @@ class GoogleAdsController extends GetxController {
   final adResponse = Rxn<GoogleAdsAdResponse>();
   final summaryResponse = Rxn<GoogleAdsSummaryResponse>();
 
-  /// Pichhle barabar range ka summary (KPI par badlav %)
+  /// Summary of the previous range of the same length (for the KPI change %)
   final previousSummaryResponse = Rxn<GoogleAdsSummaryResponse>();
   final deviceResponse = Rxn<GoogleAdsDeviceResponse>();
 
-  /// Campaign Comparison (har campaign ka summary)
+  /// Campaign Comparison (summary of each campaign)
   final campaignRows = <GoogleAdsCampaignRow>[].obs;
 
-  // ---------- Screen ke liye seedhe getters ----------
+  // ---------- Direct getters for the screen ----------
 
   List<GoogleAdsAccount> get accounts =>
       accountResponse.value?.accounts ?? const [];
@@ -103,7 +103,7 @@ class GoogleAdsController extends GetxController {
   final adGroupId = all.obs;
   final adId = all.obs;
 
-  /// Jin accounts ka apne aap sync ho chuka (dobara na ho)
+  /// Accounts already auto-synced (do not sync again)
   final Set<String> _autoSynced = {};
 
   @override
@@ -140,13 +140,13 @@ class GoogleAdsController extends GetxController {
   static String _fmt(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-  /// Aaj se [days] din pehle tak
+  /// From [days] days ago until today
   static ({String start, String end}) rangeOf(int days, {DateTime? now}) {
     final end = now ?? DateTime.now();
     return (start: _fmt(end.subtract(Duration(days: days))), end: _fmt(end));
   }
 
-  /// Utne hi din, thik pehle wale (badlav % ke liye)
+  /// The same number of days, right before (for the change %)
   static ({String start, String end}) previousOf(int days, {DateTime? now}) {
     final current = (now ?? DateTime.now()).subtract(Duration(days: days));
     final end = current.subtract(const Duration(days: 1));
@@ -199,7 +199,7 @@ class GoogleAdsController extends GetxController {
 
     final hasData = await loadMetrics();
 
-    // Web jaisa: DB khali hai aur abhi tak sync nahi hua -> ek baar sync
+    // Same as web: the DB is empty and no sync has happened yet -> sync once
     if (!hasData && !_autoSynced.contains(id)) {
       await syncNow();
       return;
@@ -251,7 +251,7 @@ class GoogleAdsController extends GetxController {
     await loadMetrics();
   }
 
-  /// Sabse neeche chuni cheez ka data: Ad > Campaign > Account
+  /// Data of the lowest selected item: Ad > Campaign > Account
   ({String id, String level}) get target {
     if (adId.value != all) return (id: adId.value, level: 'ad');
     if (campaignId.value != all) {
@@ -273,7 +273,7 @@ class GoogleAdsController extends GetxController {
   // 4. METRICS
   // ============================================================
 
-  /// Return: data mila ya nahi
+  /// Return: whether data was found
   Future<bool> loadMetrics() async {
     final t = target;
     if (accountId.value.isEmpty || t.id.isEmpty) return false;
@@ -298,7 +298,7 @@ class GoogleAdsController extends GetxController {
 
       summaryResponse.value = response;
 
-      // Devices aur pichhla range: fail ho to bhi baaki dikhe
+      // Devices and the previous range: show the rest even if these fail
       await Future.wait([
         _loadDevices(t.id, t.level, r.start, r.end),
         _loadPrevious(t.id, t.level, p.start, p.end),
@@ -357,7 +357,7 @@ class GoogleAdsController extends GetxController {
     deviceResponse.value = null;
   }
 
-  /// Badlav % (pichhla 0 ya nahi ho to null)
+  /// Change % (null if the previous value is 0 or missing)
   double? change(double current, double? before) =>
       before == null || before == 0 ? null : (current - before) / before;
 
@@ -405,13 +405,13 @@ class GoogleAdsController extends GetxController {
   // 6. SYNC
   // ============================================================
 
-  /// Return: null = ho gaya, text = error
+  /// Return: null = done, text = error
   Future<String?> syncNow() async {
     if (isSyncing.value) return null;
 
     isSyncing.value = true;
 
-    final r = rangeOf(AdsRange.d90.days); // Web hamesha 90 din sync karta hai
+    final r = rangeOf(AdsRange.d90.days); // The web always syncs 90 days
     final account = accountId.value;
 
     try {

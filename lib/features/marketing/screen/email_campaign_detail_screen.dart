@@ -5,7 +5,7 @@
 //   Sent | Delivered | Failed | Opened | Clicked | Unsubscribed
 //   [All] [Pending] [Sent] [Failed] [Opened] [Clicked]
 //   recipients (page by page)
-//   Email content (jaisa gaya waisa)
+//   Email content (as it was sent)
 // ============================================================
 
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';

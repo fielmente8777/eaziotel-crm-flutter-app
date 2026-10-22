@@ -1,6 +1,6 @@
 // ============================================================
 // SMART INSIGHT CARD
-// Ek baar me ek sujhaav. Neeche dots / "Next", ya ungli se swipe.
+// One suggestion at a time. Dots / "Next" below, or swipe with a finger.
 // ============================================================
 
 import 'package:flutter/material.dart';

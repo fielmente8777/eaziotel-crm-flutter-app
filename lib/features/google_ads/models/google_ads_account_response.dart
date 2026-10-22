@@ -58,7 +58,7 @@ class GoogleAdsAccount implements AdsDropdownItem {
 
   factory GoogleAdsAccount.fromJson(Map<String, dynamic> json) {
     return GoogleAdsAccount(
-      // Kuch account me id "googleAccountId" naam se aati hai
+      // Some accounts send the id as "googleAccountId"
       clientCustomerId: adsStr(
         json['clientCustomerId'] ?? json['googleAccountId'],
       ),

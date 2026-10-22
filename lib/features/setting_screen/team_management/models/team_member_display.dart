@@ -1,11 +1,11 @@
 // ============================================================
 // TEAM MEMBER DISPLAY
 //
-// UserModel (dashboard ka model) par chhote helper, taaki card aur table
-// dono ek hi tarah naam, role aur tareekh dikhayen.
+// Small helpers on UserModel (the dashboard's model), so the card and the table
+// both show the name, role and date the same way.
 //
 //   user.isSuperAdmin   -> true / false
-//   user.displayLabel   -> "Rachita kumar"  (khali ho to "-")
+//   user.displayLabel   -> "Rachita kumar"  ("-" if empty)
 //   user.roleLabel      -> "superadmin" / "admin" / "user"
 //   user.addedOnLabel   -> "19/03/2026, 08:28 am"
 // ============================================================
@@ -13,10 +13,10 @@
 import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';
 
 extension TeamMemberDisplay on UserModel {
-  /// Superadmin ko edit / delete nahi kar sakte
+  /// A superadmin cannot be edited / deleted
   bool get isSuperAdmin => (role ?? '').toLowerCase() == 'superadmin';
 
-  /// Naam, pehla akshar capital
+  /// Name, first letter capital
   String get displayLabel {
     final name = (displayName ?? userName ?? '').trim();
 
@@ -25,7 +25,7 @@ extension TeamMemberDisplay on UserModel {
     return name[0].toUpperCase() + name.substring(1);
   }
 
-  /// role ho to wahi, warna isAdmin se
+  /// The role if there is one, otherwise from isAdmin
   String get roleLabel {
     final value = role ?? '';
 

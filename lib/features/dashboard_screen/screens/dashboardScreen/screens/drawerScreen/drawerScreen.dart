@@ -1,13 +1,13 @@
 // ============================================================
 // DASHBOARD DRAWER (menu)
 //
-//   upar     : hotel ka card (naam, shehar, email) + "View profile"
-//              (Profile bottom tab me hai; yahan alag item nahi)
+//   top      : hotel card (name, city, email) + "View profile"
+//              (Profile is in the bottom tab; no separate item here)
 //   INSIGHTS : Google Analytics, Google Ads Insights, Meta Insights, SEO
 //   ENGAGE   : Marketing (WhatsApp / Email), Calls Management, Social Media
-//   (Settings, theme, logout, version ab bottom tab "Settings" me hain)
+//   (Settings, theme, logout, version are now in the "Settings" bottom tab)
 //
-// Poori list scroll hoti hai (chhote phone par bhi kuch nahi katta).
+// The whole list scrolls (nothing gets cut off even on small phones).
 // ============================================================
 
 import 'package:eazotel/features/Calls%20Management/screen/calls_management_screen.dart';
@@ -41,7 +41,7 @@ class DashboardDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    /// Menu band karke screen kholo
+    /// Close the menu and open the screen
     void go(Widget Function() page, {Bindings? binding}) {
       Navigator.pop(context);
       Get.to(page, binding: binding);
@@ -66,7 +66,7 @@ class DashboardDrawer extends StatelessWidget {
               },
               onClose: () => Navigator.pop(context),
             ),
-            // Menu (lamba ho to scroll)
+            // Menu (scrolls if long)
             Expanded(
               child: CustomScrollView(
                 slivers: [

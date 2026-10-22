@@ -290,7 +290,7 @@ class _TopEventsCardState extends State<TopEventsCard> {
     );
   }
 
-  /// Load par 0 se fill hota hai, toggle par smoothly naye ratio tak jaata hai
+  /// Fills from 0 on load; on toggle it moves smoothly to the new ratio
   Widget _bar(AnalyticsPalette c, double ratio, int i, bool isActive) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: ratio.clamp(0.0, 1.0)),

@@ -1,11 +1,11 @@
 // ============================================================
 // MARKETING COMMON
 //
-// WhatsApp aur Email dono marketing screen ke chhote widget:
+// Small widgets for both the WhatsApp and Email marketing screens:
 //   StatusPill     : rangeen status (Completed / In-Progress / Read ...)
-//   StatTile       : ek ginti wala dabba (Sent 7)
+//   StatTile       : a box with one count (Sent 7)
 //   PagerBar       : "Page 1 of 2" + Prev / Next
-//   MarketingState : loading / error / khali list
+//   MarketingState : loading / error / empty list
 //   formatDateTime : "22 Jun 2026, 11:33 AM"
 // ============================================================
 
@@ -125,7 +125,7 @@ class PagerBar extends StatelessWidget {
 
   final MarketingPage page;
 
-  /// Is page par kitni lines dikh rahi hain
+  /// How many lines are visible on this page
   final int shown;
   final ValueChanged<int> onPage;
 
@@ -158,7 +158,7 @@ class PagerBar extends StatelessWidget {
   }
 }
 
-/// Loading / error / khali list ka ek hi widget
+/// One widget for loading / error / empty list
 class MarketingState extends StatelessWidget {
   const MarketingState({
     super.key,
@@ -184,7 +184,7 @@ class MarketingState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (loading)
-              // Gol loader nahi: hourglass (app me sab jagah jaisa)
+              // No spinner: hourglass (same as everywhere in the app)
               Icon(Icons.hourglass_top_rounded, size: 34, color: p.primary)
             else
               Icon(icon, size: 42, color: p.subText),

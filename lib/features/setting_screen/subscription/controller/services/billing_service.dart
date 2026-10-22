@@ -1,9 +1,9 @@
 // ============================================================
-// BILLING SERVICE  (plan / apps khareedna, web ke Billing page jaisa)
+// BILLING SERVICE  (buying a plan / apps, like the web Billing page)
 //
 //   getPlans      : GET  /api/v1/subscription/plans
 //   createOrder   : POST /api/v1/subscription/create-order   -> Razorpay order
-//   verifyPayment : POST /api/v1/subscription/verify-payment (payment ke baad)
+//   verifyPayment : POST /api/v1/subscription/verify-payment (after payment)
 // ============================================================
 
 import 'dart:convert';
@@ -34,7 +34,7 @@ class BillingService {
   static Map<String, dynamic> _map(dynamic v) =>
       v is Map ? Map<String, dynamic>.from(v) : <String, dynamic>{};
 
-  /// Server ka message nikal kar Exception (UI wahi dikhata hai)
+  /// Throw an Exception with the server's message (the UI shows it)
   static Never _fail(Map<String, dynamic> json, String fallback) {
     final message =
         _map(json['result'])['message'] ??
@@ -119,8 +119,8 @@ class BillingService {
     final amount = doc['amount'];
     return BillingOrder(
       orderId: orderId,
-      // Server Key ID bheje (keyId / key_id / key) to wahi: order aur checkout
-      // hamesha ek hi key se
+      // If the server sends a Key ID (keyId / key_id / key), use it: the order and
+      // checkout always use the same key
       keyId: '${doc['keyId'] ?? doc['key_id'] ?? doc['key'] ?? ''}'.trim(),
       amountInPaise: amount is num
           ? amount.round()
@@ -128,7 +128,7 @@ class BillingService {
     );
   }
 
-  /// Razorpay ne paisa le liya -> server ko batao (plan / apps chalu)
+  /// Razorpay took the payment -> tell the server (plan / apps become active)
   static Future<void> verifyPayment({
     required String paymentId,
     required String orderId,

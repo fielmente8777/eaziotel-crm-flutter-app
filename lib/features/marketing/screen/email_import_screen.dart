@@ -1,12 +1,12 @@
 // ============================================================
-// EMAIL IMPORT SCREEN  (Excel / CSV se aaye email check karo)
+// EMAIL IMPORT SCREEN  (check the emails from Excel / CSV)
 //
 //   "120 emails found in guests.xlsx"
-//   [ a@x.com    ✎ ✕ ]   <- badlo ya hatao
+//   [ a@x.com    ✎ ✕ ]   <- edit or remove
 //   [+ Add email]
 //   [Continue to compose (118 valid)]
 //
-// Continue -> batch banta hai -> Get.back(result: batch)
+// Continue -> a batch is created -> Get.back(result: batch)
 // ============================================================
 
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
@@ -158,7 +158,7 @@ class _EmailImportScreenState extends State<EmailImportScreen> {
                           onPressed: () {
                             final removed = _fields[i];
                             setState(() => _fields.remove(removed));
-                            // Field screen se hat jaye, phir controller band
+                            // Let the field leave the screen, then close the controller
                             WidgetsBinding.instance.addPostFrameCallback(
                               (_) => removed.dispose(),
                             );

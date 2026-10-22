@@ -1,11 +1,11 @@
 // ============================================================
 // SEO GEO GRID  (Map Coverage)
 //
-// Property ke aas-paas 5x5 = 25 jagah se Google Maps par rank.
-//   Grid : har point ek gol dabba (rank ke rang me). Har device par chalta
-//          hai (Windows par bhi). Tap karo -> us point ka detail.
-//   Map  : asli Google Map par wahi point (sirf Android / iOS).
-//   Scan chal raha ho -> upar "Please wait" parda.
+// Google Maps rank from 5x5 = 25 places around the property.
+//   Grid : each point is a round box (in the rank color). Works on every
+//          device (Windows too). Tap -> details of that point.
+//   Map  : the same points on a real Google Map (Android / iOS only).
+//   While a scan runs -> a "Please wait" overlay on top.
 // ============================================================
 
 import 'dart:ui' as ui;
@@ -19,7 +19,7 @@ import '../../../setting_screen/screen/widgets/setting_section_card.dart';
 import '../../models/seo_intelligence_response.dart';
 import 'seo_common.dart';
 
-/// Google Map sirf phone app me (Windows / web par nahi)
+/// Google Map only in the phone app (not on Windows / web)
 bool get seoMapSupported =>
     !kIsWeb &&
     (defaultTargetPlatform == TargetPlatform.android ||
@@ -64,7 +64,7 @@ class _SeoGeoGridState extends State<SeoGeoGrid> {
   @override
   void didUpdateWidget(SeoGeoGrid old) {
     super.didUpdateWidget(old);
-    // Naya scan aaya to purana chuna point hatao
+    // A new scan arrived -> clear the old selected point
     if (old.points != widget.points) _selected = null;
   }
 
@@ -211,7 +211,7 @@ class _SeoGeoGridState extends State<SeoGeoGrid> {
 
             return Stack(
               children: [
-                // Halki lines (map jaisa ehsaas)
+                // Light lines (to feel like a map)
                 Positioned.fill(
                   child: CustomPaint(
                     painter: _GridLinesPainter(n: n, color: p.border),
@@ -250,7 +250,7 @@ class _SeoGeoGridState extends State<SeoGeoGrid> {
 
     return Center(
       child: TweenAnimationBuilder<double>(
-        // Ek ke baad ek ubharte hain
+        // They appear one after another
         tween: Tween(begin: 0, end: 1),
         duration: Duration(milliseconds: 300 + index * 25),
         curve: Curves.easeOutBack,
@@ -481,7 +481,7 @@ class _ScanningOverlay extends StatelessWidget {
 }
 
 // ============================================================
-// MAP (sirf Android / iOS)
+// MAP (Android / iOS only)
 // ============================================================
 
 class _SeoGridMap extends StatefulWidget {
@@ -521,7 +521,7 @@ class _SeoGridMapState extends State<_SeoGridMap> {
     if (old.points != widget.points) _buildIcons();
   }
 
-  /// Har point ka gol icon (rang + "#4" likha hua)
+  /// Round icon for each point (color + "#4" written on it)
   Future<void> _buildIcons() async {
     for (final point in widget.points) {
       final center = widget.isCenter(point);
@@ -622,7 +622,7 @@ class _SeoGridMapState extends State<_SeoGridMap> {
         markers: markers,
         mapToolbarEnabled: false,
         myLocationButtonEnabled: false,
-        // Page scroll ke andar bhi map ghoome
+        // Let the map pan even inside the page scroll
         gestureRecognizers: {
           Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new),
         },

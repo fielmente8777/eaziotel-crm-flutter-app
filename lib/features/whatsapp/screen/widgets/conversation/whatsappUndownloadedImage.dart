@@ -24,7 +24,7 @@ class WhatsappUndownloadedImage extends StatelessWidget {
       final downloading = controller.isDownloading.value;
       final progress = controller.progress.value;
 
-      // Local thumbnail (controller pehle hi download karke save kar deta hai)
+      // Local thumbnail (the controller downloads and saves it beforehand)
       final thumb = controller.thumbnailPath.value;
 
       final hasThumb =

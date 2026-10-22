@@ -6,8 +6,8 @@ class ProfileResponseModel {
   final bool status;
   final SubscriptionDetailsModel subscriptionDetails;
 
-  /// Login kiye hue user ka email (`User.emailId`).
-  /// WhatsApp "Take over" me yahi bheja jaata hai.
+  /// Email of the logged-in user (`User.emailId`).
+  /// This is what WhatsApp "Take over" sends.
   final String userEmail;
 
   ProfileResponseModel({

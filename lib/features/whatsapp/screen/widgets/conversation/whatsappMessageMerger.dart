@@ -19,16 +19,16 @@ class WhatsappMessageMerger {
       }
 
       // ------------------------------------------------------------
-      // Status kabhi peeche nahi jaana chahiye.
-      // Agar naye item ka status "chhota" hai (e.g. naya = sent,
-      // purana = read), to purana status wahi rakho, sirf baaki
-      // fields (body/media/etc agar zaroorat ho) latest se le lo.
+      // The status must never go backwards.
+      // If the new item's status is "lower" (e.g. new = sent,
+      // old = read), keep the old status and take only the other
+      // fields (body/media/etc if needed) from the latest.
       // ------------------------------------------------------------
 
       if (item.statusRank >= existing.statusRank) {
         uniqueMessages[item.uniqueKey] = item;
       } else {
-        // naya item ka data rakho lekin status purane (behtar) wale ka
+        // keep the new item's data but the old (better) status
         uniqueMessages[item.uniqueKey] = item.copyWith(
           status: existing.status,
           updatedAt: existing.updatedAt,

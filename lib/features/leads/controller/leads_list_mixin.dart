@@ -5,9 +5,9 @@ import 'package:eazotel/features/leads/services/leads_api_service.dart';
 import 'package:get/get.dart';
 
 // Leads part of DashboardController: list, pagination, search and filters.
-// (Leads feature ka hissa; Home par "Recent Leads" bhi isi se aate hain)
+// (Part of the Leads feature; "Recent Leads" on Home come from here too)
 mixin DashboardLeadsMixin on GetxController {
-  // Leads ki API (features/leads/services)
+  // Leads API (features/leads/services)
   final LeadsApiService leadsApiService = LeadsApiService();
 
   // Provided by DashboardController

@@ -6,7 +6,7 @@
 //    "property_id": "341834766", "rawDomain": "fielmente.com",
 //    "siteUrl": "sc-domain:fielmente.com"}
 //
-// property_id = hotel ki Google Analytics property (activePropertyId)
+// property_id = the hotel's Google Analytics property (activePropertyId)
 // ============================================================
 
 /// Property Type dropdown
@@ -48,7 +48,7 @@ class GscSettings {
     email: json['email']?.toString() ?? '',
   );
 
-  /// POST /google/save-gsc-settings ka body (web jaisa)
+  /// Body of POST /google/save-gsc-settings (same as web)
   static Map<String, dynamic> saveBody({
     required String propertyId,
     required String hid,

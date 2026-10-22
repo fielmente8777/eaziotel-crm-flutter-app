@@ -1,6 +1,6 @@
 // ============================================================
 // SEO ADDRESS
-// Map par point chunne ke baad pata (OpenStreetMap reverse):
+// Address after picking a point on the map (OpenStreetMap reverse):
 // GET https://nominatim.openstreetmap.org/reverse?lat=&lon=&format=json
 //
 //   address.city / town / county      -> city

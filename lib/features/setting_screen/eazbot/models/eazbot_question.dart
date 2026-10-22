@@ -1,7 +1,7 @@
 // ============================================================
 // EAZBOT QUESTION
 //
-// Chatbot visitor se jo sawal poochta hai (chat_flow ki ek line):
+// Questions the chatbot asks the visitor (one line of chat_flow):
 //   {"active": false, "key": "name", "question": "What's your Name?", "type": "text"}
 // ============================================================
 
@@ -13,10 +13,10 @@ class EazbotQuestion {
     this.active = false,
   });
 
-  /// Server ka naam (name / phone / email / check-in ...). Badalta nahi.
+  /// The server's name (name / phone / email / check-in ...). Does not change.
   final String key;
 
-  /// Jawab ka type: text / number / email / date
+  /// Answer type: text / number / email / date
   final String type;
 
   String question;
@@ -29,7 +29,7 @@ class EazbotQuestion {
     'type': type,
   };
 
-  /// Web jaisa shuruaati list
+  /// Starting list, same as web
   static List<EazbotQuestion> defaults() => [
     EazbotQuestion(key: 'name', question: "What's your Name?", type: 'text'),
     EazbotQuestion(

@@ -6,11 +6,11 @@ import 'package:eazotel/utils/res/t_breakpoints.dart';
 enum TScreenSize { phone, tablet, desktop }
 
 class TResponsive {
-  /// Is widget ko milne wali width
+  /// The width this widget gets
   final double width;
   const TResponsive(this.width);
 
-  /// Poori screen ki width (MediaQuery se)
+  /// The full screen width (from MediaQuery)
   factory TResponsive.of(BuildContext context) =>
       TResponsive(MediaQuery.sizeOf(context).width);
 
@@ -24,8 +24,8 @@ class TResponsive {
   bool get isTablet => size == TScreenSize.tablet;
   bool get isDesktop => size == TScreenSize.desktop;
 
-  /// Screen ke hisaab se value choose karo.
-  /// tablet / desktop na do to pichli size ki value use hoti hai.
+  /// Pick a value based on the screen.
+  /// If tablet / desktop are not given, the previous size's value is used.
   T value<T>({required T phone, T? tablet, T? desktop}) {
     switch (size) {
       case TScreenSize.desktop:
@@ -42,11 +42,11 @@ class TResponsive {
   double get gap => value(phone: 8.0, tablet: 12.0);
   double get radius => value(phone: 14.0, tablet: 18.0);
 
-  /// Bade screen par content stretch na ho
+  /// Do not stretch content on big screens
   double get contentWidth => math.min(width, TBreakpoints.maxContentWidth);
 }
 
-/// context.responsive se kahin bhi use karein
+/// Use it anywhere with context.responsive
 extension TResponsiveContext on BuildContext {
   TResponsive get responsive => TResponsive.of(this);
 }

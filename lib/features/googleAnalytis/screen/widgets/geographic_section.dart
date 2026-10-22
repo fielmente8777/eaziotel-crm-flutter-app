@@ -9,8 +9,8 @@ import 'package:intl/intl.dart';
 
 const _allCountries = '__all__';
 
-/// Top Countries + Top Cities — dono linked:
-/// country par tap → cities card wahi country dikhata hai
+/// Top Countries + Top Cities — both linked:
+/// tap a country → the cities card shows that country
 class GeographicSection extends StatefulWidget {
   final GeoModel? data;
   final AnalyticsLayout layout;
@@ -36,7 +36,7 @@ class _GeographicSectionState extends State<GeographicSection> {
     return list;
   }
 
-  /// Countries list ke order me, phir jo sirf cities me hain
+  /// In the order of the countries list, then the ones only in cities
   List<String> get _cityCountries {
     final cities = widget.data?.cities ?? const [];
     final names = <String>[
@@ -380,7 +380,7 @@ class _TopCitiesCardState extends State<_TopCitiesCard>
     }
   }
 
-  /// Filter + same city merge + unknown ek bucket
+  /// Filter + merge the same city + one bucket for unknown
   List<_CityRow> _rows() {
     final all = widget.selected == _allCountries;
     final map = <String, _CityRow>{};
@@ -395,7 +395,7 @@ class _TopCitiesCardState extends State<_TopCitiesCard>
     }
     final rows = map.values.toList()
       ..sort((a, b) {
-        // Unknown hamesha neeche
+        // Unknown always at the bottom
         if (a.unknown != b.unknown) return a.unknown ? 1 : -1;
         return b.users.compareTo(a.users);
       });
@@ -423,7 +423,7 @@ class _TopCitiesCardState extends State<_TopCitiesCard>
           : rows.isEmpty
               ? analyticsEmpty(c, 'No city data')
               : KeyedSubtree(
-                  // country badalte hi bars dobara 0 se animate
+                  // when the country changes the bars animate from 0 again
                   key: ValueKey(widget.selected),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

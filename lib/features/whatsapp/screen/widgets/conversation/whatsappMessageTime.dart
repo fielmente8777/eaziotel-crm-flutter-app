@@ -18,7 +18,7 @@ class WhatsappMessageTime extends StatelessWidget {
     final time = _formatTime(createdAt);
 
     if (isIncoming) {
-      // Incoming messages ke liye status tick nahi dikhta
+      // No status tick for incoming messages
       return Text(
         time,
         style: TextStyle(fontSize: 9, color: Colors.grey.shade600),
@@ -32,9 +32,9 @@ class WhatsappMessageTime extends StatelessWidget {
         Text(time, style: TextStyle(fontSize: 9, color: Colors.grey.shade600)),
         const SizedBox(width: 3),
 
-        // status yahan se aata hai — jab bhi parent widget
-        // (WhatsappTextBubble) ko naya status value milega,
-        // ye poora widget rebuild hoga aur icon change ho jayega
+        // the status comes from here — whenever the parent widget
+        // (WhatsappTextBubble) gets a new status value,
+        // this whole widget rebuilds and the icon changes
         WhatsappStatusIcon(status: status),
       ],
     );

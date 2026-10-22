@@ -1,6 +1,6 @@
 // ============================================================
 // SEO ACTION RESPONSE
-// Jo API sirf "ho gaya" batati hain:
+// For APIs that only say "done":
 //   track, track-link, refresh-keyword, delete, trigger-grid-scan,
 //   update-radius, update-grid-keyword, onboarding, set-website,
 //   update-website-country
@@ -14,7 +14,7 @@ class SeoActionResponse {
   final String? responseMessage;
   final SeoRequest? request;
 
-  /// API ka baaki data (jaisa aaya waisa)
+  /// The rest of the API data (as it came)
   final Map<String, dynamic> result;
 
   SeoActionResponse({

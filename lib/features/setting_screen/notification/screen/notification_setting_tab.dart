@@ -1,10 +1,10 @@
 // ============================================================
 // NOTIFICATION SETTING TAB  (Settings > Notification)
 //
-// Ye file sirf tay karti hai ki KYA dikhe:
-//   data aa raha hai   ->  shimmer
+// This file only decides WHAT to show:
+//   data loading       ->  shimmer
 //   error              ->  message + Retry
-//   warna              ->  Save button
+//   otherwise          ->  Save button
 //                          WhatsApp Notifications card
 //                            Enable WhatsApp switch
 //                            CallNotificationBox
@@ -127,7 +127,7 @@ class _WhatsappCard extends StatelessWidget {
               ],
             ),
 
-            // WhatsApp band ho to neeche ka sab chhup jata hai
+            // If WhatsApp is off, everything below is hidden
             if (enabled) ...[
               const SizedBox(height: 8),
               CallNotificationBox(controller: controller, r: r),

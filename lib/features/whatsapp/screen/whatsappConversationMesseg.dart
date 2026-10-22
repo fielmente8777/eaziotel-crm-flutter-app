@@ -39,8 +39,8 @@ class WhatsappConversationMesseg extends StatelessWidget {
     // Kaun reply karega (AI / team / flow) -> Take over
     final handling = Get.put(WhatsappHandlingController(chat: chat), tag: tag);
 
-    // Chat band ho to "khuli chat" hata do, warna is chat ke naye message
-    // par na unread badhta, na notification aata
+    // When the chat closes, clear the "open chat", otherwise this chat's new messages
+    // so neither unread grows nor a notification comes
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {
         if (didPop &&
@@ -48,13 +48,13 @@ class WhatsappConversationMesseg extends StatelessWidget {
           whatsappController.clearCurrentConversation();
         }
 
-        // Agli baar khule to taaza haal (AI / flow) dobara pata chale
+        // Next time it opens, find out the fresh state (AI / flow) again
         if (didPop && Get.isRegistered<WhatsappHandlingController>(tag: tag)) {
           Get.delete<WhatsappHandlingController>(tag: tag);
         }
       },
       child: Scaffold(
-        // WhatsApp jaisa chat background (light: beige, dark: gehra)
+        // Chat background like WhatsApp (light: beige, dark: deep)
         backgroundColor: WaPalette(context).wallpaper,
         appBar: WhatsappConversationHeader(
           chat: chat,
@@ -77,8 +77,8 @@ class WhatsappConversationMesseg extends StatelessWidget {
 
               //   child: const Icon(Icons.add),
               // ),
-              // AI / teammate / flow reply kar raha ho to message box ki
-              // jagah "Take over" bar (web dashboard jaisa)
+              // When AI / a teammate / a flow is replying, a "Take over" bar instead of
+              // the message box (same as the web dashboard)
               WhatsappHandlingFooter(
                 controller: handling,
                 input: WhatsappMessageInput(

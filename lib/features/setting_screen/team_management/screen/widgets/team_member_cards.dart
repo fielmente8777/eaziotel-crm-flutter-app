@@ -1,8 +1,8 @@
 // ============================================================
 // TEAM MEMBER CARDS  (phone)
 //
-// Har member ka ek card: avatar, naam, role, email, phone, tareekh,
-// aur neeche Edit / Delete (superadmin ke liye nahi).
+// One card per member: avatar, name, role, email, phone, date,
+// and Edit / Delete at the bottom (not for superadmin).
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';
@@ -60,7 +60,7 @@ class _MemberCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ---------- Avatar + naam + role ----------
+          // ---------- Avatar + name + role ----------
           Row(
             children: [
               CircleAvatar(
@@ -106,7 +106,7 @@ class _MemberCard extends StatelessWidget {
             text: user.addedOnLabel,
           ),
 
-          // ---------- Edit / Delete (superadmin ke liye nahi) ----------
+          // ---------- Edit / Delete (not for superadmin) ----------
           if (!user.isSuperAdmin) ...[
             const SizedBox(height: 12),
             Row(

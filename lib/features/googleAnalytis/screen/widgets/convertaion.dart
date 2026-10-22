@@ -133,7 +133,7 @@ class ConversionsCard extends StatelessWidget {
               },
             ),
 
-            // ---------- Key events list (agar aaye) ----------
+            // ---------- Key events list (if present) ----------
             if (conversions.isNotEmpty) ...[
               const SizedBox(height: 18),
               Text(

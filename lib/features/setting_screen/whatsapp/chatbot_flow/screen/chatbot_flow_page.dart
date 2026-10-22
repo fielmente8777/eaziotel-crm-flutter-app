@@ -1,11 +1,11 @@
 // ============================================================
 // WHATSAPP FLOW PAGE  (Settings > WhatsApp > WhatsApp Flow)
 //
-// Chatbot banane ki jagah (web ka FlowBuilder).
-//   upar   : Canvas | List,  + Add step,  Refresh,  Publish
-//   Canvas : steps ka naksha (kheencho, zoom, tap = edit)   [tablet / window]
-//   List   : steps ek ke neeche ek (tap = edit)             [phone par pehle se]
-//   Publish tak badlav sirf app me ("Unsaved changes")
+// The place to build the chatbot (the web's FlowBuilder).
+//   top    : Canvas | List,  + Add step,  Refresh,  Publish
+//   Canvas : map of the steps (drag, zoom, tap = edit)   [tablet / window]
+//   List   : steps stacked (tap = edit)             [default on phones]
+//   Changes stay only in the app until Publish ("Unsaved changes")
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive.dart';
@@ -83,7 +83,7 @@ class _ChatbotFlowPageState extends State<ChatbotFlowPage> {
   Widget build(BuildContext context) {
     return TResponsiveBuilder(
       builder: (context, r) {
-        // Phone par pehli baar list, badi screen par canvas
+        // On phones a list the first time, a canvas on big screens
         if (!_viewChosen) {
           c.view.value = r.isPhone ? ChatbotView.list : ChatbotView.canvas;
           _viewChosen = true;
@@ -231,7 +231,7 @@ class _Toolbar extends StatelessWidget {
   }
 }
 
-/// Phone: steps ek ke neeche ek (shuru wale pehle)
+/// Phone: steps stacked (starting ones first)
 class _ListView extends StatelessWidget {
   const _ListView({required this.c, required this.r, required this.onOpen});
 
@@ -243,7 +243,7 @@ class _ListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = SettingPalette(context);
 
-    // Pehle START wale, phir canvas me upar-left se neeche-right
+    // START ones first, then from top-left to bottom-right on the canvas
     final ordered = c.nodes.toList()
       ..sort((a, b) {
         final sa = c.isStart(a.id) ? 0 : 1;

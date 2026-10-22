@@ -20,7 +20,7 @@ class GoogleAdsAdGroupResponse {
     this.adGroups = const [],
   });
 
-  /// Sirf ENABLED, aur ek id sirf ek baar
+  /// Only ENABLED, and each id only once
   List<GoogleAdsAdGroup> get enabled {
     final seen = <String>{};
     return adGroups.where((g) => g.isEnabled && seen.add(g.adGroupId)).toList();

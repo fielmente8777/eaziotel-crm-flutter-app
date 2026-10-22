@@ -1,16 +1,16 @@
 // ============================================================
 // AUTO MESSAGE CONFIG (model)
 //
-// "Auto Messaging Configuration" card ki EK line ka data (web jaisa).
-// Jaise: Eazbot Leads -> on hai, Template bhejna hai, kaunsa template.
+// Data of ONE line of the "Auto Messaging Configuration" card (same as web).
+// For example: Eazbot Leads -> on, send a Template, which template.
 //
-// Server se aisa aata hai (account/connection/details -> autoMessage):
+// It comes from the server like this (account/connection/details -> autoMessage):
 //   "eazbot": { "enabled": true, "type": "template",
 //               "templateName": "lead_assign_notification",
 //               "message": null, "flowId": null }
 //
-// Type teen hain: template / text / flow
-// (flow sirf "WhatsApp" module me, web jaisa)
+// There are three types: template / text / flow
+// (flow only in the "WhatsApp" module, same as web)
 // ============================================================
 
 class AutoMessageConfig {
@@ -24,10 +24,10 @@ class AutoMessageConfig {
     this.flowId = '',
   });
 
-  /// Server wala naam, jaise 'eazbot'
+  /// Name used by the server, like 'eazbot'
   final String key;
 
-  /// Screen par dikhne wala naam, jaise 'Eazbot Leads'
+  /// Name shown on screen, like 'Eazbot Leads'
   final String label;
 
   bool enabled;
@@ -42,10 +42,10 @@ class AutoMessageConfig {
   static const String typeText = 'text';
   static const String typeFlow = 'flow';
 
-  /// Flow sirf WhatsApp module me
+  /// Flow only in the WhatsApp module
   bool get canUseFlow => key == 'whatsapp';
 
-  /// Pehle dropdown ke option (value -> naam)
+  /// Options of the first dropdown (value -> name)
   Map<String, String> get typeOptions => {
     typeTemplate: 'Template',
     typeText: 'Text',
@@ -56,7 +56,7 @@ class AutoMessageConfig {
   bool get isText => type == typeText;
   bool get isFlow => type == typeFlow;
 
-  /// Paanch module: server ka naam -> screen ka naam (isi kram me dikhte hain)
+  /// Five modules: server name -> screen name (shown in this order)
   static const Map<String, String> modules = {
     'eazbot': 'Eazbot Leads',
     'webform': 'Webform Leads',
@@ -75,7 +75,7 @@ class AutoMessageConfig {
     flowId: flowId,
   );
 
-  /// Dusre module ki setting is module me (Apply to all)
+  /// Another module's setting in this module (Apply to all)
   void copyFrom(AutoMessageConfig other) {
     enabled = other.enabled;
     type = other.isFlow && !canUseFlow ? typeTemplate : other.type;
@@ -84,11 +84,11 @@ class AutoMessageConfig {
     flowId = canUseFlow ? other.flowId : '';
   }
 
-  /// Badlav pakadne ke liye (Save button tabhi dikhta hai)
+  /// To detect changes (the Save button shows only then)
   String get signature => '$enabled|$type|$templateName|$message|$flowId';
 
-  /// Server ke `autoMessage` Map se paanchon module ki list banata hai.
-  /// Khali Map do to sab module band (off) aate hain.
+  /// Builds the list of all five modules from the server's `autoMessage` Map.
+  /// An empty Map gives all modules turned off.
   static List<AutoMessageConfig> listFromJson(Map<String, dynamic> json) {
     return [
       for (final module in modules.entries)

@@ -1,11 +1,11 @@
 // ============================================================
-// WHATSAPP UI  (WhatsApp feature ke saare screen ek jaisa dikhein)
+// WHATSAPP UI  (so all screens of the WhatsApp feature look the same)
 //
-//   WaPalette               : card, border, text, chat wallpaper ke rang
-//   WaAvatar                : naam ka pehla akshar, naam ke hisaab se rang
-//   WaStatus                : conversation status ka rang
-//   WaConversationShimmer   : chat list load ho rahi ho tab (gol loader nahi)
-//   WaChatShimmer           : chat ke messages load ho rahe hon tab
+//   WaPalette               : colors for card, border, text, chat wallpaper
+//   WaAvatar                : first letter of the name, color based on the name
+//   WaStatus                : color of the conversation status
+//   WaConversationShimmer   : while the chat list loads (no spinner)
+//   WaChatShimmer           : while the chat's messages load
 // ============================================================
 
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
@@ -18,7 +18,7 @@ class WaPalette {
 
   final bool isDark;
 
-  /// WhatsApp ka hara rang (tab, badge, button)
+  /// WhatsApp green (tab, badge, button)
   static const Color green = Color(0xFF00A884);
   static const Color greenDark = Color(0xFF008069);
 
@@ -32,18 +32,18 @@ class WaPalette {
   Color get subText =>
       isDark ? TAppColors.darkSecondaryText : TAppColors.lightSecondaryText;
 
-  /// Chat ke peeche ka rang (WhatsApp jaisa)
+  /// Color behind the chat (like WhatsApp)
   Color get wallpaper =>
       isDark ? const Color(0xFF0B141A) : const Color(0xFFEFEAE2);
 
-  /// Halka rang wala background (chip / icon box)
+  /// Light tinted background (chip / icon box)
   Color tint(Color c) => c.withValues(alpha: isDark ? .18 : .12);
 
-  /// Rangeen background par us rang ka text: dark me thoda halka karo
+  /// Text in that color on a tinted background: make it a bit lighter in dark
   Color onTint(Color c) => isDark ? Color.lerp(c, Colors.white, .35)! : c;
 }
 
-/// Conversation ka status (active / inactive / converted ...)
+/// The conversation's status (active / inactive / converted ...)
 class WaStatus {
   WaStatus._();
 
@@ -72,7 +72,7 @@ class WaAvatar extends StatelessWidget {
   final String name;
   final double size;
 
-  /// Hare / rangeen header par (halka safed background)
+  /// On a green / colored header (light white background)
   final bool onBrand;
 
   static const _colors = [
@@ -95,7 +95,7 @@ class WaAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final clean = name.trim();
-    // Naam me akshar ho to pehla akshar, warna (sirf number) person icon
+    // First letter if the name has letters, otherwise (number only) a person icon
     final hasLetter =
         clean.isNotEmpty && RegExp(r'[A-Za-z]').hasMatch(clean[0]);
     final color = colorFor(clean);
@@ -166,7 +166,7 @@ Widget _box(
   );
 }
 
-/// Chat list loading. [withHeader] = true to search + tabs bhi (pehli baar)
+/// Chat list loading. [withHeader] = true also shows search + tabs (first time)
 class WaConversationShimmer extends StatelessWidget {
   const WaConversationShimmer({super.key, this.withHeader = false});
 
@@ -259,7 +259,7 @@ class WaConversationShimmer extends StatelessWidget {
   }
 }
 
-/// Chat ke messages loading: left / right bubbles
+/// Chat messages loading: left / right bubbles
 class WaChatShimmer extends StatelessWidget {
   const WaChatShimmer({super.key});
 

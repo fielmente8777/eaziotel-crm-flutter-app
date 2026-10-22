@@ -1,16 +1,16 @@
 // ============================================================
-// PLAN BUILDER CONTROLLER  (web ke Billing page jaisa)
+// PLAN BUILDER CONTROLLER  (like the web Billing page)
 //
-//   1. Base plan     : BASIC / PRO (ENTERPRISE = sales se baat)
-//   2. Add-on apps   : jo pehle se khareede hain -> "Purchased"
+//   1. Base plan     : BASIC / PRO (ENTERPRISE = talk to sales)
+//   2. Add-on apps   : already purchased ones -> "Purchased"
 //   3. Team seats    : ₹500 / seat / mahina
 //   4. Billing cycle : Monthly 5% | Quarterly 10% | 6 Months 15% | Yearly 40%
-//   Total = (plan + naye apps + seats) × mahine − chhoot + 18% GST
+//   Total = (plan + new apps + seats) × months − discount + 18% GST
 //
 //   Pay -> create-order -> Razorpay -> verify-payment -> subscription taaza
 //
-// Razorpay sirf Android / iOS par chalta hai. Key web dashboard jaisi
-// config file se aati hai: lib/core/config/app_env.dart (env.js jaisa)
+// Razorpay works only on Android / iOS. The key comes from a config file,
+// like the web dashboard: lib/core/config/app_env.dart (like env.js)
 // ============================================================
 
 import 'dart:io';
@@ -34,7 +34,7 @@ class PlanBuilderController extends GetxController {
   static const int gstPercent = 18;
   static const String salesWhatsappUrl = 'https://wa.me/+919501868775';
 
-  /// Razorpay key: web ke Billing page wali (app_env.dart)
+  /// Razorpay key: the one from the web Billing page (app_env.dart)
   static const String razorpayKey = AppEnv.razorpayBillingKeyId;
 
   final SubscriptionController subscriptionController =
@@ -59,7 +59,7 @@ class PlanBuilderController extends GetxController {
 
   final selectedPlan = Rxn<BillingPlan>();
 
-  /// Abhi chalu plan (isko dobara charge nahi karte). Naya plan chuna -> null
+  /// The current plan (not charged again). A new plan was chosen -> null
   final activePlanId = RxnString();
 
   final selectedAppIds = <String>{}.obs;
@@ -69,7 +69,7 @@ class PlanBuilderController extends GetxController {
 
   Razorpay? _razorpay;
 
-  /// Payment chalu hone par kya bheja tha (verify me wahi chahiye)
+  /// What was sent when payment started (verify needs the same)
   ({String planId, List<String> appIds, int validFor})? _pending;
 
   @override
@@ -98,10 +98,10 @@ class PlanBuilderController extends GetxController {
       plans.assignAll(result.plans);
       apps.assignAll(result.apps);
 
-      // Abhi wala plan + khareede hue apps pehle se chune hue
+      // The current plan + purchased apps are pre-selected
       final current = subscription?.plan.id ?? '';
       selectedPlan.value = plans.firstWhereOrNull((p) => p.id == current);
-      // Renew: plan ka paisa lagega (chalu plan nahi maante)
+      // Renew: the plan is charged (the current plan is not counted)
       activePlanId.value = current.isEmpty || isRenewal ? null : current;
       selectedAppIds
         ..clear()
@@ -122,7 +122,7 @@ class PlanBuilderController extends GetxController {
   // GETTERS
   // ============================================================
 
-  /// Price wale plans (web jaisa: price 0 wale nahi dikhte)
+  /// Paid plans (same as web: plans with price 0 are not shown)
   List<BillingPlan> get visiblePlans =>
       plans.where((p) => p.price > 0 || p.isEnterprise).toList();
 
@@ -133,7 +133,7 @@ class PlanBuilderController extends GetxController {
     return days <= 0 ? 0 : days.ceil();
   }
 
-  /// Web jaisa: bache din se shuru ka cycle
+  /// Same as web: cycle starting from the remaining days
   BillingCycle _defaultCycle() {
     final months = (remainingDays / 30).floor().clamp(1, 1 << 20);
     if (months == 1) return BillingCycle.month;
@@ -146,7 +146,7 @@ class PlanBuilderController extends GetxController {
         (a) => a.appId == appId,
       );
 
-  /// Ye plan abhi chalu hai (aur khatam nahi hua)
+  /// This plan is active now (and has not expired)
   bool isPurchasedPlan(String planId) {
     final s = subscription;
     final end = s?.endDate;
@@ -165,13 +165,13 @@ class PlanBuilderController extends GetxController {
       selectedPlan.value != null &&
       selectedPlan.value!.id == activePlanId.value;
 
-  /// Naye apps (jo pehle se khareede nahi)
-  /// Plan khatam (ya hai hi nahi): pehle khareede add-ons bhi dobara
-  /// lene padenge, isliye wo bhi "add-on" list me gine jaate hain
+  /// New apps (not purchased before)
+  /// Plan expired (or there is none): previously bought add-ons must be bought
+  /// again, so they are also counted in the "add-on" list
   bool get isRenewal => remainingDays == 0;
 
-  /// Is order me jo add-ons lenge. Renew par khareede hue bhi (user hata
-  /// sakta hai), warna sirf naye.
+  /// Add-ons taken in this order. On renew, the purchased ones too (the user can
+  /// remove them), otherwise only new ones.
   List<BillingApp> get newApps => apps
       .where(
         (a) =>
@@ -200,8 +200,8 @@ class PlanBuilderController extends GetxController {
 
   num get total => subtotal - discountAmount + gstAmount;
 
-  /// Web jaisa: kam se kam ek naya app chahiye
-  /// Renew: sirf plan bhi chalega. Warna (web jaisa) kam se kam ek naya app.
+  /// Same as web: at least one new app is needed
+  /// Renew: the plan alone is fine. Otherwise (same as web) at least one new app.
   bool get canPay =>
       !isProcessing.value &&
       (isRenewal ? selectedPlan.value != null : newApps.isNotEmpty);
@@ -213,17 +213,17 @@ class PlanBuilderController extends GetxController {
   void selectPlan(BillingPlan plan) {
     if (plan.isEnterprise || isPurchasedPlan(plan.id)) return;
 
-    // Web jaisa: naya plan -> apps dobara chuno, plan ka poora paisa lagega
+    // Same as web: new plan -> choose apps again, the full plan price is charged
     selectedAppIds.clear();
     activePlanId.value = null;
     selectedPlan.value = plan;
 
-    // Renew: pehle khareede add-ons phir se list me (user hata sakta hai)
+    // Renew: previously bought add-ons are back in the list (the user can remove them)
     if (isRenewal) selectedAppIds.addAll(_purchasedIds);
   }
 
   void toggleApp(BillingApp app) {
-    // Chalu plan me khareeda hua app hata nahi sakte; renew me sab chalega
+    // An app bought in the current plan cannot be removed; on renew anything goes
     if (appsLocked || (!isRenewal && isPurchasedApp(app.id))) return;
     selectedAppIds.contains(app.id)
         ? selectedAppIds.remove(app.id)
@@ -269,7 +269,7 @@ class PlanBuilderController extends GetxController {
         gst: gstPercent,
       );
 
-      // Key: server ne bheji ho to wahi, warna .env wali (build ke time)
+      // Key: the server's if it sent one, otherwise the one from .env (at build time)
       final key = order.keyId.isNotEmpty ? order.keyId : razorpayKey;
       if (key.isEmpty) {
         isProcessing.value = false;
@@ -323,10 +323,10 @@ class PlanBuilderController extends GetxController {
 
       _toast('Payment successful', 'Your plan has been updated.');
 
-      // Naya plan / apps dikhao
+      // Show the new plan / apps
       await subscriptionController.load();
 
-      // Plan khatam wala screen tha to dashboard dobara check kare (khul jaye)
+      // If it was the plan-expired screen, the dashboard checks again (so it opens)
       if (Get.isRegistered<DashboardController>()) {
         Get.find<DashboardController>().getUser();
       }
@@ -349,7 +349,7 @@ class PlanBuilderController extends GetxController {
     _pending = null;
     isProcessing.value = false;
 
-    // Khud band kiya to error mat dikhao
+    // Closed by the user, so do not show an error
     if (r.code == Razorpay.PAYMENT_CANCELLED) return;
 
     _toast(

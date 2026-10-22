@@ -1,5 +1,5 @@
 import 'package:eazotel/features/Calls%20Management/screen/widgets/make_call_dialog.dart';
-import 'package:eazotel/features/whatsapp/controller/whatsappController.dart'; // apna path
+import 'package:eazotel/features/whatsapp/controller/whatsappController.dart'; // own path
 import 'package:eazotel/features/whatsapp/controller/whatsapp_lead_filter_controller.dart';
 import 'package:eazotel/features/whatsapp/models/whatsappMessegesLeads.dart';
 import 'package:eazotel/features/whatsapp/screen/widgets/whatsapp_lead_filter_widget.dart';
@@ -7,7 +7,7 @@ import 'package:eazotel/features/whatsapp/screen/widgets/whatsapp_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-/// Confirm dialog + delete. Header aur message list dono use karte hain.
+/// Confirm dialog + delete. Both the header and the message list use it.
 Future<void> confirmAndDeleteMessages(
   BuildContext context,
   WhatsappController controller,
@@ -85,7 +85,7 @@ class WhatsappConversationHeader extends StatelessWidget
       title: Text('$count selected'),
       actions: [
         if (deleting)
-          // Delete ho raha hai: hourglass (gol loader nahi)
+          // Deleting: hourglass (no spinner)
           const Padding(
             padding: EdgeInsets.all(16),
             child: Icon(Icons.hourglass_top_rounded, size: 20),
@@ -164,11 +164,11 @@ class WhatsappConversationHeader extends StatelessWidget
           onPressed: () {
             showWhatsappFilterSheet(
               context: context,
-              conversationId: chat.id, // tumhare model mein id pehle se hai
+              conversationId: chat.id, // your model already has an id
               hid: whatsappController.hid,
-              ndid: chat.ndid, // neeche dekho
+              ndid: chat.ndid, // see below
               contact: chat.phone,
-              name: chat.name, // model mein jo name field hai wo
+              name: chat.name, // the name field in the model
               status: chat.status,
               assignedTo: chat.assignedTo,
             );
@@ -269,7 +269,7 @@ void showWhatsappFilterSheet({
   );
 }
 
-/// Chat header ka rang: WhatsApp jaisa (light: hara, dark: gehra slate)
+/// Chat header color: like WhatsApp (light: green, dark: deep slate)
 Color _barColor(BuildContext context) =>
     Theme.of(context).brightness == Brightness.dark
     ? const Color(0xFF1F2C34)

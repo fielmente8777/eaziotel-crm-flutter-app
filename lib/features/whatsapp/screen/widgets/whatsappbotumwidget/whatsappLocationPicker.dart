@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-// Map: Google Maps. API key AndroidManifest.xml (aur iOS AppDelegate) me hai.
-// Place search: OpenStreetMap Nominatim (key nahi chahiye).
+// Map: Google Maps. The API key is in AndroidManifest.xml (and iOS AppDelegate).
+// Place search: OpenStreetMap Nominatim (no key needed).
 const String _searchUserAgent = 'com.eazotel.app';
 
 // ============================================================
@@ -15,7 +15,7 @@ class PickedLocation {
   final double latitude;
   final double longitude;
 
-  /// Search se chuni jagah ka naam (map haath se hilaya ho to khali)
+  /// Name of the place picked from search (empty if the map was moved by hand)
   final String name;
 
   const PickedLocation({
@@ -41,8 +41,8 @@ class _SearchResult {
 // LOCATION PICKER SCREEN
 // ============================================================
 
-/// Map par pin ke neeche wali jagah chuno aur Send dabao.
-/// Navigator.pop se [PickedLocation] milta hai (back par null).
+/// Pick the place under the pin on the map and press Send.
+/// Navigator.pop returns a [PickedLocation] (null on back).
 class WhatsappLocationPicker extends StatefulWidget {
   const WhatsappLocationPicker({super.key});
 
@@ -51,20 +51,20 @@ class WhatsappLocationPicker extends StatefulWidget {
 }
 
 class _WhatsappLocationPickerState extends State<WhatsappLocationPicker> {
-  // GPS na mile to India ka center
+  // India's center if GPS is not available
   static const LatLng _fallbackCenter = LatLng(20.5937, 78.9629);
   static const double _fallbackZoom = 4.5;
   static const double _pickZoom = 16;
 
   GoogleMapController? _mapController;
 
-  // Camera chalte waqt ka center (rukne par _center me jata hai)
+  // The center while the camera moves (goes into _center when it stops)
   LatLng _cameraTarget = _fallbackCenter;
 
-  // Search se chuni jagah (naam tabhi tak rehta hai jab tak pin yahin ho)
+  // Place picked from search (the name stays only while the pin is here)
   LatLng? _namedPoint;
 
-  // Permission mili ho to map par blue dot dikhao
+  // Show the blue dot on the map if permission was given
   bool _showMyLocation = false;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocus = FocusNode();
@@ -98,8 +98,8 @@ class _WhatsappLocationPickerState extends State<WhatsappLocationPicker> {
   // CURRENT LOCATION
   // ============================================================
 
-  /// [silent] true ho to permission/GPS ki dikkat par message nahi dikhata
-  /// (screen khulte hi apne aap chalta hai).
+  /// If [silent] is true, no message is shown for permission/GPS problems
+  /// (it runs by itself when the screen opens).
   Future<void> _goToCurrentLocation({bool silent = false}) async {
     if (_locating) return;
 
@@ -156,11 +156,11 @@ class _WhatsappLocationPickerState extends State<WhatsappLocationPicker> {
     });
   }
 
-  // Camera rukne par pin ke neeche wali jagah final karo
+  // When the camera stops, finalize the place under the pin
   void _onCameraIdle() {
     final named = _namedPoint;
 
-    // Haath se hilaya to search wala naam hata do
+    // Moved by hand, so clear the search name
     final movedAway = named != null &&
         ((named.latitude - _cameraTarget.latitude).abs() > 0.0003 ||
             (named.longitude - _cameraTarget.longitude).abs() > 0.0003);
@@ -283,7 +283,7 @@ class _WhatsappLocationPickerState extends State<WhatsappLocationPicker> {
                   onCameraMove: (position) => _cameraTarget = position.target,
                   onCameraIdle: _onCameraIdle,
                 ),
-                // Center pin (nok map ke center par)
+                // Center pin (its tip on the map center)
                 const IgnorePointer(
                   child: Center(
                     child: Padding(

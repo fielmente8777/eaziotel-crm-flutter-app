@@ -2,10 +2,10 @@
 // FORGOT PASSWORD SCREEN  (web: Forgot password? + Reset your password)
 //
 //   Step 1: email          -> "Send reset code"
-//   Step 2: code + naya password
+//   Step 2: code + new password
 //   Step 3: "Password updated" -> Back to sign in
 //
-// Phone par poori width, tablet / web par beech me 460 ka card.
+// Full width on phones; a 460-wide card in the middle on tablet / web.
 // ============================================================
 
 import 'package:eazotel/features/auth/controllers/forgot_password_controller.dart';
@@ -17,7 +17,7 @@ import 'package:get/get.dart';
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key, this.email = ''});
 
-  /// Login screen par likha email (ho to) pehle se bhar do
+  /// Pre-fill the email typed on the login screen (if any)
   final String email;
 
   @override
@@ -147,7 +147,7 @@ class _EmailStep extends StatelessWidget {
 }
 
 // ============================================================
-// STEP 2: CODE + NAYA PASSWORD
+// STEP 2: CODE + NEW PASSWORD
 // ============================================================
 
 class _ResetStep extends StatelessWidget {
@@ -327,7 +327,7 @@ class _Rules extends StatelessWidget {
 }
 
 // ============================================================
-// STEP 3: HO GAYA
+// STEP 3: DONE
 // ============================================================
 
 class _DoneStep extends StatelessWidget {

@@ -41,7 +41,7 @@ class WhatsappStatusIcon extends StatelessWidget {
           color: Colors.grey.shade600,
         );
 
-      // pending / failed / null -> koi icon nahi
+      // pending / failed / null -> no icon
       case 'failed':
         return const Icon(
           Icons.error_outline,

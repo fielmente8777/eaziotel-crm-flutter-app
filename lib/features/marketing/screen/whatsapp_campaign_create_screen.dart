@@ -1,13 +1,13 @@
 // ============================================================
 // NEW WHATSAPP CAMPAIGN SCREEN  (Campaign Management > + New Campaign)
 //
-//   (1) Name      : sirf aapko dikhta hai
-//   (2) Message   : Marketing | Utility  ->  approved template chuno
-//                   -> {{1}} {{2}} ki value bharo (upar live preview)
-//   (3) Audience  : contact source -> kitne log + andaazan kharcha
-//   neeche        : "kya baaki hai" + [Create campaign]
+//   (1) Name      : only you can see it
+//   (2) Message   : Marketing | Utility  ->  choose an approved template
+//                   -> fill the {{1}} {{2}} values (live preview on top)
+//   (3) Audience  : contact source -> how many people + estimated cost
+//   bottom        : "what is missing" + [Create campaign]
 //
-// Ban gaya -> Get.back(result: true) (list dobara aati hai)
+// Created -> Get.back(result: true) (the list reloads)
 // ============================================================
 
 import 'package:eazotel/features/whatsapp/models/whatsappTemaplateModle.dart';
@@ -31,7 +31,7 @@ class WhatsappCampaignCreateScreen extends StatefulWidget {
 
 class _WhatsappCampaignCreateScreenState
     extends State<WhatsappCampaignCreateScreen> {
-  // Har baar naya form (purana bhara hua na dikhe)
+  // A fresh form every time (do not show the old filled one)
   final controller = Get.put(WhatsappCampaignCreateController());
 
   @override
@@ -354,7 +354,7 @@ class _TemplateTile extends StatelessWidget {
   }
 }
 
-/// Chuna hua template: live preview + {{n}} ki values
+/// Selected template: live preview + {{n}} values
 class _ChosenTemplate extends StatelessWidget {
   const _ChosenTemplate({required this.controller, required this.template});
 
@@ -404,7 +404,7 @@ class _ChosenTemplate extends StatelessWidget {
         ),
         const SizedBox(height: 8),
 
-        // ---------- Live preview (WhatsApp jaisa bubble) ----------
+        // ---------- Live preview (WhatsApp-style bubble) ----------
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(14),
@@ -650,7 +650,7 @@ class _SummaryItem extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  /// null = abhi load ho raha hai
+  /// null = still loading
   final String? value;
 
   @override
@@ -697,7 +697,7 @@ class _SummaryItem extends StatelessWidget {
 }
 
 // ============================================================
-// BOTTOM BAR: kya baaki hai + Create
+// BOTTOM BAR: what is missing + Create
 // ============================================================
 
 class _BottomBar extends StatelessWidget {

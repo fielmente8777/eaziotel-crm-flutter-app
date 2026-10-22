@@ -1,7 +1,7 @@
 // ============================================================
 // SEO SERVICE
 //
-// Local SEO + Website SEO ki saari API. Har function:
+// All Local SEO + Website SEO APIs. Each function:
 //   API call  ->  log (URL, STATUS, BODY)  ->  JSON  ->  Response model
 //
 //   getSeoIntelligence    : GET    /seo-intelligence
@@ -17,9 +17,9 @@
 //   trackWebsiteKeywords  : POST   /seo-intelligence/track-link
 //   refreshKeyword        : POST   /seo-intelligence/refresh-keyword
 //   untrackKeyword        : DELETE /seo-intelligence/<keyword>
-//   reverseGeocode        : OpenStreetMap se lat/lng ka pata
+//   reverseGeocode        : address for a lat/lng from OpenStreetMap
 //
-// Credit kam ho to API 402 deti hai -> tokenShortage(e) se message.
+// If credits are low the API returns 402 -> message from tokenShortage(e).
 // ============================================================
 
 import 'dart:convert';
@@ -47,7 +47,7 @@ class SeoService {
   // ============================================================
 
   static Future<SeoIntelligenceResponse> getSeoIntelligence() async {
-    // "t" = purana (cache) data na aaye
+    // "t" = so old (cached) data does not come
     final endpoint =
         '${SeoApiEndpoint.intelligence}?t=${DateTime.now().millisecondsSinceEpoch}';
 
@@ -97,7 +97,7 @@ class SeoService {
   }
 
   // ============================================================
-  // LOCAL SEO: keyword jodo
+  // LOCAL SEO: add keywords
   // ============================================================
 
   static Future<SeoActionResponse> trackKeywords({
@@ -220,7 +220,7 @@ class SeoService {
   }
 
   // ============================================================
-  // LOCAL SEO: map coverage dobara scan
+  // LOCAL SEO: scan the map coverage again
   // ============================================================
 
   static Future<SeoActionResponse> triggerGridScan() async {
@@ -273,7 +273,7 @@ class SeoService {
   }
 
   // ============================================================
-  // LOCAL SEO: map coverage kis keyword par
+  // LOCAL SEO: which keyword the map coverage is for
   // ============================================================
 
   static Future<SeoActionResponse> updateGridKeyword({
@@ -304,7 +304,7 @@ class SeoService {
   }
 
   // ============================================================
-  // WEBSITE SEO: website link lock (ek hi baar)
+  // WEBSITE SEO: lock the website link (only once)
   // ============================================================
 
   static Future<SeoActionResponse> setWebsite({
@@ -361,7 +361,7 @@ class SeoService {
   }
 
   // ============================================================
-  // WEBSITE SEO: keyword jodo
+  // WEBSITE SEO: add keywords
   // ============================================================
 
   static Future<SeoActionResponse> trackWebsiteKeywords({
@@ -387,7 +387,7 @@ class SeoService {
   }
 
   // ============================================================
-  // DONO: ek keyword ka rank taaza karo
+  // BOTH: refresh one keyword's rank
   // ============================================================
 
   static Future<SeoActionResponse> refreshKeyword({
@@ -418,7 +418,7 @@ class SeoService {
   }
 
   // ============================================================
-  // DONO: keyword hatao
+  // BOTH: remove a keyword
   // ============================================================
 
   static Future<SeoActionResponse> untrackKeyword({
@@ -463,7 +463,7 @@ class SeoService {
       final response = await _dio.get(
         url,
         queryParameters: {'lat': lat, 'lon': lng, 'format': 'json', 'zoom': 14},
-        // OpenStreetMap ko app ka naam chahiye
+        // OpenStreetMap needs the app's name
         options: Options(headers: {'User-Agent': 'com.eazotel.app'}),
       );
 
@@ -483,7 +483,7 @@ class SeoService {
   // ============================================================
 
   /// 402 (credit kam) -> "Not enough tokens. Need 4, have 2."
-  /// Baaki error -> null
+  /// Other errors -> null
   static String? tokenShortage(Object error) {
     if (error is! ApiException || error.statusCode != 402) return null;
 
@@ -498,7 +498,7 @@ class SeoService {
     return 'Not enough tokens. Need $required, have $available.';
   }
 
-  /// API ka "error" / "message" text, warna [fallback]
+  /// The API's "error" / "message" text, otherwise [fallback]
   static String errorMessage(Object error, String fallback) {
     if (error is ApiException) {
       final body = _errorBody(error);
@@ -521,7 +521,7 @@ class SeoService {
   // HELPERS (JSON + log)
   // ============================================================
 
-  /// JSON decode (DELETE me body khali bhi ho sakti hai)
+  /// JSON decode (the body can be empty for DELETE)
   static Map<String, dynamic> _decode(String body) {
     if (body.trim().isEmpty) return {};
 

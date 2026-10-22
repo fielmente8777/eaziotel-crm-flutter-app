@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 
 import '../../models/call_model.dart';
 
-/// Ek call ka card (web table ki ek row).
+/// Card for one call (one row of the web table).
 class CallCard extends StatelessWidget {
-  final int index; // 0 se
+  final int index; // from 0
   final CallModel call;
   final bool isPlaying;
   final bool isRecordingLoading;
@@ -309,7 +309,7 @@ class CallCard extends StatelessWidget {
   ) {
     final value = call.valueOf(field);
 
-    // API se koi aisi value aaye jo list me nahi hai to use bhi dikhao
+    // If the API sends a value that is not in the list, show it too
     final options = [
       ...field.options,
       if (value != null && !field.options.contains(value)) value,

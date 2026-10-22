@@ -18,13 +18,13 @@ class LoginController extends GetxController {
   final passwordController = TextEditingController();
 
   final RxBool showPassword = false.obs;
-  /// Sirf "Sign In" (email / password) button ka loader
+  /// Loader for the "Sign In" (email / password) button only
   final isLoading = false.obs;
 
-  /// Sirf "Continue with Google" button ka loader
+  /// Loader for the "Continue with Google" button only
   final isGoogleLoading = false.obs;
 
-  /// Koi bhi login chal raha ho to dono button band
+  /// While any login is running, both buttons are disabled
   bool get isBusy => isLoading.value || isGoogleLoading.value;
 
   void toggleShowPassword() {
@@ -72,14 +72,14 @@ class LoginController extends GetxController {
 
         debugPrint('TOKEN SAVED SUCCESSFULLY');
 
-        // Pichhle user ke bache hue controller hatao -> dashboard naya data laye
+        // Remove the previous user's leftover controllers -> dashboard loads fresh data
         SessionCleaner.deleteControllers();
 
-        // Password manager ko bolo "Save password?" poochhe.
-        // Ye field khali karne se PEHLE hona chahiye.
+        // Tell the password manager to ask "Save password?".
+        // This must happen BEFORE the fields are cleared.
         TextInput.finishAutofillContext(shouldSave: true);
 
-        // Login ho gaya -> email / password field khali kar do
+        // Logged in -> clear the email / password fields
         emailController.clear();
         passwordController.clear();
 
@@ -185,8 +185,8 @@ class LoginController extends GetxController {
     try {
       debugPrint('🚪 LOGGING OUT');
 
-      // Saare controller, SharedPreferences (token, hotel id ...) aur
-      // download hui recordings saaf karo
+      // Clear all controllers, SharedPreferences (token, hotel id ...) and
+      // downloaded recordings
       await SessionCleaner.clearAll();
 
       // Google logout
@@ -200,7 +200,7 @@ class LoginController extends GetxController {
         return;
       }
 
-      // '/login' naam ka route app me nahi hai, isliye seedha screen kholo
+      // There is no route named '/login' in the app, so open the screen directly
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
         (route) => false,

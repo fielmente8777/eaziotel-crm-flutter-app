@@ -12,7 +12,7 @@ import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:get/get.dart';
 
 class AddContect extends StatefulWidget {
-  /// Diya ho to phone number pehle se bhara aata hai (jaise Calls page se)
+  /// If given, the phone number comes pre-filled (like from the Calls page)
   final String? initialPhone;
 
   const AddContect({super.key, this.initialPhone});
@@ -31,8 +31,8 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
     'CA',
   ];
 
-  /// Country ke hisab se national number ki (min, max) length.
-  /// Jo country list me nahi hai uske liye _fallbackRange use hota hai.
+  /// Length (min, max) of the national number by country.
+  /// _fallbackRange is used for countries not in the list.
   static const Map<String, (int, int)> _lengthRules = {
     'IN': (10, 10),
     'US': (10, 10),
@@ -59,10 +59,10 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
 
   Country selectedCountry = CountryService().findByCode('IN')!;
 
-  /// Chuna hua template object
+  /// The chosen template object
   dynamic selectedTemplate;
 
-  // Template ke variables jo user ne edit kiye (bhejne ke liye)
+  // Template variables edited by the user (to send)
   TemplateSendData? selectedTemplateData;
 
   bool isPickingContact = false;
@@ -97,8 +97,8 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  /// App background / tab switch par focus hata do, taaki wapas aane par
-  /// keyboard apne aap na khule.
+  /// Remove focus when the app goes to background / tabs switch, so the
+  /// keyboard does not open by itself on return.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) {
@@ -361,7 +361,7 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
     );
   }
 
-  /// Tap karne par WhatsappTemplateScreen popup khulta hai.
+  /// Tapping opens the WhatsappTemplateScreen popup.
   Widget _buildTemplateField(ThemeData theme, ColorScheme cs) {
     final hasTemplate = selectedTemplate != null;
 
@@ -533,14 +533,14 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
                 controller: controller,
                 sendLabel: 'Select',
                 onSend: (template) async {
-                  // Variables ({{1}}, {{2}} ...) edit karne ka popup
+                  // Popup to edit the variables ({{1}}, {{2}} ...)
                   final data = await showTemplateParamsEditor(
                     context,
                     template,
                     actionLabel: 'Done',
                   );
 
-                  // Cancel: template popup khula rahe
+                  // Cancel: keep the template popup open
                   if (data == null) return false;
 
                   if (mounted) {
@@ -549,7 +549,7 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
                       selectedTemplateData = data;
                     });
                   }
-                  return true; // popup band ho jayega
+                  return true; // the popup will close
                 },
               ),
             ),
@@ -558,7 +558,7 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
       },
     );
 
-    // Popup band hone ke baad keyboard wapas na khule
+    // Do not reopen the keyboard after the popup closes
     if (mounted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) phoneFocusNode.unfocus();
@@ -607,7 +607,7 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
   // VALIDATION
   // ===============================================================
 
-  /// null = number sahi hai, warna error message.
+  /// null = the number is valid, otherwise an error message.
   String? _validatePhone(String phone) {
     if (phone.isEmpty) {
       return 'Please enter a phone number.';
@@ -625,7 +625,7 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
           'You entered ${phone.length} digits.';
     }
 
-    // India: mobile number 6-9 se shuru hota hai
+    // India: mobile numbers start with 6-9
     if (code == 'IN' && !RegExp(r'^[6-9]').hasMatch(phone)) {
       return 'Indian mobile number 6, 7, 8 ya 9 se shuru hona chahiye.';
     }
@@ -729,8 +729,8 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
         TextPosition(offset: phoneController.text.length),
       );
 
-      // NOTE: yahan jaan-boojh kar requestFocus nahi kiya,
-      // warna contact pick ke baad keyboard khul jata tha.
+      // NOTE: requestFocus is deliberately not called here,
+      // otherwise the keyboard opened after picking a contact.
     } catch (e) {
       debugPrint('Contact picker error: $e');
       if (mounted) {
@@ -814,7 +814,7 @@ class _AddContectState extends State<AddContect> with WidgetsBindingObserver {
       return;
     }
 
-    // ---------- params (user ke edit kiye hue) ----------
+    // ---------- params (edited by the user) ----------
     final params = data.params;
     final headerParams = data.headerParams;
     final preview = data.preview;

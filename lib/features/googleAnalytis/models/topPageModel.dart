@@ -29,7 +29,7 @@ class TopPage {
   /// Seconds
   final double avgDuration;
 
-  /// 0.0 – 1.0 (API se fraction aata hai)
+  /// 0.0 – 1.0 (the API sends a fraction)
   final double bounceRate;
 
   const TopPage({
@@ -52,11 +52,11 @@ class TopPage {
         bounceRate: _d(json['bounceRate']),
       );
 
-  /// "app.eazotel.com/career" – https:// hata ke
+  /// "app.eazotel.com/career" – with https:// removed
   String get displayUrl =>
       fullUrl.replaceFirst(RegExp(r'^https?://'), '');
 
-  /// "1m 9s", "0m 18s" – screenshot jaisa
+  /// "1m 9s", "0m 18s" – like the screenshot
   String get avgTimeLabel {
     final t = avgDuration.round();
     return '${t ~/ 60}m ${t % 60}s';

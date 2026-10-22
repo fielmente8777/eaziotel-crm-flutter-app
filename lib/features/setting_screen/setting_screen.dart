@@ -1,15 +1,15 @@
 // ============================================================
 // SETTING SCREEN  (drawer > Settings)
 //
-// Ye sirf page ka dhancha hai:
-//   - upar tab bar  (Profile, WhatsApp, Eazbot ...)
-//   - neeche chune hue tab ka screen
+// This is only the page frame:
+//   - tab bar on top  (Profile, WhatsApp, Eazbot ...)
+//   - the selected tab's screen below
 //
-// Har tab ka apna folder hai:
+// Each tab has its own folder:
 //   profile/   whatsapp/   eazbot/   integration/
 //   team_management/   notification/   subscription/
 //
-// Naya tab banana ho: us folder me screen banao aur neeche _tabBody me jodo.
+// To add a new tab: make the screen in that folder and add it to _tabBody below.
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive_builder.dart';
@@ -29,7 +29,7 @@ import 'screen/widgets/setting_tabs.dart';
 class SettingScreen extends StatelessWidget {
   const SettingScreen({super.key});
 
-  /// Har tab apne feature folder ka screen kholta hai
+  /// Each tab opens the screen from its own feature folder
   Widget _tabBody(SettingTab tab) {
     switch (tab) {
       case SettingTab.profile:
@@ -56,7 +56,7 @@ class SettingScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: SafeArea(
-        // Phone / tablet / window: milne wali width se layout apne aap badalta hai
+        // Phone / tablet / window: the layout changes by itself with the available width
         child: TResponsiveBuilder(
           builder: (context, r) {
             return Column(

@@ -1,14 +1,14 @@
 // ============================================================
 // SETTING CONTROLLER
 //
-// Sirf ek kaam: yaad rakhna ki upar ka kaunsa tab chuna hua hai.
-// Har tab ka apna alag controller uske folder me hai.
+// Only one job: remember which top tab is selected.
+// Each tab has its own controller in its folder.
 // ============================================================
 
 import 'package:get/get.dart';
 
-/// Settings page ka shell: sirf upar ke tabs.
-/// Har tab ka apna feature folder hai (profile, whatsapp, eazbot ...).
+/// Shell of the Settings page: only the top tabs.
+/// Each tab has its own feature folder (profile, whatsapp, eazbot ...).
 enum SettingTab {
   profile('Profile'),
   whatsapp('WhatsApp'),

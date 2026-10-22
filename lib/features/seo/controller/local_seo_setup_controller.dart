@@ -1,11 +1,11 @@
 // ============================================================
-// LOCAL SEO SETUP CONTROLLER  (pehli baar ka 3 step wizard)
+// LOCAL SEO SETUP CONTROLLER  (the 3-step wizard for the first time)
 //
-//   Step 1  Business : naam, type (hotel/resort...), website
-//   Step 2  Location : map par tap / GPS -> lat, lng, district, city
-//   Step 3  Keywords : API se sujhaav (fail ho to apne aap bana dete hain)
+//   Step 1  Business : name, type (hotel/resort...), website
+//   Step 2  Location : tap on the map / GPS -> lat, lng, district, city
+//   Step 3  Keywords : suggestions from the API (if it fails, we make our own)
 //
-//   Finish -> onboarding API + track API (chune hue keyword)
+//   Finish -> onboarding API + track API (selected keywords)
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -51,7 +51,7 @@ class LocalSeoSetupController extends GetxController {
   final isSuggesting = false.obs;
   final isSaving = false.obs;
 
-  /// Text badalne par button on/off karne ke liye
+  /// To turn the button on/off when the text changes
   final _tick = 0.obs;
 
   List<TextEditingController> get _fields => [
@@ -82,7 +82,7 @@ class LocalSeoSetupController extends GetxController {
   }
 
   // ============================================================
-  // KAB AAGE JA SAKTE HAIN
+  // WHEN WE CAN GO NEXT
   // ============================================================
 
   double? get latValue => double.tryParse(lat.text.trim());
@@ -115,7 +115,7 @@ class LocalSeoSetupController extends GetxController {
   // STEP 2: LOCATION
   // ============================================================
 
-  /// Map par tap / GPS: lat-lng bharo, phir pata khud bharo
+  /// Tap on the map / GPS: fill lat-lng, then fill the address by itself
   Future<void> setPoint(double latitude, double longitude) async {
     lat.text = latitude.toStringAsFixed(6);
     lng.text = longitude.toStringAsFixed(6);
@@ -132,11 +132,11 @@ class LocalSeoSetupController extends GetxController {
       if (address.state.isNotEmpty) state.text = address.state;
       _pincode = address.pincode;
     } catch (_) {
-      // Pata na mile to user khud bhar sakta hai
+      // If the address is not found, the user can fill it in
     }
   }
 
-  /// Return: mila to lat/lng (map ko wahan le jaane ke liye)
+  /// Return: lat/lng if found (to move the map there)
   Future<({double lat, double lng})?> detectLocation() async {
     if (isLocating.value) return null;
 
@@ -200,7 +200,7 @@ class LocalSeoSetupController extends GetxController {
         response.suggestions.isEmpty ? _fallback() : response.suggestions,
       );
     } catch (_) {
-      // Web jaisa: API fail ho to khud bana do
+      // Same as web: if the API fails, make them ourselves
       suggestions.assignAll(_fallback());
     } finally {
       isSuggesting.value = false;
@@ -241,7 +241,7 @@ class LocalSeoSetupController extends GetxController {
   // FINISH
   // ============================================================
 
-  /// Return: null = ho gaya, text = error
+  /// Return: null = done, text = error
   Future<String?> submit() async {
     if (selected.isEmpty || isSaving.value) return null;
 

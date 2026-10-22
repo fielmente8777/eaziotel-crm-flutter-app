@@ -1,10 +1,10 @@
 // ============================================================
 // TEMPLATES CARD
 //
-// "WhatsApp Templates" wala card. controller.templates ki list dikhata hai.
+// The "WhatsApp Templates" card. Shows the controller.templates list.
 //   - Tablet / window : table  (_TemplateHeaderRow + _TemplateRow)
 //   - Phone           : card   (_TemplateTile)
-// Har template par teen button: Delete, Edit, View (_Actions).
+// Three buttons on each template: Delete, Edit, View (_Actions).
 // ============================================================
 
 import 'package:eazotel/features/whatsapp/models/whatsappTemaplateModle.dart';
@@ -218,13 +218,13 @@ class _Actions extends StatelessWidget {
   }
 }
 
-/// Table ke column ki chaudai. Heading aur har line me yahi use hoti hai,
-/// isliye dono hamesha seedh me rehte hain.
+/// Table column widths. Used in the heading and every line,
+/// so both always stay aligned.
 const int _nameFlex = 4;
 const int _otherFlex = 2;
 const double _actionsWidth = 120;
 
-/// Table ki sabse upar wali line: Name | Category | Language | Status | Actions
+/// The top line of the table: Name | Category | Language | Status | Actions
 class _TemplateHeaderRow extends StatelessWidget {
   const _TemplateHeaderRow();
 
@@ -268,7 +268,7 @@ class _TemplateHeaderRow extends StatelessWidget {
   }
 }
 
-/// Table me ek template ki line (tablet / window)
+/// One template line in the table (tablet / window)
 class _TemplateRow extends StatelessWidget {
   const _TemplateRow({
     required this.template,
@@ -334,7 +334,7 @@ class _TemplateRow extends StatelessWidget {
   }
 }
 
-/// Phone par ek template ka card
+/// One template card on phones
 class _TemplateTile extends StatelessWidget {
   const _TemplateTile({
     required this.template,

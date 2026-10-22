@@ -1,8 +1,8 @@
 // ============================================================
 // STEP 1: BOT BUILDER
 //
-//   Intro     : Eazbot kya karta hai
-//   Customize : rang chunna + greeting message + chhota preview
+//   Intro     : what Eazbot does
+//   Customize : pick a color + greeting message + small preview
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -157,7 +157,7 @@ class _Customize extends StatelessWidget {
   }
 }
 
-/// Chhota preview: greeting bubble + gol chat button
+/// Small preview: greeting bubble + round chat button
 class _Preview extends StatelessWidget {
   const _Preview({required this.color, required this.text});
 
@@ -242,7 +242,7 @@ class _ColorDot extends StatelessWidget {
   }
 }
 
-/// Khulne-band hone wala dabba (Intro / Customize)
+/// Box that opens and closes (Intro / Customize)
 class _Section extends StatelessWidget {
   const _Section({
     required this.title,

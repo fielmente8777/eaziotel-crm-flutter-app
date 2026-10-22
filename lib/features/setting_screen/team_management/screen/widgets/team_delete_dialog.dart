@@ -1,7 +1,7 @@
 // ============================================================
 // TEAM DELETE DIALOG
 //
-// "Delete user?" poochta hai. Haan kahne par controller.deleteUser.
+// Asks "Delete user?". On yes, controller.deleteUser.
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';

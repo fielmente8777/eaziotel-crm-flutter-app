@@ -1,9 +1,9 @@
 // ============================================================
 // ADS CAMPAIGNS
 //
-//   CampaignComparison : campaigns kharch ke hisaab se (tap -> wahi campaign)
-//                        window/tablet table, phone par card
-//   AdPreviewCard      : Google Search jaisa ad ka preview
+//   CampaignComparison : campaigns by spend (tap -> that campaign)
+//                        table on window/tablet, card on phone
+//   AdPreviewCard      : preview of the ad like Google Search
 // ============================================================
 
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';

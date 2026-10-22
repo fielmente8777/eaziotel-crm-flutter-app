@@ -1,8 +1,8 @@
 // ============================================================
 // ACCOUNT CARDS
 //
-// Is file me do card hain. Dono controller.info se data padhte hain:
-//   1. WhatsappAccountCard : naam, WABA ID, Business ID
+// This file has two cards. Both read data from controller.info:
+//   1. WhatsappAccountCard : name, WABA ID, Business ID
 //   2. WhatsappPhoneCard   : number, quality rating, platform, mode
 // ============================================================
 
@@ -13,7 +13,7 @@ import 'package:get/get.dart';
 import '../../../screen/widgets/setting_section_card.dart';
 import '../../controller/whatsapp_setting_controller.dart';
 
-/// "WhatsApp Business Account" card: naam, WABA ID, Business ID
+/// "WhatsApp Business Account" card: name, WABA ID, Business ID
 class WhatsappAccountCard extends StatelessWidget {
   const WhatsappAccountCard({super.key, required this.controller});
 
@@ -117,7 +117,7 @@ class WhatsappPhoneCard extends StatelessWidget {
 
         final quality = info.qualityRating;
 
-        // Web jaisa: message tabhi jaate hain jab Cloud API + LIVE ho
+        // Same as web: messages go only when Cloud API + LIVE
         final isCloudApi = info.platform.toUpperCase() == 'CLOUD_API';
         final isLive = info.accountMode.toUpperCase() == 'LIVE';
         final connected = isCloudApi && isLive;

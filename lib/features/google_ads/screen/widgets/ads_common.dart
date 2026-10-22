@@ -1,13 +1,13 @@
 // ============================================================
 // ADS COMMON
 //
-// Google Ads screen ke chhote widget + formatter:
+// Small widgets + formatters for the Google Ads screen:
 //   AdsFormat  : ₹1,234.50 / 12.3K / 4.56%
-//   AdsPanel   : title + subtitle wala dabba
-//   KpiCard    : bada number + pichhle range se badlav %
-//   MiniStat   : chhota number
-//   EmptyMini  : "data nahi" ka dabba
-//   AdsShimmer : loading ke time bhoore dabbe
+//   AdsPanel   : box with a title + subtitle
+//   KpiCard    : big number + change % from the previous range
+//   MiniStat   : small number
+//   EmptyMini  : "no data" box
+//   AdsShimmer : grey boxes while loading
 // ============================================================
 
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
@@ -130,11 +130,11 @@ class KpiCard extends StatelessWidget {
   final String value;
   final Color color;
 
-  /// 0.12 = +12% (null = mat dikhao)
+  /// 0.12 = +12% (null = do not show)
   final double? change;
   final String? hint;
 
-  /// Cost jaisa: kam hona achha hai (hara)
+  /// Like Cost: lower is better (green)
   final bool lowerIsBetter;
 
   @override
@@ -293,7 +293,7 @@ class EmptyMini extends StatelessWidget {
   }
 }
 
-/// Grid me barabar chaudai ke dabbe (phone 2, tablet 3, window [wide])
+/// Equal-width boxes in a grid (phone 2, tablet 3, window [wide])
 class AdsGrid extends StatelessWidget {
   const AdsGrid({
     super.key,

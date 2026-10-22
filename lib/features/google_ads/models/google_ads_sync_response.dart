@@ -1,7 +1,7 @@
 // ============================================================
 // GOOGLE ADS SYNC RESPONSE
 // GET /api/v1/google-ads/sync?startDate=&endDate=&targetAccountId=&targetCampaignId=
-// (Google se taaza data DB me laata hai)
+// (pulls fresh data from Google into the DB)
 // ============================================================
 
 import 'google_ads_common.dart';

@@ -1,9 +1,9 @@
 // ============================================================
 // SOCIAL MEDIA SCREEN  (Drawer > Social Media)
 //
-// Web jaisa: social media ka kaam alag portal (social.eazotel.com) par
-// hota hai. Yahan kya milta hai wo dikhao + button se portal kholo
-// (browser me).
+// Same as web: social media work happens on a separate portal (social.eazotel.com).
+// Here we show what it offers + a button to open the portal
+// (in the browser).
 // ============================================================
 
 import 'package:eazotel/core/constants/api_endpoints.dart';

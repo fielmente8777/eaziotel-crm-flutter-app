@@ -60,7 +60,7 @@ Container leads_detail_body(
                     ? TAppColors.whatsappDark
                     : TAppColors.whatsappLight,
                 onTap: () {
-                  // App ke andar wali WhatsApp chat (na ho to Add Contact)
+                  // In-app WhatsApp chat (Add Contact if there is none)
                   WhatsappChatOpener.open(
                     context,
                     phone: phone,

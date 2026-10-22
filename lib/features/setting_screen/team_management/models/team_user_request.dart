@@ -1,8 +1,8 @@
 // ============================================================
 // TEAM USER REQUEST (model)
 //
-// Create / Edit user ki API ka body banata hai.
-// Controller sirf form ki value deta hai; body ki shakal yahin tay hoti hai.
+// Builds the body for the Create / Edit user API.
+// The controller only gives the form values; the body shape is decided here.
 //
 //   POST /user/create/<token>   (Create)
 //   POST /user/edit/<token>     (Edit)
@@ -28,15 +28,15 @@ class TeamUserRequest {
   final String phone;
   final String email;
 
-  /// Optional. Edit me server ko hamesha khali jata hai.
+  /// Optional. On Edit it is always sent empty to the server.
   final String password;
 
   final LocationOption location;
 
-  /// Chune hue Access Control checkbox (TeamAccess.permissions ki keys)
+  /// Chosen Access Control checkboxes (keys of TeamAccess.permissions)
   final Set<String> selected;
 
-  /// null = naya user (Create), warna jis user ko badalna hai (Edit)
+  /// null = new user (Create), otherwise the user being changed (Edit)
   final UserModel? existing;
 
   bool get isEdit => existing != null;
@@ -53,15 +53,15 @@ class TeamUserRequest {
       'access_id': isEdit ? '' : password,
       'isAdmin': false,
       'assigned_location': [
-        // Edit me user ke baaki hotel jaise the waise hi rahein
+        // On Edit, the user's other hotels stay as they were
         if (user != null)
           for (final other in user.assignedLocation)
             if (other.hid != location.hid) other.toJson(),
 
-        // Chuna hua hotel, nayi access setting ke saath
+        // The chosen hotel, with the new access setting
         {
           'hid': location.hid,
-          // Web ka spelling aisa hi hai, aur ye sirf Create me jata hai
+          // The web spells it this way, and it is sent only on Create
           if (!isEdit) 'disPlayLocation': location.name,
           'accessScope': TeamAccess.buildScope(
             selected,

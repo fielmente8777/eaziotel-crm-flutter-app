@@ -1,8 +1,8 @@
 // ============================================================
 // SETTING TABS
 //
-// Settings page ke upar ka tab bar. Chhoti screen par side me scroll hota hai.
-// Tab dabane par SettingController.selectedTab badalta hai.
+// Tab bar at the top of the Settings page. Scrolls sideways on small screens.
+// Tapping a tab changes SettingController.selectedTab.
 // ============================================================
 
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
@@ -11,7 +11,7 @@ import 'package:get/get.dart';
 
 import '../../controller/setting_controller.dart';
 
-/// Upar ke tabs (chhoti screen par side me scroll hote hain)
+/// Top tabs (scroll sideways on small screens)
 class SettingTabs extends StatelessWidget {
   const SettingTabs({
     super.key,

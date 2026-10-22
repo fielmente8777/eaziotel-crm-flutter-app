@@ -1,6 +1,6 @@
 // ============================================================
 // WHATSAPP ACTION RESPONSE
-// Jo API sirf "ho gaya / nahi hua" batati hain (save, delete, create):
+// For APIs that only say "done / not done" (save, delete, create):
 //   template create / update / delete, auto message save, AI save,
 //   flow create, quick reply save / delete
 //
@@ -18,7 +18,7 @@ class WhatsappActionResponse {
   final String? responseMessage;
   final dynamic result;
 
-  /// Meta ka error (template reject): error.error.error_user_msg
+  /// Meta's error (template rejected): error.error.error_user_msg
   final String? metaError;
 
   WhatsappActionResponse({
@@ -50,13 +50,13 @@ class WhatsappActionResponse {
     };
   }
 
-  /// Server ka sabse kaam ka message (na ho to [fallback])
+  /// The server's most useful message ([fallback] if none)
   String message(String fallback) {
     final text = metaError ?? responseMessage;
     return text == null || text.trim().isEmpty ? fallback : text;
   }
 
-  /// Fail hui API (ApiException) se padhne layak message
+  /// A readable message from a failed API (ApiException)
   static String errorOf(Object error, String fallback) {
     if (error is ApiException) {
       try {

@@ -1,11 +1,11 @@
 // ============================================================
 // TEAM MANAGEMENT CONTROLLER
 //
-//   Screen (widgets)  --->  ye controller  --->  TeamManagementService  --->  API
+//   Screen (widgets)  --->  this controller  --->  TeamManagementService  --->  API
 //
-// Is file me 4 hisse hain:
-//   1. MEMBERS   : selected hotel ke team members (dashboard ke data se)
-//   2. LOCATIONS : form ke "Select Location" dropdown ke hotel
+// This file has 4 parts:
+//   1. MEMBERS   : team members of the selected hotel (from the dashboard data)
+//   2. LOCATIONS : hotels for the form's "Select Location" dropdown
 //   3. SAVE      : form check + Create / Edit API
 //   4. DELETE    : user hatana
 // ============================================================
@@ -21,7 +21,7 @@ import '../models/team_user_request.dart';
 import '../services/team_management_service.dart';
 
 class TeamManagementController extends GetxController {
-  /// Users, hotels aur selected hotel dashboard se milte hain
+  /// Users, hotels and the selected hotel come from the dashboard
   final DashboardController dashboard = Get.isRegistered<DashboardController>()
       ? Get.find<DashboardController>()
       : Get.put(DashboardController());
@@ -29,12 +29,12 @@ class TeamManagementController extends GetxController {
   String get selectedHotelId => dashboard.selectedHotelId.value;
 
   // ============================================================
-  // 1. MEMBERS  (sirf selected hotel ke)
+  // 1. MEMBERS  (only of the selected hotel)
   //
-  //   - superadmin hamesha dikhta hai (poore account par access)
-  //   - baaki users tab, jab unka koi assigned hotel selected hotel ho
+  //   - superadmin always shows (has access to the whole account)
+  //   - other users only when one of their assigned hotels is the selected hotel
   //
-  // Obx ke andar padho to hotel badalne par list apne aap badalti hai.
+  // Read inside Obx so the list changes by itself when the hotel changes.
   // ============================================================
 
   List<UserModel> get members {
@@ -49,7 +49,7 @@ class TeamManagementController extends GetxController {
   }
 
   // ============================================================
-  // 2. LOCATIONS  (profile.hotels se)
+  // 2. LOCATIONS  (from profile.hotels)
   // ============================================================
 
   List<LocationOption> get locations {
@@ -64,7 +64,7 @@ class TeamManagementController extends GetxController {
     ];
   }
 
-  /// Create form me pehle se chuna hua hotel (jo abhi selected hai)
+  /// Hotel pre-selected in the Create form (the one selected now)
   LocationOption? get selectedLocation =>
       locations.firstWhereOrNull((location) => location.hid == selectedHotelId);
 
@@ -72,11 +72,11 @@ class TeamManagementController extends GetxController {
   // 3. SAVE  (Create / Edit)
   // ============================================================
 
-  /// true = Save chal raha hai (button par "Saving...")
+  /// true = Save is running ("Saving..." on the button)
   final isSaving = false.obs;
 
-  /// [existing] null = Create, warna Edit.
-  /// Return: null = ho gaya, text = form me dikhane wala error.
+  /// [existing] null = Create, otherwise Edit.
+  /// Return: null = done, text = error to show in the form.
   Future<String?> saveUser({
     UserModel? existing,
     required String name,
@@ -88,7 +88,7 @@ class TeamManagementController extends GetxController {
   }) async {
     if (isSaving.value) return null;
 
-    // ---------- Form check (password ke alawa sab zaroori) ----------
+    // ---------- Form check (everything except password is required) ----------
     final error = _validate(
       name: name,
       phone: phone,
@@ -177,7 +177,7 @@ class TeamManagementController extends GetxController {
   // HELPERS
   // ============================================================
 
-  /// Create / Edit / Delete ke baad list dobara lao
+  /// Reload the list after Create / Edit / Delete
   Future<void> _reloadMembers() => dashboard.getUserDetails();
 
   /// "Exception: User already exists" -> "User already exists"

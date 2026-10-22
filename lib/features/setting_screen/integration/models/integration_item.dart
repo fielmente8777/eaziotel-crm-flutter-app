@@ -1,13 +1,13 @@
 // ============================================================
 // INTEGRATION ITEM
 //
-// Integrations page ka ek card (Gmail, WhatsApp, Exotel ...).
-// "Connected" hai ya nahi, ye integration/get API ke result.docs se aata hai.
+// One card on the Integrations page (Gmail, WhatsApp, Exotel ...).
+// Whether it is "Connected" comes from result.docs of the integration/get API.
 // ============================================================
 
 import 'package:flutter/material.dart';
 
-/// Upar ke tabs: All / Communication / Analytics
+/// Tabs on top: All / Communication / Analytics
 enum IntegrationCategory {
   all('All'),
   communication('Communication'),
@@ -29,7 +29,7 @@ class IntegrationItem {
     this.connected = false,
   });
 
-  /// integration/get ke docs me iska naam (jaise "metaWhatsapp")
+  /// Its name in the integration/get docs (like "metaWhatsapp")
   final String apiKey;
   final String title;
   final String description;
@@ -48,7 +48,7 @@ class IntegrationItem {
     connected: connected,
   );
 
-  /// Web dashboard jaisa list. Order bhi wahi.
+  /// Same list as the web dashboard. Same order too.
   static const List<IntegrationItem> all = [
     IntegrationItem(
       apiKey: 'gmail',
@@ -128,7 +128,7 @@ class IntegrationItem {
     ),
   ];
 
-  /// docs me value true ho, ya {"status": true} ho = connected
+  /// connected = the docs value is true, or {"status": true}
   static bool isOn(dynamic value) {
     if (value is bool) return value;
     if (value is Map) return value['status'] == true;
@@ -136,7 +136,7 @@ class IntegrationItem {
   }
 }
 
-/// Google account (Search Console) ka status: `/google/status/<hid>`
+/// Status of the Google account (Search Console): `/google/status/<hid>`
 class GoogleConnection {
   const GoogleConnection({this.connected = false, this.email = ''});
 

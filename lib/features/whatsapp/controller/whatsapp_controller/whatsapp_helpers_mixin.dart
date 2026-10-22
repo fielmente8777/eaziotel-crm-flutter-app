@@ -3,10 +3,10 @@ part of '../whatsappController.dart';
 // ============================================================
 // WHATSAPP HELPERS MIXIN
 //
-// Baaki mixins ke saanjhe chhote helper:
-//   - text / map saaf karna, unread ginna, last message banana
-//   - khuli chat ke messages padhna / badalna
-//   - message / socket message / conversation ki copy banana
+// Small helpers shared by the other mixins:
+//   - clean text / map, count unread, build the last message
+//   - read / change the open chat's messages
+//   - copy a message / socket message / conversation
 //   - lead NDID cache
 // ============================================================
 
@@ -24,7 +24,7 @@ mixin WhatsappHelpersMixin on WhatsappStateMixin {
     return (sender == null || sender.isEmpty) ? 'contact' : sender;
   }
 
-  /// null / khali / "null" -> null
+  /// null / empty / "null" -> null
   String? _cleanString(dynamic value) {
     final text = value?.toString().trim();
     return (text == null || text.isEmpty || text == 'null') ? null : text;
@@ -36,7 +36,7 @@ mixin WhatsappHelpersMixin on WhatsappStateMixin {
   String? _getSocketNdid(Map<String, dynamic> data) =>
       _cleanString(data['ndid']);
 
-  /// Server ka unread_count -> warna chat khuli ho to 0 -> incoming par +1
+  /// The server's unread_count -> otherwise 0 if the chat is open -> +1 on incoming
   int _resolveUnreadCount({
     required int oldCount,
     required Map<String, dynamic> raw,
@@ -83,7 +83,7 @@ mixin WhatsappHelpersMixin on WhatsappStateMixin {
     'interactive': 'Interactive message',
   };
 
-  /// Body ho to wahi, warna type ka label (jaise "📷 Photo")
+  /// The body if there is one, otherwise the type's label (like "📷 Photo")
   String _lastMessageText(WhatsappSocketMessageModel m) {
     final body = m.body?.trim() ?? '';
     if (body.isNotEmpty) return body;
@@ -92,14 +92,14 @@ mixin WhatsappHelpersMixin on WhatsappStateMixin {
   }
 
   // ============================================================
-  // KHULI CHAT KE MESSAGES (messagesResponse)
+  // MESSAGES OF THE OPEN CHAT (messagesResponse)
   // ============================================================
 
   List<WhatsappMessageModel> get _openMessages =>
       messagesResponse.value?.result?.messages ??
       const <WhatsappMessageModel>[];
 
-  /// messagesResponse ki baaki cheezein waisi hi rakh kar sirf messages badlo
+  /// Keep everything else in messagesResponse the same, change only the messages
   void _setOpenMessages(List<WhatsappMessageModel> messages) {
     final response = messagesResponse.value;
     if (response == null) return;
@@ -184,13 +184,13 @@ mixin WhatsappHelpersMixin on WhatsappStateMixin {
   int _conversationIndex(String id) =>
       conversations.indexWhere((c) => c.id == id);
 
-  /// Jis conversation ke last_message ka message_id ye ho
+  /// The conversation whose last_message has this message_id
   int _conversationIndexByLastMessageId(String messageId) =>
       conversations.indexWhere(
         (c) => c.lastMessage?.toJson()['message_id']?.toString() == messageId,
       );
 
-  /// Conversation ke kuch field badlo. [toTop] = list me sabse upar le jao.
+  /// Change some fields of a conversation. [toTop] = move it to the top of the list.
   void _updateConversation(
     int index,
     Map<String, dynamic> changes, {
@@ -241,7 +241,7 @@ mixin WhatsappHelpersMixin on WhatsappStateMixin {
     _leadNdids = ndids;
   }
 
-  /// JSON ke andar har jagah "ndid" key dhoondta hai
+  /// Looks for the "ndid" key everywhere inside the JSON
   void _collectNdids(dynamic value, Set<String> result) {
     if (value is Map) {
       for (final entry in value.entries) {
@@ -258,9 +258,9 @@ mixin WhatsappHelpersMixin on WhatsappStateMixin {
     }
   }
 
-  /// Socket ka NDID allowed hai ya nahi.
-  ///   leadResponse set hai -> sirf lead NDID se match
-  ///   warna                -> load hui conversations ke NDID se match
+  /// Whether the socket's NDID is allowed.
+  ///   leadResponse is set -> match only the lead NDIDs
+  ///   otherwise           -> match the NDIDs of the loaded conversations
   bool _isLeadNdid(String ndid) {
     final value = ndid.trim();
 

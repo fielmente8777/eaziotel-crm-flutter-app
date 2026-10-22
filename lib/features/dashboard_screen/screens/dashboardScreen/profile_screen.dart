@@ -128,7 +128,7 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               // ==============================
-              // THEME SWITCH (drawer me bhi yahi)
+              // THEME SWITCH (the drawer uses this too)
               // ==============================
               const AppThemeSwitch(),
 

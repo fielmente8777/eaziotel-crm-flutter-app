@@ -99,7 +99,7 @@ class WhatsappConversationDetailController extends GetxController {
   int get totalUnreadCount => initialUnreadCount.value + newIncomingCount.value;
 
   // ============================================================
-  // SAFE MESSAGE (snackbar crash na ho)
+  // SAFE MESSAGE (so the snackbar does not crash)
   // ============================================================
 
   void _showMessage(String title, String message) {
@@ -347,7 +347,7 @@ class WhatsappConversationDetailController extends GetxController {
   // ============================================================
   // SEND FLOW MESSAGE
   // (local list update + API + temp id -> real id
-  //  WhatsappController.sendFlowMessage me hota hai)
+  //  happens in WhatsappController.sendFlowMessage)
   // ============================================================
 
   Future<bool> sendFlowMessage({
@@ -446,8 +446,8 @@ class WhatsappConversationDetailController extends GetxController {
 
   // ============================================================
   // GALLERY / CAMERA PICK
-  // (Android Photo Picker aur system camera app use hota hai, isliye
-  //  storage / camera permission manifest me daalne ki zarurat nahi)
+  // (The Android Photo Picker and the system camera app are used, so
+  //  no storage / camera permission is needed in the manifest)
   // ============================================================
 
   // WhatsApp video limit
@@ -465,14 +465,14 @@ class WhatsappConversationDetailController extends GetxController {
         lower.endsWith('.avi');
   }
 
-  /// Preview me jo file hai wo video hai ya image
+  /// Whether the file in the preview is a video or an image
   bool get pickedIsVideo {
     final file = pickedImage.value;
 
     return file != null && _isVideoPath(file.path);
   }
 
-  /// Gallery se image ya video chuno
+  /// Pick an image or video from the gallery
   Future<void> pickImageFromGallery() async {
     try {
       final XFile? x = await _picker.pickMedia(
@@ -483,7 +483,7 @@ class WhatsappConversationDetailController extends GetxController {
       if (x == null) return;
 
       if (_isVideoPath(x.path)) {
-        // WhatsApp sirf MP4 video leta hai, 16 MB tak
+        // WhatsApp accepts only MP4 videos, up to 16 MB
         if (!x.path.toLowerCase().endsWith('.mp4')) {
           _showMessage('Video', 'Sirf MP4 video bheji ja sakti hai');
 
@@ -506,7 +506,7 @@ class WhatsappConversationDetailController extends GetxController {
     }
   }
 
-  /// Camera se photo lo — gallery wali image ki tarah preview me aati hai
+  /// Take a photo with the camera — it shows in the preview like a gallery image
   Future<void> pickImageFromCamera() => _pickImage(ImageSource.camera);
 
   Future<void> _pickImage(ImageSource source) async {
@@ -537,8 +537,8 @@ class WhatsappConversationDetailController extends GetxController {
   // LOCATION (send as Google Maps link)
   // ============================================================
 
-  /// Location picker se chuni hui jagah bhejta hai.
-  /// Chat me ye link wala message map card ban kar dikhta hai.
+  /// Sends the place picked in the location picker.
+  /// In the chat this link message shows as a map card.
   Future<void> sendLocation({
     required double latitude,
     required double longitude,
@@ -554,7 +554,7 @@ class WhatsappConversationDetailController extends GetxController {
   }
   // ============================================================
   // IMAGE CACHE HELPERS
-  // WhatsappMediaController ye file naam expect karta hai:
+  // WhatsappMediaController expects this file name:
   //   <documents>/whatsapp_image_<safeMessageId>.<ext>
   // ============================================================
 
@@ -570,7 +570,7 @@ class WhatsappConversationDetailController extends GetxController {
       '_',
     );
 
-    // Video ke liye WhatsappMediaController "whatsapp_video_" dhundhta hai
+    // For videos WhatsappMediaController looks for "whatsapp_video_"
     final prefix = isVideo ? 'whatsapp_video' : 'whatsapp_image';
 
     return File('${dir.path}/${prefix}_$safeId.$extension');
@@ -631,7 +631,7 @@ class WhatsappConversationDetailController extends GetxController {
     File? cachedFile;
 
     try {
-      // 1) Image ko app storage me copy karo (temp id ke naam se)
+      // 1) Copy the image to app storage (named with the temp id)
       final target = await _cachedImageFile(
         tempMessageId,
         extension,
@@ -640,7 +640,7 @@ class WhatsappConversationDetailController extends GetxController {
 
       cachedFile = await file.copy(target.path);
 
-      // 2) Turant chat me dikhao (WhatsApp jaisa)
+      // 2) Show it in the chat right away (like WhatsApp)
       whatsappController.addSentMessageToCurrentConversation(
         phone: phone,
         text: caption.isNotEmpty
@@ -662,7 +662,7 @@ class WhatsappConversationDetailController extends GetxController {
         }
       });
 
-      // 3) Server par upload (progress image / video ke upar dikhta hai)
+      // 3) Upload to the server (progress shows over the image / video)
       WhatsappUploadProgress.update(tempMessageId, 0);
 
       final response = await WhatsappMessageSand.sendWhatsappImage(
@@ -670,7 +670,7 @@ class WhatsappConversationDetailController extends GetxController {
         phone: phone,
         file: file,
         caption: caption,
-        // 100% tabhi jab server ka jawab aa jaye, tab tak 99% par ruko
+        // 100% only when the server answers; stay at 99% until then
         onProgress: (value) => WhatsappUploadProgress.update(
           tempMessageId,
           value > 0.99 ? 0.99 : value,
@@ -679,7 +679,7 @@ class WhatsappConversationDetailController extends GetxController {
 
       debugPrint('IMAGE SEND SUCCESS: ${response.body}');
 
-      // 4) Real message id mila -> file rename, phir id replace
+      // 4) Got the real message id -> rename the file, then replace the id
       String? realMessageId;
 
       try {
@@ -716,7 +716,7 @@ class WhatsappConversationDetailController extends GetxController {
       debugPrint('IMAGE SEND ERROR: $e');
       debugPrintStack(stackTrace: st);
 
-      // Fail hua -> chat se message hatao, image wapas preview me
+      // Failed -> remove the message from the chat, put the image back in the preview
       try {
         await whatsappController.deleteMessages([tempMessageId]);
       } catch (_) {}
@@ -748,12 +748,12 @@ class WhatsappConversationDetailController extends GetxController {
   }
 
   // ============================================================
-  // SEND BUTTON HANDLER (image ho to image, warna text)
+  // SEND BUTTON HANDLER (image if there is one, otherwise text)
   // ============================================================
 
   Future<void> sendMessage() async {
     if (pickedImage.value != null) {
-      // Ek time par ek hi file upload (text is dauran bhi bhej sakte hain)
+      // Only one file uploads at a time (text can still be sent meanwhile)
       if (isUploading.value) {
         _showMessage('Please wait', 'Pehli file abhi upload ho rahi hai');
 

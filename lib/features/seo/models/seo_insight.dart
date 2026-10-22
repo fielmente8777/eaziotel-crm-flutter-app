@@ -1,9 +1,9 @@
 // ============================================================
-// SEO INSIGHT  (API nahi, keywords se banta hai - web jaisa)
+// SEO INSIGHT  (not an API, built from the keywords - same as web)
 //
-//   mapsGap     : zyada search wala keyword, Map 3-Pack me nahi
-//   almostThere : organic rank 4-10 (top 3 ke paas)
-//   defend      : Map 3-Pack me hai, bachaye rakho
+//   mapsGap     : a keyword with many searches that is not in the Map 3-Pack
+//   almostThere : organic rank 4-10 (close to the top 3)
+//   defend      : in the Map 3-Pack, keep it there
 // ============================================================
 
 import 'seo_intelligence_response.dart';

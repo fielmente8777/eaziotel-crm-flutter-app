@@ -1,16 +1,16 @@
 // ============================================================
 // META INSIGHTS SCREEN  (Drawer > Meta Insights)
 //
-// Web ke "Meta Page Insights" jaisa:
-//   upar   : Today / 7 days / 28 days / 90 days
+// Like "Meta Page Insights" on the web:
+//   top    : Today / 7 days / 28 days / 90 days
 //   cards  : Followers, New Followers, Reach, Impressions, Video Views
-//            (▲ / ▼ badlav ke saath)
-//   charts : Reach, Engagements (roz ka)
-//   posts  : sabse achhe post (tap = Facebook par kholo)
+//            (with ▲ / ▼ change)
+//   charts : Reach, Engagements (daily)
+//   posts  : the best posts (tap = open on Facebook)
 //
-// Phone: cards 2 column, charts ek ke neeche ek.
-// Tablet: cards 3, charts saath me.  Window: cards 5.
-// Meta juda nahi / error -> message + "Open Integrations".
+// Phone: cards in 2 columns, charts stacked.
+// Tablet: 3 cards, charts side by side.  Window: 5 cards.
+// Meta not connected / error -> message + "Open Integrations".
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive.dart';

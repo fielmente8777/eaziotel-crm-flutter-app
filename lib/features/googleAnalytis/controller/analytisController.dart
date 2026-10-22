@@ -22,7 +22,7 @@ class AnalytisController extends GetxController {
   final isGeoLoading = false.obs; // countries + cities
   final isAudienceLoading = false.obs; // users by device / country
 
-  // Hotel ka Google Analytics connect nahi hai
+  // The hotel's Google Analytics is not connected
   final isNotConnected = false.obs;
   static const String notConnectedError = 'GA property not connected';
 
@@ -66,7 +66,7 @@ class AnalytisController extends GetxController {
     loadAll();
   }
 
-  /// Saari APIs ek saath
+  /// All APIs together
   Future<void> loadAll() async {
     await Future.wait([
       getAnalytics(),
@@ -138,7 +138,7 @@ class AnalytisController extends GetxController {
       topPagesData.value = TopPagesModel.fromJson(json);
     } catch (e) {
       print('Top Pages Error: $e');
-      topPagesData.value = null; // purana hotel/range ka data na dikhe
+      topPagesData.value = null; // so old hotel/range data is not shown
     } finally {
       isPagesLoading.value = false;
     }

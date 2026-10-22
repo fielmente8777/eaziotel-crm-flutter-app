@@ -19,7 +19,7 @@ class AnalyticsPalette {
 
 
 
-  /// Channel ke naam se color (screenshot wale colors)
+  /// Color by channel name (the colors from the screenshot)
 Color channelColorFor(String name) {
   switch (name.toLowerCase()) {
     case 'direct':
@@ -45,7 +45,7 @@ Color channelColorFor(String name) {
   }
 }
 
-  /// Har metric ka apna attractive color
+  /// Each metric's own attractive color
   Color accent(AnalyticsMetric m) {
     switch (m) {
       case AnalyticsMetric.activeUsers:

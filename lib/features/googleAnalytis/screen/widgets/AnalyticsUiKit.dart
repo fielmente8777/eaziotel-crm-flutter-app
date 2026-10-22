@@ -1,6 +1,6 @@
 // lib/features/googleAnalytis/screen/widgets/analytics_ui_kit.dart
 //
-// Geo + Audience cards ke shared pieces.
+// Shared pieces of the Geo + Audience cards.
 
 import 'package:eazotel/features/googleAnalytis/screen/widgets/analytics_layout.dart';
 import 'package:eazotel/features/googleAnalytis/screen/widgets/analytics_palette.dart';
@@ -54,7 +54,7 @@ IconData deviceIcon(String name) {
   }
 }
 
-/// Section ka bada heading + subtitle
+/// Big section heading + subtitle
 class SectionHeading extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -116,7 +116,7 @@ class SectionHeading extends StatelessWidget {
   }
 }
 
-/// Card shell: top gradient line + halka tint
+/// Card shell: gradient line on top + light tint
 class AnalyticsShell extends StatelessWidget {
   final String title;
   final Color accent;
@@ -238,13 +238,13 @@ class AnimatedPercentText extends StatelessWidget {
   }
 }
 
-/// 0 se fill hone wala gradient bar, active par glow
+/// gradient bar that fills from 0, glows when active
 class GlowBar extends StatelessWidget {
   final double ratio; // 0..1
   final Color color;
   final bool active;
   final double height;
-  final int index; // stagger ke liye
+  final int index; // for the stagger
 
   const GlowBar({
     super.key,
@@ -294,11 +294,11 @@ class GlowBar extends StatelessWidget {
   }
 }
 
-/// Card ke andar loading: shimmer rows (label + value + bar)
+/// Loading inside a card: shimmer rows (label + value + bar)
 Widget analyticsLoader({int rows = 4}) => AnalyticsShimmer(rows: rows);
 
-/// Shimmer placeholder. [blockHeight] do to rows ki jagah ek bada block
-/// (chart ke liye) banta hai.
+/// Shimmer placeholder. Give [blockHeight] to get one big block instead of rows
+/// (for charts).
 class AnalyticsShimmer extends StatelessWidget {
   final int rows;
   final double? blockHeight;
@@ -359,7 +359,7 @@ class AnalyticsShimmer extends StatelessWidget {
   }
 }
 
-/// Poora card shimmer (metric tabs / line chart ki jagah)
+/// Whole-card shimmer (in place of metric tabs / line chart)
 class AnalyticsShimmerCard extends StatelessWidget {
   final double height;
   final AnalyticsLayout layout;
@@ -392,7 +392,7 @@ Widget analyticsEmpty(AnalyticsPalette c, [String msg = 'No data']) => Padding(
       child: Center(child: Text(msg, style: TextStyle(color: c.subText))),
     );
 
-/// Hover/tap state wala mixin — har card me same logic
+/// Mixin for hover/tap state — same logic in every card
 mixin HoverSelect<T extends StatefulWidget, K> on State<T> {
   K? selectedKey;
   K? hoverKey;

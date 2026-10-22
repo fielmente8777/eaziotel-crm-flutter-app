@@ -1,12 +1,12 @@
 // ============================================================
 // INTEGRATION SETTING CONTROLLER
 //
-//   Screen (widgets)  --->  ye controller  --->  IntegrationSettingService  --->  API
+//   Screen (widgets)  --->  this controller  --->  IntegrationSettingService  --->  API
 //
-// Is file me 4 hisse hain:
-//   1. DATA LOAD      : kaunsi integration connected hai + Search Console
+// This file has 4 parts:
+//   1. DATA LOAD      : which integrations are connected + Search Console
 //   2. FILTER         : search box + All / Communication / Analytics tabs
-//   3. SEARCH CONSOLE : property type + domain save karna
+//   3. SEARCH CONSOLE : save the property type + domain
 //   4. BUTTONS        : Connect / Disconnect
 // ============================================================
 
@@ -32,20 +32,20 @@ class IntegrationSettingController extends GetxController {
 
   final isLoading = true.obs;
 
-  /// null = sab theek. Text ho to poori screen par message + Retry.
+  /// null = all good. If there is text, a full-screen message + Retry.
   final errorMessage = RxnString();
 
   final items = <IntegrationItem>[].obs;
   final google = const GoogleConnection().obs;
 
-  /// Search Console ki saved setting
+  /// Saved Search Console setting
   final gsc = const GscSettings().obs;
 
-  /// Hotel ki Google Analytics property (null = GA juda nahi, Search Console
-  /// setting save nahi ho sakti)
+  /// The hotel's Google Analytics property (null = GA not connected, Search Console
+  /// settings cannot be saved)
   final gaPropertyId = RxnString();
 
-  /// Google login ke liye browser khula tha -> app wapas aane par status dobara lao
+  /// The browser was opened for Google login -> reload the status when the app comes back
   bool _waitingForBrowser = false;
   AppLifecycleListener? _lifecycle;
 
@@ -96,7 +96,7 @@ class IntegrationSettingController extends GetxController {
       return;
     }
 
-    // Search Console. Fail ho jaye to bhi baaki page dikhta hai.
+    // Search Console. The rest of the page shows even if this fails.
     await Future.wait([_loadGoogleStatus(), _loadSearchConsole()]);
 
     isLoading.value = false;
@@ -147,7 +147,7 @@ class IntegrationSettingController extends GetxController {
     }).toList();
   }
 
-  /// Search Console card Analytics tab ka hissa hai
+  /// The Search Console card is part of the Analytics tab
   bool get showSearchConsole {
     final inTab =
         category.value == IntegrationCategory.all ||
@@ -171,7 +171,7 @@ class IntegrationSettingController extends GetxController {
       .replaceFirst(RegExp(r'^www\.'), '')
       .replaceFirst(RegExp(r'/+$'), '');
 
-  /// Return: null = save ho gaya, text = form me dikhane wala error
+  /// Return: null = saved, text = error to show in the form
   Future<String?> saveSearchConsole({
     required GscPropertyType type,
     required String domain,
@@ -229,7 +229,7 @@ class IntegrationSettingController extends GetxController {
 
   final isConnectingExotel = false.obs;
 
-  /// Return: null = jud gaya, text = form me dikhane wala error
+  /// Return: null = connected, text = error to show in the form
   Future<String?> connectExotel({
     required String apiKey,
     required String authToken,
@@ -254,7 +254,7 @@ class IntegrationSettingController extends GetxController {
     try {
       await IntegrationSettingService.connectExotel(body: body);
 
-      // Card par "Connected" dikhe
+      // Show "Connected" on the card
       await load();
 
       _message('Exotel', 'Exotel connected successfully.');
@@ -268,8 +268,8 @@ class IntegrationSettingController extends GetxController {
 
   // ============================================================
   // 4. BUTTONS
-  //   Google Ads Connect : Google login browser me (app wapas aane par refresh)
-  //   Baaki              : login web dashboard me hota hai
+  //   Google Ads Connect : Google login in the browser (refresh when the app comes back)
+  //   Others             : login happens in the web dashboard
   // ============================================================
 
   final connectingKey = RxnString();

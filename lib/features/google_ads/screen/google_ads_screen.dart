@@ -1,13 +1,13 @@
 // ============================================================
 // GOOGLE ADS SCREEN  (Drawer > Google Ads Insights)
 //
-// Web dashboard ke "Google Ads Performance" jaisa:
-//   Google Ads juda nahi   -> "Connect Google Ads" (Settings > Integration)
-//   upar                   -> Sync + 7D / 30D / 90D + Account/Campaign/Ad Group/Ad
-//   data hai               -> KPI, charts, campaign comparison, ad previews
-//   data nahi              -> "Check for latest updates" (Sync)
+// Like "Google Ads Performance" in the web dashboard:
+//   Google Ads not connected -> "Connect Google Ads" (Settings > Integration)
+//   top                    -> Sync + 7D / 30D / 90D + Account/Campaign/Ad Group/Ad
+//   has data                 -> KPI, charts, campaign comparison, ad previews
+//   no data                  -> "Check for latest updates" (Sync)
 //
-// Phone par sab ek ke neeche ek, window par 3 column.
+// On phones everything is stacked; on a window, 3 columns.
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive_builder.dart';
@@ -230,7 +230,7 @@ class _Filters extends StatelessWidget {
 }
 
 // ============================================================
-// DASHBOARD (data hai)
+// DASHBOARD (has data)
 // ============================================================
 
 class _Dashboard extends StatelessWidget {
@@ -566,7 +566,7 @@ class _NotConnected extends StatelessWidget {
 
   final Future<void> Function() onRetry;
 
-  /// Settings kholo, Integration tab chuna hua
+  /// Open Settings with the Integration tab selected
   void _openIntegration() {
     Get.put(SettingController()).selectedTab.value = SettingTab.integration;
     Get.to(() => const SettingScreen())?.then((_) => onRetry());

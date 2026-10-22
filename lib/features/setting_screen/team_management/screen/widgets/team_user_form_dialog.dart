@@ -2,13 +2,13 @@
 // TEAM USER FORM DIALOG  (Create / Edit)
 //
 //   Create : Name, Phone, Email, Password (optional), Location, Access Control
-//   Edit   : wahi, par Email badal nahi sakte aur Password nahi dikhta
+//   Edit   : same, but the Email cannot change and Password is hidden
 //
-// Save par controller.saveUser chalta hai. Error aaye to form ke neeche
-// dikhta hai aur dialog khula rehta hai.
+// Save runs controller.saveUser. If there is an error it shows below
+// the form and the dialog stays open.
 //
 // Responsive: chaudai 480 se kam ho to fields ek ke neeche ek,
-// aur Access Control 1 column me.
+// and Access Control in 1 column.
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';
@@ -20,7 +20,7 @@ import '../../controller/team_management_controller.dart';
 import '../../models/location_option.dart';
 import '../../models/team_access.dart';
 
-/// [existing] null = naya user, warna us user ka Edit
+/// [existing] null = new user, otherwise Edit for that user
 void showTeamUserForm(
   BuildContext context,
   TeamManagementController controller, {
@@ -51,7 +51,7 @@ class _TeamUserFormState extends State<_TeamUserForm> {
 
   LocationOption? _location;
 
-  /// Chune hue Access Control checkbox
+  /// Chosen Access Control checkboxes
   final _selected = <String>{};
 
   String? _error;
@@ -65,12 +65,12 @@ class _TeamUserFormState extends State<_TeamUserForm> {
     super.initState();
 
     if (!_isEdit) {
-      // Create: abhi selected hotel pehle se chuna hua
+      // Create: the currently selected hotel is pre-selected
       _location = _controller.selectedLocation;
       return;
     }
 
-    // Edit: user ka wo hotel jo selected hotel se mile, warna uska pehla hotel
+    // Edit: the user's hotel that matches the selected hotel, otherwise their first hotel
     final assigned = widget.existing!.assignedLocation;
     if (assigned.isEmpty) return;
 
@@ -87,7 +87,7 @@ class _TeamUserFormState extends State<_TeamUserForm> {
     _loadSavedAccess(target.hid);
   }
 
-  /// Edit: chune hue hotel ke checkbox user ki saved setting se bharo
+  /// Edit: fill the chosen hotel's checkboxes from the user's saved setting
   void _loadSavedAccess(String? hid) {
     _selected.clear();
 
@@ -176,7 +176,7 @@ class _TeamUserFormState extends State<_TeamUserForm> {
                   ),
                   const SizedBox(height: 12),
 
-                  // ---------- Email (Edit me badal nahi sakte) ----------
+                  // ---------- Email (cannot change on Edit) ----------
                   TextField(
                     controller: _email,
                     enabled: !_isEdit,
@@ -185,7 +185,7 @@ class _TeamUserFormState extends State<_TeamUserForm> {
                   ),
                   const SizedBox(height: 12),
 
-                  // ---------- Password (sirf Create) + Location ----------
+                  // ---------- Password (Create only) + Location ----------
                   if (_isEdit)
                     _locationDropdown(p)
                   else
@@ -257,7 +257,7 @@ class _TeamUserFormState extends State<_TeamUserForm> {
     );
   }
 
-  /// Wide screen par do field ek line me, phone par ek ke neeche ek
+  /// Two fields in one row on wide screens, stacked on phones
   Widget _pair(Widget first, Widget second, {required bool wide}) {
     if (!wide) {
       return Column(children: [first, const SizedBox(height: 12), second]);
@@ -287,13 +287,13 @@ class _TeamUserFormState extends State<_TeamUserForm> {
       onChanged: (hid) => setState(() {
         _location = locations.firstWhereOrNull((l) => l.hid == hid);
 
-        // Edit me us hotel ki saved setting dikhao
+        // On Edit, show the saved setting for that hotel
         if (_isEdit) _loadSavedAccess(hid);
       }),
     );
   }
 
-  /// Checkbox grid: chhoti chaudai par 1 column, warna 2
+  /// Checkbox grid: 1 column on narrow widths, otherwise 2
   Widget _accessGrid(double width, SettingPalette p) {
     final columns = width >= 420 ? 2 : 1;
     const gap = 8.0;
@@ -347,7 +347,7 @@ class _TeamUserFormState extends State<_TeamUserForm> {
     );
   }
 
-  /// Phone par dono button barabar chaude, wide par daaye taraf
+  /// On phones both buttons are equal width, on wide screens on the right
   Widget _buttons({required bool wide}) {
     final close = OutlinedButton(
       onPressed: () => Navigator.of(context).pop(),

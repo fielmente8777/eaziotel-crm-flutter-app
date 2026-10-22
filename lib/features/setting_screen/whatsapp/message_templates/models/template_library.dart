@@ -1,8 +1,8 @@
 // ============================================================
-// TEMPLATE LIBRARY (API nahi, web dashboard jaisi fixed list)
+// TEMPLATE LIBRARY (no API, a fixed list like the web dashboard)
 //
-// Hotel ke liye taiyaar template. "Use Template" dabane par
-// Create Template form inse bhar jaata hai.
+// Ready templates for hotels. Pressing "Use Template"
+// fills the Create Template form with them.
 // ============================================================
 
 class LibraryButton {
@@ -33,7 +33,7 @@ class LibraryTemplate {
   final String footer;
   final List<LibraryButton> buttons;
 
-  /// Search: naam, header ya body me
+  /// Search: in the name, header or body
   bool matches(String query) {
     final q = query.trim().toLowerCase();
     if (q.isEmpty) return true;

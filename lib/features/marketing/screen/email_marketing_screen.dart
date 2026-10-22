@@ -1,14 +1,14 @@
 // ============================================================
 // EMAIL MARKETING SCREEN  (Drawer > Marketing > Email Marketing)
 //
-// "EazoMail": Recipients / Campaigns / Templates   (web dashboard jaisa)
-//   window : left side menu        phone : upar chips
+// "EazoMail": Recipients / Campaigns / Templates   (same as the web dashboard)
+//   window : side menu on the left      phone : chips on top
 //
-// RECIPIENTS : search, select (ek / page / search ke saare)
+// RECIPIENTS : search, select (one / page / all search results)
 //              [Send to selected]  ⋮ Import from Excel / CSV
 // CAMPAIGNS  : list -> tap = detail (stats + recipients + email)
 // TEMPLATES  : saved / AI templates: Use, Edit with AI, Delete
-// Compose    : neeche button (kisi ko bhi email likho)
+// Compose    : button at the bottom (write an email to anyone)
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive_builder.dart';
@@ -116,7 +116,7 @@ class EmailActions {
     );
   }
 
-  /// Compose kholo; bhej diya to selection hatao + campaigns taaza
+  /// Open Compose; if sent, clear the selection + refresh campaigns
   static Future<void> compose(
     EmailMarketingController c, {
     RecipientBatch? batch,
@@ -132,7 +132,7 @@ class EmailActions {
     if (sent == true) c.onSent();
   }
 
-  /// Chune hue logon ko email
+  /// Email the selected people
   static Future<void> sendToSelected(EmailMarketingController c) async {
     final batch = await c.prepareSelected(
       onError: (m) => _toast('Could not continue', m, error: true),
@@ -140,7 +140,7 @@ class EmailActions {
     if (batch != null) await compose(c, batch: batch);
   }
 
-  /// Excel / CSV -> emails check karo -> compose
+  /// Excel / CSV -> check the emails -> compose
   static Future<void> importFile(EmailMarketingController c) async {
     final file = await FilePicker.pickFile(
       type: FileType.custom,
@@ -720,7 +720,7 @@ class _TemplateCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Chhota preview (sirf dekhne ke liye, tap = Use)
+          // Small preview (view only, tap = Use)
           InkWell(
             onTap: onUse,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),

@@ -10,8 +10,8 @@ import 'package:get/get.dart';
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
-  /// "Continue with Google" aur "Sign up" dono yahi chalate hain.
-  /// Naye account ka hotel nahi hota, to dashboard khud onboarding dikhata hai.
+  /// Both "Continue with Google" and "Sign up" run this.
+  /// A new account has no hotel, so the dashboard shows onboarding by itself.
   Future<void> _googleLogin(
     BuildContext context,
     LoginController controller,
@@ -49,8 +49,8 @@ class LoginScreen extends StatelessWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 22),
-          // Email + password ko password manager (Google / iCloud) se jodta hai.
-          // Save sirf login successful hone par hota hai (LoginController me).
+          // Connects email + password to the password manager (Google / iCloud).
+          // Saving happens only after a successful login (in LoginController).
           child: AutofillGroup(
             onDisposeAction: AutofillContextAction.cancel,
             child: Column(
@@ -133,8 +133,8 @@ class LoginScreen extends StatelessWidget {
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   autocorrect: false,
-                  // Sirf "username": "email" hint bhi dene par password manager
-                  // is field ko login ka username nahi, ek aam email field maanta hai
+                  // Giving only the "username": "email" hint makes the password manager
+                  // treat this field as a plain email field, not the login username
                   autofillHints: const [AutofillHints.username],
                   decoration: const InputDecoration(
                     hintText: 'your@email.com',
@@ -205,8 +205,8 @@ class LoginScreen extends StatelessWidget {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      // Google chal raha ho to bhi band, par loader sirf
-                      // isi button ka apna (isLoading)
+                      // Disabled while Google login runs too, but the loader
+                      // belongs only to this button (isLoading)
                       onPressed: controller.isBusy
                           ? null
                           : () async {
@@ -318,8 +318,8 @@ class LoginScreen extends StatelessWidget {
                 // ==================================================
                 // SIGN UP
                 // ==================================================
-                // Naya account = Google se sign in. Server account bana deta
-                // hai, phir "Onboard your property" form khulta hai (web jaisa)
+                // New account = sign in with Google. The server creates the account,
+                // then the "Onboard your property" form opens (same as web)
                 Center(
                   child: Wrap(
                     crossAxisAlignment: WrapCrossAlignment.center,

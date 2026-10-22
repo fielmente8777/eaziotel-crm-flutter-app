@@ -1,12 +1,12 @@
 // ============================================================
 // EAZBOT SETTING SERVICE
 //
-// Settings > Eazbot tab ki API. Sirf yahi file server se baat karti hai.
+// API for the Settings > Eazbot tab. Only this file talks to the server.
 //
 //   publish : POST /leadeazbot/create?hid=<hid>   (JSON)
 //             -> {"Message": "Eazbot updated successfully", "Status": true}
 //
-// Saved bot load karne ki API abhi nahi hai.
+// There is no API to load a saved bot yet.
 // ============================================================
 
 import 'dart:convert';
@@ -19,7 +19,7 @@ import 'package:flutter/foundation.dart';
 class EazbotSettingService {
   EazbotSettingService._();
 
-  /// Return: server ka message
+  /// Return: the server's message
   static Future<String> publish({
     required String hid,
     required Map<String, dynamic> body,

@@ -553,8 +553,8 @@ class _PaymentSection extends StatelessWidget {
         const SizedBox(height: 14),
 
         // ---------- List + Show more ----------
-        // visibleCount yahin Obx ke andar padha jata hai, isliye
-        // "Show more" dabane par ye hissa khud rebuild hota hai.
+        // visibleCount is read inside this Obx, so
+        // this part rebuilds by itself when "Show more" is pressed.
         Obx(() {
           final payments = controller.visiblePayments;
           final total = controller.payments.length;

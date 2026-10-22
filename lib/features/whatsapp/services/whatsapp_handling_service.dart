@@ -1,5 +1,5 @@
 // ============================================================
-// WHATSAPP HANDLING SERVICE  (chat me "Take over" / "Hand back to AI")
+// WHATSAPP HANDLING SERVICE  ("Take over" / "Hand back to AI" in chat)
 //
 //   isAiEnabled     : GET  account/connection/details -> ai.enabled
 //   takeOver        : PUT  conversations/<id>/takeover   { userEmail }
@@ -30,7 +30,7 @@ class WhatsappHandlingService {
     debugPrint('==================================================');
   }
 
-  /// json[a][b][c] bina crash ke (beech me kuch na ho to null)
+  /// json[a][b][c] without crashing (null if something in between is missing)
   static dynamic _at(dynamic json, List<String> path) {
     dynamic value = json;
     for (final key in path) {
@@ -51,7 +51,7 @@ class WhatsappHandlingService {
   }
 
   // ============================================================
-  // AI ON HAI? (account/connection/details -> ai.enabled)
+  // IS AI ON? (account/connection/details -> ai.enabled)
   // ============================================================
 
   static Future<bool> isAiEnabled({required String hid}) async {
@@ -77,9 +77,9 @@ class WhatsappHandlingService {
   }
 
   // ============================================================
-  // MERA EMAIL (take over me bhejna hota hai)
+  // MY EMAIL (has to be sent on take over)
   // GET https://nexon.eazotel.com/user/user-details  -> User.emailId
-  // (web dashboard bhi yahi API use karta hai)
+  // (the web dashboard uses the same API)
   // ============================================================
 
   static Future<String> getMyEmail() async {
@@ -108,7 +108,7 @@ class WhatsappHandlingService {
 
   // ============================================================
   // TAKE OVER / HAND BACK
-  // Server naya handling { mode, assignedTo } bhejta hai
+  // The server sends the new handling { mode, assignedTo }
   // ============================================================
 
   static Future<WhatsappHandlingModel?> takeOver({
@@ -161,7 +161,7 @@ class WhatsappHandlingService {
   }
 
   // ============================================================
-  // AUTOMATED FLOW (form) CHAL RAHA HAI?
+  // IS AN AUTOMATED FLOW (form) RUNNING?
   // ============================================================
 
   static Future<bool> isFlowActive({
@@ -198,7 +198,7 @@ class WhatsappHandlingService {
     }
   }
 
-  /// Flow band karo taaki team ka banda reply kar sake
+  /// Stop the flow so a team member can reply
   static Future<void> stopFlow({
     required String hid,
     required String ndid,

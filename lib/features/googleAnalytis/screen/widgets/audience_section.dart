@@ -535,7 +535,7 @@ class _UsersByCountryCardState extends State<_UsersByCountryCard>
                   ],
                 ),
                 const SizedBox(height: 9),
-                // Screenshot jaisa: top country full bar, baaki uske relative
+                // Like the screenshot: top country is a full bar, the rest relative to it
                 GlowBar(
                   ratio: maxV == 0 ? 0 : it.users / maxV,
                   color: color,

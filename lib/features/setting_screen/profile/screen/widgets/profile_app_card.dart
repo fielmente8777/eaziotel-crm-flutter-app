@@ -1,14 +1,14 @@
 // ============================================================
-// APPEARANCE + ACCOUNT  (Settings > Profile ke sabse neeche)
+// APPEARANCE + ACCOUNT  (at the very bottom of Settings > Profile)
 //
 //   APPEARANCE
-//   ┌──────┐ ┌──────┐ ┌──────┐     har dabba us theme ka chhota
-//   │ ◐    │ │ ☀    │ │ ☾    │     preview dikhata hai (phone ki
-//   │System│ │Light │ │Dark  │     Settings jaisa)
+//   ┌──────┐ ┌──────┐ ┌──────┐     each box shows a small
+//   │ ◐    │ │ ☀    │ │ ☾    │     shows a preview (like the phone's
+//   │System│ │Light │ │Dark  │     Settings)
 //   └──────┘ └──────┘ └──────┘
 //
 //   ACCOUNT
-//   ⎋ Log out                  ›   ("Log out?" pooch kar)
+//   ⎋ Log out                  ›   (asks "Log out?")
 //
 //          Eazotel · Version 1.4.0 (23)
 // ============================================================
@@ -69,7 +69,7 @@ class SettingAppearanceCard extends StatelessWidget {
   }
 }
 
-/// Ek theme: upar chhota preview, neeche icon + naam
+/// One theme: small preview on top, icon + name below
 class _ThemeChoice extends StatelessWidget {
   const _ThemeChoice({
     required this.mode,
@@ -147,7 +147,7 @@ class _ThemeChoice extends StatelessWidget {
   }
 }
 
-/// Theme ka mini screen: System = aadha light, aadha dark
+/// Mini screen of a theme: System = half light, half dark
 class _Preview extends StatelessWidget {
   const _Preview({required this.mode});
 

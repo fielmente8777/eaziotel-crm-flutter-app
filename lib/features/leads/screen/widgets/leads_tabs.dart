@@ -1,6 +1,6 @@
 // ============================================================
 // LEADS TABS  (All Leads | Contact | Converted | Hot)
-// Chuna hua tab rangeen pill, saath me us tab ki ginti.
+// Selected tab is a colored pill, with that tab's count.
 // ============================================================
 
 import 'package:eazotel/features/leads/controller/leads_controller.dart';
@@ -16,7 +16,7 @@ class LeadsTabs extends StatelessWidget {
 
   static const List<String> tabs = ['All Leads', 'Contact', 'Converted', 'Hot'];
 
-  /// Har tab me kitne lead (jo abhi list me aaye hain)
+  /// How many leads in each tab (of the ones loaded in the list so far)
   int _countFor(int index) {
     final all = controller.allLeads;
     switch (index) {
@@ -39,7 +39,7 @@ class LeadsTabs extends StatelessWidget {
       height: 46,
       child: Obx(() {
         final selected = controller.selectedLeadTab.value;
-        controller.allLeads.length; // list badle to ginti badle
+        controller.allLeads.length; // the count changes when the list changes
 
         return ListView.separated(
           scrollDirection: Axis.horizontal,
@@ -49,7 +49,7 @@ class LeadsTabs extends StatelessWidget {
           itemBuilder: (_, index) {
             final isOn = selected == index;
             final count = _countFor(index);
-            // Tab ka apna rang (All = indigo, Contact = neela, Converted = hara, Hot = laal)
+            // Tab's own color (All = indigo, Contact = blue, Converted = green, Hot = red)
             final color = index == 0 ? p.primary : LeadsStyle.tabColors[index];
 
             return Material(

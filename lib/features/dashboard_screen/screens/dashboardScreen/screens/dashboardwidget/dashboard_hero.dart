@@ -1,5 +1,5 @@
 // ============================================================
-// DASHBOARD HERO + QUICK ACTIONS  (Home tab ka upar wala hissa)
+// DASHBOARD HERO + QUICK ACTIONS  (top part of the Home tab)
 //
 //   DashboardHero
 //     ┌───────────────────────────────────────────┐
@@ -8,10 +8,10 @@
 //     │ [📍 Goa ▾]          [⚡ 4 new leads today] │
 //     └───────────────────────────────────────────┘
 //
-//   DashboardQuickActions: Leads, WhatsApp, Calls, Analytics ... ke
-//   chhote gol button (phone par side me scroll, badi screen par wrap)
+//   DashboardQuickActions: shortcuts for Leads, WhatsApp, Calls, Analytics ...
+//   small round buttons (scroll sideways on phones, wrap on big screens)
 //
-//   DashboardSectionTitle: har section ka ek jaisa heading
+//   DashboardSectionTitle: the same heading for every section
 // ============================================================
 
 import 'package:eazotel/features/Calls%20Management/screen/calls_management_screen.dart';
@@ -37,7 +37,7 @@ import 'package:intl/intl.dart';
 class DashboardHero extends StatelessWidget {
   const DashboardHero({super.key, required this.onMenu});
 
-  /// Avatar par tap: menu (drawer) kholo
+  /// Tap the avatar: open the menu (drawer)
   final VoidCallback onMenu;
 
   static String greeting(DateTime now) {
@@ -131,7 +131,7 @@ class DashboardHero extends StatelessWidget {
                             ],
                           ),
                         ),
-                        // Ghanti: naye WhatsApp message ki ginti
+                        // Bell: count of new WhatsApp messages
                         const NotificationBell(),
                         const SizedBox(width: 10),
                         _Avatar(initial: initial, onTap: onMenu),
@@ -422,7 +422,7 @@ class DashboardQuickActions extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, box) {
-        // Sab ek line me aa jaayein to beech me, warna side me scroll
+        // Centered if everything fits in one line, otherwise scroll sideways
         final fits = box.maxWidth >= actions.length * 84 + 32;
 
         return SizedBox(

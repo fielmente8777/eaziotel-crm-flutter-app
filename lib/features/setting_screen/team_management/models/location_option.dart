@@ -1,9 +1,9 @@
 // ============================================================
 // LOCATION OPTION (model)
 //
-// User form ke "Select Location" dropdown ka ek item.
-//   hid  -> API ko jata hai
-//   name -> screen par dikhta hai (hotel ki city)
+// One item of the user form's "Select Location" dropdown.
+//   hid  -> sent to the API
+//   name -> shown on screen (the hotel's city)
 // ============================================================
 
 class LocationOption {

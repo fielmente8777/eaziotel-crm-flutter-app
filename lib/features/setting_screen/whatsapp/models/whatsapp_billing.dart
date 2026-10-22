@@ -1,16 +1,16 @@
 // ============================================================
 // WHATSAPP BILLING (models)
 //
-// Settings > WhatsApp > Credits & Usage ka data.
+// Data of Settings > WhatsApp > Credits & Usage.
 //
-//   WhatsappBilling      : wallet, free messages aur is mahine ka usage
+//   WhatsappBilling      : wallet, free messages and this month's usage
 //                          (GET /api/v1/whatsapp/billing -> result.docs)
-//   BillingUsageRow      : usage table ki ek line (Marketing, Utility ...)
-//   WhatsappTransaction  : recharge ki ek entry
+//   BillingUsageRow      : one line of the usage table (Marketing, Utility ...)
+//   WhatsappTransaction  : one recharge entry
 //                          (GET /api/v1/whatsapp/billing/transactions -> items)
 // ============================================================
 
-/// null / galat type ho to 0
+/// 0 if null / wrong type
 double _toDouble(dynamic value) {
   return value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
 }
@@ -19,12 +19,12 @@ int _toInt(dynamic value) {
   return value is num ? value.toInt() : int.tryParse('$value') ?? 0;
 }
 
-/// null / galat type ho to khali Map
+/// Empty Map if null / wrong type
 Map<String, dynamic> _toMap(dynamic value) {
   return value is Map ? Map<String, dynamic>.from(value) : {};
 }
 
-/// "2026-10-07T06:30:46.500Z" -> phone ke time zone ka DateTime
+/// "2026-10-07T06:30:46.500Z" -> DateTime in the phone's time zone
 DateTime? _toDate(dynamic value) {
   return DateTime.tryParse(value?.toString() ?? '')?.toLocal();
 }
@@ -60,24 +60,24 @@ class WhatsappBilling {
   final int freeUsed; // 66
   final int freeRemaining; // 934
 
-  /// Usage table ki lines
+  /// Lines of the usage table
   final List<BillingUsageRow> usage;
 
-  /// "Credits used" bar: 0.0 se 1.0
+  /// "Credits used" bar: from 0.0 to 1.0
   double get usedFraction {
     if (totalLoaded <= 0) return 0;
 
     return (totalUsed / totalLoaded).clamp(0.0, 1.0);
   }
 
-  /// "Free service messages" bar: 0.0 se 1.0
+  /// "Free service messages" bar: from 0.0 to 1.0
   double get freeFraction {
     if (freeLimit <= 0) return 0;
 
     return (freeUsed / freeLimit).clamp(0.0, 1.0);
   }
 
-  /// Table ki "Total" line
+  /// The "Total" line of the table
   int get totalMessages => usage.fold(0, (sum, row) => sum + row.messages);
 
   double get totalCost => usage.fold(0, (sum, row) => sum + row.cost);
@@ -114,7 +114,7 @@ class WhatsappBilling {
           rate: rates['utility'],
         ),
 
-        // Web ki tarah: Authentication tabhi dikhao jab koi message gaya ho
+        // Same as web: show Authentication only when a message was sent
         if (_toInt(authentication['count']) > 0)
           BillingUsageRow.fromJson(
             type: 'Authentication',
@@ -146,7 +146,7 @@ class BillingUsageRow {
   final String type; // "Marketing"
   final String note; // "Promotional templates"
   final int messages;
-  final double rate; // ek message ka daam
+  final double rate; // price of one message
   final double cost;
 
   factory BillingUsageRow.fromJson({
@@ -185,7 +185,7 @@ class WhatsappTransaction {
   final double amount;
   final String status; // "paid"
 
-  /// Payment ka time (na ho to order banne ka time)
+  /// Payment time (the order creation time if missing)
   final DateTime? date;
 
   bool get isPaid => status.toLowerCase() == 'paid';
@@ -209,7 +209,7 @@ class WhatsappTransaction {
   }
 }
 
-/// Transactions API ka ek page: items + kitne page hain
+/// One page of the Transactions API: items + how many pages
 class WhatsappTransactionPage {
   const WhatsappTransactionPage({
     this.items = const [],

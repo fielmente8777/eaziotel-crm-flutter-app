@@ -1,14 +1,14 @@
 // ============================================================
 // CREDITS OVERVIEW  (Credits & Usage > Overview tab)
 //
-// Upar se neeche:
+// Top to bottom:
 //   1. Heading + refresh + "Add Credits" button
-//   2. Teen dabbe  : Available balance | Total loaded | Total used
-//   3. Do bar      : Credits used  |  Free service messages
+//   2. Three boxes : Available balance | Total loaded | Total used
+//   3. Two bars    : Credits used  |  Free service messages
 //   4. Usage table : Marketing, Utility, Service + Total
-//   5. Neeche ek note
+//   5. A note at the bottom
 //
-// Data controller.billing se aata hai.
+// The data comes from controller.billing.
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive.dart';
@@ -35,10 +35,10 @@ class CreditsOverview extends StatelessWidget {
       final isLoading = controller.isBillingLoading.value;
       final error = controller.billingError.value;
 
-      // Pehli baar data aa raha hai
+      // Data is loading for the first time
       if (billing == null && isLoading) return const _OverviewShimmer();
 
-      // Data nahi aaya
+      // No data came
       if (billing == null) {
         return _OverviewError(
           message: error ?? 'No data found',
@@ -78,8 +78,8 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = SettingPalette(context);
 
-    // Poori chaudai lo: heading baaye, buttons daaye.
-    // Jagah kam ho (phone) to buttons apne aap neeche aa jaate hain.
+    // Take the full width: heading on the left, buttons on the right.
+    // When space is short (phone), the buttons move down by themselves.
     return SizedBox(width: double.infinity, child: _headerContent(p));
   }
 
@@ -163,7 +163,7 @@ class _Header extends StatelessWidget {
 }
 
 // ============================================================
-// 2. TEEN DABBE (balance, loaded, used)
+// 2. THREE BOXES (balance, loaded, used)
 // ============================================================
 
 class _WalletTiles extends StatelessWidget {
@@ -192,7 +192,7 @@ class _WalletTiles extends StatelessWidget {
             Text(
               formatMoney(amount),
               style: TextStyle(
-                // Balance sabse bada aur gehra dikhta hai
+                // The balance is the biggest and darkest
                 color: isMain ? p.text : p.primary,
                 fontSize: isMain ? 22 : 17,
                 fontWeight: isMain ? FontWeight.w700 : FontWeight.w500,
@@ -209,7 +209,7 @@ class _WalletTiles extends StatelessWidget {
       tile('Total used', billing.totalUsed),
     ];
 
-    // Phone: ek ke neeche ek. Tablet / window: teeno ek line me.
+    // Phone: stacked. Tablet / window: all three in one row.
     if (r.isPhone) {
       return Column(
         children: [
@@ -235,7 +235,7 @@ class _WalletTiles extends StatelessWidget {
 }
 
 // ============================================================
-// 3. DO BAR (credits used, free service messages)
+// 3. TWO BARS (credits used, free service messages)
 // ============================================================
 
 class _UsageBars extends StatelessWidget {
@@ -329,7 +329,7 @@ class _UsageTable extends StatelessWidget {
   final WhatsappBilling billing;
   final TResponsive r;
 
-  /// Har type ke aage ka rangeen bindu
+  /// Colored dot in front of each type
   Color _dotColor(String type) {
     switch (type) {
       case 'Marketing':
@@ -347,7 +347,7 @@ class _UsageTable extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = SettingPalette(context);
 
-    // Phone par column patle, bade screen par chaude
+    // Narrow columns on phones, wide on big screens
     final double numberWidth = r.isPhone ? 64 : 110;
 
     Widget headerText(String text, {bool right = true}) {
@@ -358,7 +358,7 @@ class _UsageTable extends StatelessWidget {
       );
     }
 
-    /// Table ki ek line: [first] baaye, baaki teen daaye (tay chaudai me)
+    /// One table line: [first] on the left, the other three on the right (fixed widths)
     Widget line({
       required Widget first,
       required Widget messages,
@@ -423,7 +423,7 @@ class _UsageTable extends StatelessWidget {
             ),
           ),
 
-          // ---------- Column ke naam ----------
+          // ---------- Column names ----------
           line(
             first: headerText('TYPE', right: false),
             messages: headerText('MESSAGES'),
@@ -431,7 +431,7 @@ class _UsageTable extends StatelessWidget {
             cost: headerText('COST'),
           ),
 
-          // ---------- Har type ki line ----------
+          // ---------- A line for each type ----------
           for (final row in billing.usage)
             line(
               first: Row(

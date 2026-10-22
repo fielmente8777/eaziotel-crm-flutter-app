@@ -34,7 +34,7 @@ class WhatsappMessageList extends StatelessWidget {
   final WhatsappConversationDetailController controller;
   final WhatsappConversationModel chatdetail;
 
-  // Unread divider sirf pehli build par dikhega.
+  // The unread divider shows only on the first build.
   bool _hasShownUnreadDivider = false;
 
   WhatsappMessageList({
@@ -49,7 +49,7 @@ class WhatsappMessageList extends StatelessWidget {
       final whatsappController = controller.whatsappController;
 
       // ------------------------------------------------------------
-      // SELECTION STATE (Obx ke andar read karna zaroori hai)
+      // SELECTION STATE (must be read inside Obx)
       // ------------------------------------------------------------
       final bool selectionMode = whatsappController.isSelectionMode;
       final Set<String> selectedIds = whatsappController.selectedMessageIds
@@ -59,7 +59,7 @@ class WhatsappMessageList extends StatelessWidget {
       // LOADING
       // ------------------------------------------------------------
       if (whatsappController.isMessagesLoading.value) {
-        // Gol loader nahi: chat jaise bubbles ka shimmer
+        // No spinner: shimmer of chat-like bubbles
         return const WaChatShimmer();
       }
 
@@ -117,7 +117,7 @@ class WhatsappMessageList extends StatelessWidget {
       // LIST
       // ------------------------------------------------------------
       return PopScope(
-        // Selection mode me back dabane par pehle selection clear hoga.
+        // In selection mode, pressing back clears the selection first.
         canPop: !selectionMode,
         onPopInvokedWithResult: (didPop, result) {
           if (!didPop) {
@@ -171,8 +171,8 @@ class WhatsappMessageList extends StatelessWidget {
 
     final message = (entry as _MessageEntry).message;
 
-    // NOTE: API ko wamid... wali ID chahiye. Agar WhatsappMessageItem me
-    // field ka naam alag hai (jaise id), to yahan wahi use karo.
+    // NOTE: the API needs the wamid... ID. If the field in WhatsappMessageItem
+    // has a different name (like id), use that here.
     final String id = message.messageId ?? '';
     final bool isSelected = selectedIds.contains(id);
     final wc = controller.whatsappController;
@@ -187,7 +187,7 @@ class WhatsappMessageList extends StatelessWidget {
         color: isSelected
             ? TAppColors.success.withOpacity(0.40)
             : Colors.transparent,
-        // Selection mode me bubble ke andar ke taps (image, link etc.) band.
+        // In selection mode, taps inside the bubble (image, link etc.) are disabled.
         child: IgnorePointer(
           ignoring: selectionMode,
           child: WhatsappMessageBubble(

@@ -1,9 +1,9 @@
 // ============================================================
 // APP NOTIFICATION
 //
-// Ek notification (abhi sirf WhatsApp ka naya message).
-// Phone me save hota hai (SharedPreferences) taaki app band karke
-// kholne par bhi list wahi rahe. Logout par saaf ho jaata hai.
+// One notification (for now only a new WhatsApp message).
+// Saved on the phone (SharedPreferences) so the list stays the same
+// after closing and reopening the app. Cleared on logout.
 // ============================================================
 
 enum AppNotificationType { whatsapp }
@@ -21,20 +21,20 @@ class AppNotification {
     this.isRead = false,
   });
 
-  /// Message ki id (ek message ki ek hi notification)
+  /// Message id (one notification per message)
   final String id;
   final AppNotificationType type;
 
-  /// Kis hotel ki hai (hotel badalne par sirf usi ki dikhti hain)
+  /// Which hotel it belongs to (after changing hotel only that hotel's show)
   final String hid;
 
-  /// Tap karne par yahi chat khulti hai
+  /// Tapping opens this chat
   final String conversationId;
 
-  /// Customer ka naam (ya number)
+  /// The customer's name (or number)
   final String title;
 
-  /// Message ka text
+  /// Text of the message
   final String body;
   final String phone;
   final DateTime createdAt;

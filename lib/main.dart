@@ -17,14 +17,14 @@ Future<void> main() async {
 
   _printSavedAccessToken();
 
-  // Native splash (logo) tab tak dikhta hai jab tak ye check hota hai.
-  // Phir seedhi Login ya Dashboard khulti hai, beech me koi splash page nahi.
+  // The native splash (logo) stays on screen while this check runs.
+  // Then Login or Dashboard opens directly, with no splash page in between.
   final home = await AppStart.firstScreen();
 
-  // Device Preview (computer par alag-alag phone ka frame) ab default BAND.
-  // Asli phone par ye kaam ka nahi tha aur har tap par
-  // "FocusScopeNode was used after being disposed" error deta tha.
-  // Chahiye to aise chalao:
+  // Device Preview (a different phone frame on the computer) is now OFF by default.
+  // On a real phone this was not useful, and on every tap
+  // it caused the "FocusScopeNode was used after being disposed" error.
+  // If you need it, run it like this:
   //   flutter run -d windows --dart-define=DEVICE_PREVIEW=true
   runApp(
     DevicePreview(
@@ -34,12 +34,12 @@ Future<void> main() async {
   );
 }
 
-/// Sirf debug + --dart-define=DEVICE_PREVIEW=true par
+/// Only in debug + --dart-define=DEVICE_PREVIEW=true
 const bool _devicePreview =
     kDebugMode && bool.fromEnvironment('DEVICE_PREVIEW', defaultValue: true);
 
-/// App khulte hi SharedPreferences me saved access token console me dikhata hai.
-/// Sirf debug build me (release me token log nahi hota).
+/// When the app opens, prints the access token saved in SharedPreferences to the console.
+/// Only in debug builds (the token is not logged in release).
 Future<void> _printSavedAccessToken() async {
   if (!kDebugMode) return;
 
@@ -59,7 +59,7 @@ Future<void> _printSavedAccessToken() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key, required this.home});
 
-  /// Pehli screen (Login ya Dashboard), AppStart.firstScreen se
+  /// The first screen (Login or Dashboard), from AppStart.firstScreen
   final Widget home;
 
   @override
@@ -76,7 +76,7 @@ class MyApp extends StatelessWidget {
 
         themeMode: themeController.themeMode.value,
 
-        // Device Preview chalu ho tabhi uska frame / language lagao
+        // Apply its frame / language only when Device Preview is on
         locale: _devicePreview ? DevicePreview.locale(context) : null,
         builder: _devicePreview ? DevicePreview.appBuilder : null,
 

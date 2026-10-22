@@ -1,15 +1,15 @@
 // ============================================================
 // WEBSITE SEO CONTROLLER
 //
-//   Screen  --->  ye controller  --->  SeoService  --->  API
+//   Screen  --->  this controller  --->  SeoService  --->  API
 //                      |
 //                      +--> intelligenceResponse (website keywords + url)
-//                      +--> tokenResponse        (credits, mixin se)
+//                      +--> tokenResponse        (credits, from the mixin)
 //
-// Web dashboard (WebsiteDashboard.tsx) jaisa logic:
-//   1. URL nahi   : website link lock karo (hamesha ke liye)
-//   2. DESH       : India / US / ... (credit desh ke hisaab se)
-//   3. KEYWORDS   : jodo, Google rank taaza karo, hatao
+// Same logic as the web dashboard (WebsiteDashboard.tsx):
+//   1. NO URL     : lock the website link (permanently)
+//   2. COUNTRY    : India / US / ... (credits depend on the country)
+//   3. KEYWORDS   : add, refresh Google rank, remove
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -42,7 +42,7 @@ class WebsiteSeoController extends GetxController with SeoTokenMixin {
   SeoIntelligence get data =>
       intelligenceResponse.value?.result ?? const SeoIntelligence();
 
-  /// Lock kiya hua website link ('' = abhi nahi)
+  /// The locked website link ('' = not yet)
   String get lockedUrl => data.localConfig?.websiteUrl.trim() ?? '';
 
   // ============================================================
@@ -113,7 +113,7 @@ class WebsiteSeoController extends GetxController with SeoTokenMixin {
     }
   }
 
-  /// Return: null = ho gaya, text = error
+  /// Return: null = done, text = error
   Future<String?> lockWebsite() async {
     final url = setupUrl.text.trim();
     if (url.isEmpty || isSettingUrl.value) return null;
@@ -139,12 +139,12 @@ class WebsiteSeoController extends GetxController with SeoTokenMixin {
       countries.firstWhereOrNull((c) => c.code == country.value)?.name ??
       country.value;
 
-  /// India 2 credit, baaki 3 credit (har keyword)
+  /// India 2 credits, others 3 credits (per keyword)
   int get perKeyword => SeoTokenPricing.websiteFor(country.value);
 
   int costFor(int count) => count * perKeyword;
 
-  /// Return: badla ya nahi
+  /// Return: whether it changed
   Future<bool> changeCountry(String code) async {
     if (code == country.value || isChangingCountry.value) return true;
 
@@ -174,7 +174,7 @@ class WebsiteSeoController extends GetxController with SeoTokenMixin {
 
     switch (sortBy.value) {
       case WebsiteSort.rank:
-        // Rank wale pehle (chhota = achha), bina rank wale aakhir me
+        // Ranked ones first (lower = better), unranked ones at the end
         list.sort(
           (a, b) =>
               (a.liveOrganicRank ?? 9999).compareTo(b.liveOrganicRank ?? 9999),

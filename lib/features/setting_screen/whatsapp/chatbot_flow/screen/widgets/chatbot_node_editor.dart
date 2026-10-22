@@ -1,15 +1,15 @@
 // ============================================================
-// CHATBOT NODE EDITOR  (step par tap karne par)
+// CHATBOT NODE EDITOR  (opens when you tap a step)
 //
-//   upar   : step ka type
-//   beech  : us type ka form (chatbot_step_editors.dart)
-//   CONNECTIONS : har rasta (button / option / next) -> "Goes to" step
-//                 (web me teer kheenchte hain; yahan dropdown se chunte hain,
-//                  phone par bhi aasaan)
-//   neeche : Delete step | Cancel | Save
+//   top    : the step type
+//   middle : the form for that type (chatbot_step_editors.dart)
+//   CONNECTIONS : each path (button / option / next) -> "Goes to" step
+//                 (on the web you drag arrows; here you pick from a dropdown,
+//                  easy on phones too)
+//   bottom : Delete step | Cancel | Save
 //
-// Data ki copy par kaam hota hai; Cancel = kuch nahi badla.
-// Phone: neeche se sheet. Tablet / window: beech me dialog.
+// Works on a copy of the data; Cancel = nothing changed.
+// Phone: sheet from the bottom. Tablet / window: centered dialog.
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive.dart';
@@ -72,7 +72,7 @@ class _NodeEditor extends StatefulWidget {
 class _NodeEditorState extends State<_NodeEditor> {
   late final Map<String, dynamic> _data = chatbotDeepCopy(widget.node.data);
 
-  /// rasta (handle key) -> step id
+  /// path (handle key) -> step id
   late final Map<String, String?> _links = {
     for (final o in widget.node.outputs)
       o.key: widget.c.targetOf(widget.node.id, o.handle),
@@ -251,7 +251,7 @@ class _NodeEditorState extends State<_NodeEditor> {
           ),
           child: Row(
             children: [
-              // Chhoti screen par sirf icon
+              // Icon only on small screens
               if (MediaQuery.sizeOf(context).width < 480)
                 IconButton(
                   tooltip: 'Delete step',

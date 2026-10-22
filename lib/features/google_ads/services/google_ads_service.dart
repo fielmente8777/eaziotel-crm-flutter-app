@@ -1,7 +1,7 @@
 // ============================================================
 // GOOGLE ADS SERVICE
 //
-// Google Ads Insights ki saari API. Har function:
+// All Google Ads Insights APIs. Each function:
 //   API call  ->  log (URL, STATUS, BODY)  ->  JSON  ->  Response model
 //
 //   syncGoogleAds        : GET /api/v1/google-ads/sync
@@ -12,7 +12,7 @@
 //   getGoogleAdsSummary  : GET /api/v1/google-ads/metrics/summary/<id>
 //   getGoogleAdsDevices  : GET /api/v1/google-ads/metrics/devices/<id>
 //
-// "Connected hai ya nahi" Settings > Integration ki service se aata hai.
+// "Connected or not" comes from the Settings > Integration service.
 // ============================================================
 
 import 'dart:convert';
@@ -46,7 +46,7 @@ class GoogleAdsService {
   }
 
   // ============================================================
-  // SYNC  (Google -> DB, web hamesha 90 din)
+  // SYNC  (Google -> DB, the web always uses 90 days)
   // ============================================================
 
   static Future<GoogleAdsSyncResponse> syncGoogleAds({

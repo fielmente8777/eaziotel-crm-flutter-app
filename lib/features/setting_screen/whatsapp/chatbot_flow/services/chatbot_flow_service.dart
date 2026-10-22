@@ -4,11 +4,11 @@
 //   getChatbotFlow     : GET  /api/v1/whatsapp/flow?hid=
 //   publishChatbotFlow : POST /api/v1/whatsapp/flow?hid=  (form-data)
 //                          nodes (JSON), edges (JSON),
-//                          file_<blockId> (Send Message ki photo/video...)
+//                          file_<blockId> (photo/video... of Send Message)
 //   uploadImage        : POST /api/v1/image/upload (form-data "file")
-//                          carousel card ki photo -> result.doc.imageUrl
+//                          carousel card photo -> result.doc.imageUrl
 //
-// Form flow ki list (Flow node ke liye): WhatsappSettingService.getFlows
+// List of form flows (for the Flow node): WhatsappSettingService.getFlows
 // ============================================================
 
 import 'dart:convert';
@@ -60,7 +60,7 @@ class ChatbotFlowService {
     required List<ChatbotNode> nodes,
     required List<ChatbotEdge> edges,
 
-    /// blockId -> phone / computer par file ka rasta
+    /// blockId -> path of the file on the phone / computer
     Map<String, String> files = const {},
   }) async {
     final endpoint = '${WhatsappApiEndpoint.chatbotFlow}?hid=$hid';
@@ -98,7 +98,7 @@ class ChatbotFlowService {
     }
   }
 
-  /// Return: photo ka link (fail ho to null)
+  /// Return: the photo link (null if it fails)
   static Future<String?> uploadImage({required String path}) async {
     const endpoint = WhatsappApiEndpoint.imageUpload;
 

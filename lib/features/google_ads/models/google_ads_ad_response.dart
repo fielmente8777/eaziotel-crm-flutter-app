@@ -20,7 +20,7 @@ class GoogleAdsAdResponse {
     this.ads = const [],
   });
 
-  /// Sirf ENABLED, aur ek ad id sirf ek baar
+  /// Only ENABLED, and each ad id only once
   List<GoogleAdsAd> get enabled {
     final seen = <String>{};
     return ads.where((a) => a.isEnabled && seen.add(a.adId)).toList();
@@ -66,7 +66,7 @@ class GoogleAdsAd implements AdsDropdownItem {
 
   String get finalUrl => finalUrls.isEmpty ? '' : finalUrls.first;
 
-  /// "www.example.com" (link na ho to khali)
+  /// "www.example.com" (empty if there is no link)
   String get displayUrl => Uri.tryParse(finalUrl)?.host ?? '';
 
   @override
@@ -76,7 +76,7 @@ class GoogleAdsAd implements AdsDropdownItem {
   String get label => finalUrl.isEmpty ? adId : finalUrl;
 
   factory GoogleAdsAd.fromJson(Map<String, dynamic> json) {
-    // headline kabhi {"text": ".."} hota hai, kabhi seedha text
+    // headline is sometimes {"text": ".."}, sometimes plain text
     List<String> texts(dynamic list) => list is List
         ? list
               .map((e) => e is Map ? adsStr(e['text']) : adsStr(e))

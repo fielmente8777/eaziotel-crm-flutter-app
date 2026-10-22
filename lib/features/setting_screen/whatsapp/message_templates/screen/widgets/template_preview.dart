@@ -1,8 +1,8 @@
 // ============================================================
 // TEMPLATE PREVIEW
-// Template WhatsApp par kaisa dikhega: chat ki background par
-// ek message (header, body, footer, time) aur neeche buttons.
-// {{1}} ki jagah sample dikhta hai (sample na ho to {{1}} hi).
+// How the template will look on WhatsApp: one message on the chat
+// background (header, body, footer, time) and buttons below.
+// The sample shows in place of {{1}} ({{1}} itself if there is no sample).
 // ============================================================
 
 import 'dart:io';
@@ -18,8 +18,8 @@ class TemplatePreviewButton {
 }
 
 class TemplatePreview extends StatelessWidget {
-  /// Server wale (saved) template se preview. {{1}} ki jagah Meta ke
-  /// sample (example) dikhte hain.
+  /// Preview from the server's (saved) template. Meta's samples (examples)
+  /// show in place of {{1}}.
   factory TemplatePreview.ofTemplate(WhatsappTemplate template) {
     TemplateComponent? part(String type) => template.components
         ?.where((c) => c.type?.toUpperCase() == type)

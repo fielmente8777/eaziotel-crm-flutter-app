@@ -1,13 +1,13 @@
 // ============================================================
 // WHATSAPP ACCOUNT INFO (model)
 //
-// Do API ke jawab se screen ke kaam ki cheezein nikal kar
-// seedhe-saade fields me rakhta hai. Cards sirf in fields ko padhte hain.
+// Takes what the screen needs from the answers of two APIs and keeps it
+// in simple fields. The cards read only these fields.
 //
 //   account/connection/details -> waba, business, phoneNumber
 //   whatsapp/profile           -> about, email, address, websites
 //
-// Jo cheez na mile uski jagah '-' aata hai.
+// '-' is used for anything that is missing.
 // ============================================================
 
 class WhatsappAccountInfo {
@@ -45,11 +45,11 @@ class WhatsappAccountInfo {
   final String email;
   final String address;
   final String industry; // "PROF_SERVICES"
-  final String profilePicture; // photo ka link ('' = photo nahi)
+  final String profilePicture; // photo link ('' = no photo)
   final List<String> websites;
 
-  /// [details] = account/connection/details ka `result.docs`
-  /// [profile] = whatsapp/profile ka `result.doc`
+  /// [details] = `result.docs` of account/connection/details
+  /// [profile] = `result.doc` of whatsapp/profile
   factory WhatsappAccountInfo.fromJson({
     required Map<String, dynamic> details,
     required Map<String, dynamic> profile,
@@ -80,12 +80,12 @@ class WhatsappAccountInfo {
     );
   }
 
-  /// null / galat type ho to khali Map
+  /// Empty Map if null / wrong type
   static Map<String, dynamic> _map(dynamic value) {
     return value is Map ? Map<String, dynamic>.from(value) : {};
   }
 
-  /// null / khali ho to '-'
+  /// '-' if null / empty
   static String _text(dynamic value) {
     final text = value?.toString().trim() ?? '';
 

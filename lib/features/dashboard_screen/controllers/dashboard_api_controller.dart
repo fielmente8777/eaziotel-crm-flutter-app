@@ -35,7 +35,7 @@ class DashboardController extends GetxController
   final user = Rxn<ProfileResponseModel>();
   // null = checking, true = dashboard, false = subscription expired.
   final isSubscriptionActive = RxnBool();
-  // true = naya account, koi hotel nahi -> pehle onboarding form (web jaisa)
+  // true = new account, no hotel -> onboarding form first (same as web)
   final needsOnboarding = RxnBool();
 
   // ============================================================
@@ -87,8 +87,8 @@ class DashboardController extends GetxController
         return;
       }
 
-      // Profile (hotels) + login kiya hua user (role, assigned locations)
-      // ek saath laao
+      // Load the profile (hotels) + the logged-in user (role, assigned locations)
+      // together
       final profileFuture = apiService.getUserProfile(token);
       final authFuture = _loadAuthUser();
 
@@ -103,7 +103,7 @@ class DashboardController extends GetxController
       isSubscriptionActive.value = endDate?.isAfter(DateTime.now()) ?? false;
       if (isSubscriptionActive.value != true) return;
 
-      // Sirf wahi hotels jo is user ko dikhne chahiye
+      // Only the hotels this user should see
       final hotels = allowedHotels;
 
       if (hotels.isEmpty) {
@@ -112,7 +112,7 @@ class DashboardController extends GetxController
 
       final prefs = await SharedPreferences.getInstance();
 
-      // Pichhli baar wala hotel, par sirf agar ye user use khol sakta hai
+      // The hotel from last time, but only if this user can open it
       final hotelId = _pickHotel(hotels, prefs.getString(hotelIdKey)).hotelId;
       await prefs.setString(hotelIdKey, hotelId);
 
@@ -135,13 +135,13 @@ class DashboardController extends GetxController
   }
 
   // ============================================================
-  // KAUN KAUNSI LOCATION DEKH SAKTA HAI (web dashboard jaisa)
-  //   isAdmin       -> saari locations
-  //   team member   -> sirf assigned_location wali
-  //   role "owner"  -> upar se client accounts bhi (LocationController)
+  // WHICH LOCATIONS A USER CAN SEE (same as the web dashboard)
+  //   isAdmin       -> all locations
+  //   team member   -> only assigned_location ones
+  //   role "owner"  -> also client accounts (LocationController)
   // ============================================================
 
-  /// Login kiya hua user (GET /user/user-details)
+  /// The logged-in user (GET /user/user-details)
   final authUser = Rxn<AuthUserModel>();
   final ownerUser = Rxn<AuthUserModel>();
 
@@ -161,12 +161,12 @@ class DashboardController extends GetxController
     try {
       authUser.value = await apiService.getAuthUser();
     } catch (e) {
-      // Na mile to pehle jaisa: saari locations (kisi ko bahar na karo)
+      // If not found, same as before: all locations (do not lock anyone out)
       debugPrint('AUTH USER (user-details) ERROR: $e');
     }
   }
 
-  /// Is user ko dikhne wale hotels
+  /// Hotels this user can see
   List<HotelModel> get allowedHotels {
     final all = user.value?.profile.hotels ?? const <HotelModel>[];
     final me = authUser.value;
@@ -180,7 +180,7 @@ class DashboardController extends GetxController
         orElse: () => allowed.first,
       );
 
-  /// Bahar se bhi (LocationController) same niyam
+  /// Same rules from outside too (LocationController)
   HotelModel? pickHotel(List<HotelModel> allowed, String? savedHid) =>
       allowed.isEmpty ? null : _pickHotel(allowed, savedHid);
 
@@ -203,10 +203,10 @@ class DashboardController extends GetxController
       //     userNameResponse.value =UserResponseModel(
       // status: result.status,
       // data: [
-      //   // Apne custom user (TESTING)
+      //   // Own custom user (TESTING)
       //   UserModel(displayName: '(gangadhar)', phone: '+917497042180'),
 
-      //   // API se aaye user
+      //   // Users from the API
       //   ...result.data,
       // ],   / for call testing
     } on ApiException catch (e) {
@@ -247,16 +247,16 @@ class DashboardController extends GetxController
 
     selectedHotelId.value = hotelId;
 
-    // old analytics hata do
+    // clear the old analytics
     analyticsResponse.value = null;
 
-    // old call analytics bhi hata do
+    // clear the old call analytics too
     callAnalytics.value = null;
 
-    // UI ko loading state dikhao
+    // show the loading state in the UI
     isAnalyticsLoading.value = true;
 
-    // Leads bhi reset karo
+    // reset leads too
     leadsSearch.value = '';
     resetLeadFilters();
 
@@ -272,7 +272,7 @@ class DashboardController extends GetxController
   // ============================================================
 
   void clearDashboardData() {
-    // Login kiya hua user (role / locations)
+    // The logged-in user (role / locations)
     authUser.value = null;
     ownerUser.value = null;
 

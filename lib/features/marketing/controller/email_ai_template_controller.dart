@@ -1,13 +1,13 @@
 // ============================================================
-// AI EMAIL TEMPLATE CONTROLLER  (web ke AITemplateModal jaisa)
+// AI EMAIL TEMPLATE CONTROLLER  (like the web AITemplateModal)
 //
-//   Brief  : kya email chahiye + tone + brand (naam, rang, logo) + button
-//   Generate -> AI poora email banata hai (20-60 sec)
-//   Refine   -> "button laal karo" jaisa badlav, naya version
-//   Versions : < 1 / 3 >  pichhle version par wapas ja sakte ho
+//   Brief  : what email you want + tone + brand (name, color, logo) + button
+//   Generate -> AI writes the whole email (20-60 sec)
+//   Refine   -> a change like "make the button red", new version
+//   Versions : < 1 / 3 >  you can go back to an older version
 //   Save / Save & use
 //
-// Brand phone me yaad rehta hai (har baar dobara na likhna pade).
+// The brand is remembered on the phone (no need to type it every time).
 // ============================================================
 
 import 'dart:convert';
@@ -76,7 +76,7 @@ class EmailAiTemplateController extends GetxController {
   final error = RxnString();
   final notice = RxnString();
 
-  /// Server par save hua template (khali = abhi save nahi)
+  /// Template saved on the server (empty = not saved yet)
   final savedId = ''.obs;
   String _savedSnapshot = '';
 
@@ -145,7 +145,7 @@ class EmailAiTemplateController extends GetxController {
         previous: previous?.copyWith(subject: subject.value),
       );
 
-      // Aage ke version hata kar naya jodo (undo ke baad naya banaya)
+      // Drop the later versions and add a new one (new one made after an undo)
       final next = [
         ...versions.take(versionIndex.value + 1),
         EmailTemplate(
@@ -186,7 +186,7 @@ class EmailAiTemplateController extends GetxController {
   // SAVE
   // ============================================================
 
-  /// Saved template (null = galti, [error] me message)
+  /// Saved template (null = error, message in [error])
   Future<EmailTemplate?> save() async {
     final c = current;
     if (c == null || isSaving.value) return null;
@@ -227,7 +227,7 @@ class EmailAiTemplateController extends GetxController {
     }
   }
 
-  /// Email me lagane ke liye (badla ho to pehle save)
+  /// To use in the email (save first if it changed)
   Future<EmailTemplate?> saveAndUse() async {
     final c = current;
     if (c == null || busy) return null;
@@ -245,7 +245,7 @@ class EmailAiTemplateController extends GetxController {
   }
 
   // ============================================================
-  // BRAND (phone me yaad)
+  // BRAND (remembered on the phone)
   // ============================================================
 
   Future<void> _loadBrand() async {

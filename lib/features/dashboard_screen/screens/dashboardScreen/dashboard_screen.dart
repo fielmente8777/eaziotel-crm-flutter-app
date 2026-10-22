@@ -53,7 +53,7 @@ class DashboardScreen extends StatelessWidget {
         // ======================================================
         // APP BAR - FIXED
         // ======================================================
-        // Upar ka hissa ab scroll ke saath (DashboardHero), alag app bar nahi
+        // The top part now scrolls with the page (DashboardHero), no separate app bar
 
         // ======================================================
         // BODY
@@ -211,7 +211,7 @@ class DashboardScreen extends StatelessWidget {
 
           VSpace(height: 12),
 
-          // Owner: Locations | Client accounts (baaki users ko sirf locations)
+          // Owner: Locations | Client accounts (other users see only locations)
           Obx(() {
             if (!locationController.isViewingClient) {
               return const SizedBox.shrink();
@@ -292,7 +292,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  /// Is user ki locations (admin = saari, team member = sirf assigned)
+  /// This user's locations (admin = all, team member = only assigned)
   Widget _hotelList() {
     return Obx(() {
       final hotels = locationController.filteredHotels;

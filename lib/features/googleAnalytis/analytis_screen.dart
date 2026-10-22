@@ -34,7 +34,7 @@ class Analytis extends StatelessWidget {
                 IconButton(
                   tooltip: 'Refresh',
                   icon: const Icon(Icons.refresh),
-                  onPressed: controller.loadAll, // sab refresh
+                  onPressed: controller.loadAll, // refresh everything
                 ),
               DateRangeDropdown(controller: controller),
               SizedBox(width: r.pagePadding),
@@ -42,7 +42,7 @@ class Analytis extends StatelessWidget {
           ),
           body: SafeArea(
             child: Obx(() {
-              // Chart API chal rahi ho to tabs + chart ki jagah shimmer
+              // While the chart API runs, show shimmer instead of tabs + chart
               final loading = controller.isLoading.value;
 
               if (!loading && controller.isNotConnected.value) {
@@ -117,7 +117,7 @@ class Analytis extends StatelessWidget {
                             ),
                           ),
                           SizedBox(height: r.gap + 4),
-                          // Events + Conversions: wide par side-by-side
+                          // Events + Conversions: side by side when wide
                           Padding(
                             padding: EdgeInsets.symmetric(
                               horizontal: r.pagePadding,

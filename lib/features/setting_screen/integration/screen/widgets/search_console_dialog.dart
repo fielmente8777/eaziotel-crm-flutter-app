@@ -38,7 +38,7 @@ class _SearchConsoleDialogState extends State<_SearchConsoleDialog> {
     text: widget.controller.gsc.value.rawDomain,
   );
   late final email = TextEditingController(
-    // Saved email na ho to judi hui Google account ka email
+    // If there is no saved email, the connected Google account's email
     text: widget.controller.gsc.value.email.isNotEmpty
         ? widget.controller.gsc.value.email
         : widget.controller.google.value.email,

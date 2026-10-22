@@ -1,6 +1,6 @@
 import 'package:eazotel/utils/res/t_responsive.dart';
 
-/// Sirf analytics ki sizes. Breakpoints global TResponsive se aate hain.
+/// Analytics-only sizes. Breakpoints come from the global TResponsive.
 class AnalyticsLayout {
   final TResponsive r;
 

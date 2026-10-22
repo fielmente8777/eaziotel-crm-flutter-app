@@ -2,12 +2,12 @@
 // QUICK REPLY CONTROLLER
 // Settings > WhatsApp > Quick Replies
 //
-//   Existing Replies : list + search, har reply par Edit / Delete
-//   Create / Edit    : naam, message, photo / video / document
-//                      (photo 5MB, video 10MB, document 10MB tak)
+//   Existing Replies : list + search, Edit / Delete on each reply
+//   Create / Edit    : name, message, photo / video / document
+//                      (photo up to 5MB, video 10MB, document 10MB)
 //
-// Edit me purani files "media" me wapas jaati hain (jo hatayi nahi),
-// nayi files "file" me upload hoti hain.
+// On Edit, old files (the ones not removed) go back in "media",
+// new files are uploaded in "file".
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
@@ -45,7 +45,7 @@ enum AttachmentKind {
   ];
 }
 
-/// Form me ek file: nayi (path) ya pehle se upload hui (media)
+/// One file in the form: new (path) or already uploaded (media)
 class QuickReplyAttachment {
   QuickReplyAttachment.newFile({
     required this.kind,
@@ -92,7 +92,7 @@ class QuickReplyController extends GetxController {
   final search = ''.obs;
   final tab = QuickReplyTab.list.obs;
 
-  /// Kis reply ka delete chal raha hai
+  /// Which reply is being deleted
   final deletingId = RxnString();
 
   List<QuickReply> get replies => (listResponse.value?.replies ?? const [])
@@ -139,7 +139,7 @@ class QuickReplyController extends GetxController {
   // FORM
   // ============================================================
 
-  /// null = naya reply
+  /// null = new reply
   final editingId = RxnString();
   bool get isEditing => editingId.value != null;
 
@@ -152,7 +152,7 @@ class QuickReplyController extends GetxController {
   final _tick = 0.obs;
   void _touch() => _tick.value++;
 
-  /// WhatsApp par kitne message jaayenge (har file alag message)
+  /// How many messages will go on WhatsApp (each file is a separate message)
   int get messageCount => attachments.isEmpty ? 1 : attachments.length;
 
   bool get canSave {
@@ -318,7 +318,7 @@ class QuickReplyController extends GetxController {
       );
 
       if (response.isSuccess) {
-        // Web me list taaza nahi hoti thi; yahan turant hat jaata hai
+        // On the web the list did not refresh; here it is removed right away
         final current = listResponse.value;
         if (current != null) {
           listResponse.value = QuickReplyListResponse(

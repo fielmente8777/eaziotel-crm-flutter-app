@@ -1,14 +1,14 @@
 // ============================================================
 // GOOGLE ADS MODELS
 //
-//   AdsOption      : Account / Campaign / Ad Group / Ad dropdown ki ek line
-//   AdsAd          : ek ad (headline, description, link) -> Live Ad Preview
+//   AdsOption      : one line of the Account / Campaign / Ad Group / Ad dropdown
+//   AdsAd          : one ad (headline, description, link) -> Live Ad Preview
 //   AdsTotals      : impressions, clicks, cost, conversions, conv. value
 //   AdsDerived     : CTR, Avg CPC, Conv. Rate, Cost/Conv, ROAS, Impr. Share
-//   AdsDayPoint    : chart ka ek din
+//   AdsDayPoint    : one day of the chart
 //   AdsSummary     : totals + derived + series (metrics/summary API)
-//   AdsDeviceSlice : device ke hisaab se clicks
-//   AdsCampaignRow : Campaign Comparison table ki line
+//   AdsDeviceSlice : clicks by device
+//   AdsCampaignRow : a line of the Campaign Comparison table
 // ============================================================
 
 double _num(dynamic v) =>
@@ -19,7 +19,7 @@ String _str(dynamic v) {
   return text == 'null' ? '' : text;
 }
 
-/// Web jaisa: sirf ENABLED (ya "2") wale dikhte hain
+/// Same as web: only ENABLED (or "2") items are shown
 bool isEnabledStatus(dynamic status) {
   final s = _str(status).toUpperCase();
   return s == 'ENABLED' || s == '2';
@@ -45,11 +45,11 @@ class AdsAd {
   final List<String> descriptions;
   final String finalUrl;
 
-  /// "www.example.com" (link na ho to khali)
+  /// "www.example.com" (empty if there is no link)
   String get displayUrl => Uri.tryParse(finalUrl)?.host ?? '';
 
   factory AdsAd.fromJson(Map<String, dynamic> json) {
-    // headline kabhi {"text": ".."} hota hai, kabhi seedha text
+    // headline is sometimes {"text": ".."}, sometimes plain text
     List<String> texts(dynamic list) => list is List
         ? list
               .map((e) => e is Map ? _str(e['text']) : _str(e))
@@ -114,7 +114,7 @@ class AdsDerived {
   final double costPerConversion;
   final double roas;
 
-  /// null = data nahi
+  /// null = no data
   final double? impressionShare;
   final bool impressionShareApprox;
 
@@ -172,7 +172,7 @@ class AdsSummary {
   final AdsDerived derived;
   final List<AdsDayPoint> series;
 
-  /// Web jaisa: totals sab 0 ho to "data nahi"
+  /// Same as web: if all totals are 0 then "no data"
   bool get hasData => !totals.isEmpty;
 
   factory AdsSummary.fromJson(dynamic json) {
@@ -199,7 +199,7 @@ class AdsDeviceSlice {
   final String name;
   final double clicks;
 
-  /// Google ka device number -> naam
+  /// Google's device number -> name
   static const Map<String, String> names = {
     '2': 'Mobile',
     '3': 'Tablet',
@@ -208,7 +208,7 @@ class AdsDeviceSlice {
     '6': 'Other',
   };
 
-  /// API list -> device ke naam se jodi hui clicks (0 wale hata kar)
+  /// API list -> clicks added up by device name (dropping zeros)
   static List<AdsDeviceSlice> group(List<dynamic> rows) {
     final map = <String, double>{};
 

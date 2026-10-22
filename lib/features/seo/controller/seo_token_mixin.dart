@@ -1,9 +1,9 @@
 // ============================================================
 // SEO TOKEN MIXIN
-// Local SEO aur Website SEO dono me credits (tokens) chahiye:
-//   tokenResponse : API ka model
-//   tokenBalance  : kitne bache (null = pata nahi)
-//   canAfford(n)  : n credit hain ya nahi
+// Both Local SEO and Website SEO need credits (tokens):
+//   tokenResponse : the API model
+//   tokenBalance  : how many are left (null = unknown)
+//   canAfford(n)  : whether there are n credits
 // ============================================================
 
 import 'package:flutter/foundation.dart';
@@ -20,7 +20,7 @@ mixin SeoTokenMixin on GetxController {
   SeoTokenPricing get pricing =>
       tokenResponse.value?.result.pricing ?? const SeoTokenPricing();
 
-  /// Balance pata nahi ho to rokte nahi (server khud 402 dega)
+  /// If the balance is unknown we do not block (the server returns 402 itself)
   bool canAfford(int cost) => tokenBalance == null || tokenBalance! >= cost;
 
   Future<void> loadTokens() async {

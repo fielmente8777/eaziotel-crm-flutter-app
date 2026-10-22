@@ -2,14 +2,14 @@
 // SEO INTELLIGENCE RESPONSE
 // GET /api/v1/seo/seo-intelligence
 //
-//   result.keywords      : saare keyword (targetUrl hai = Website SEO,
-//                          nahi hai = Local SEO)
-//   result.localConfig   : property, shehar, radius, website url
-//   result.geoGrid       : map coverage ke 25 point (rank ke saath)
+//   result.keywords      : all keywords (has targetUrl = Website SEO,
+//                          not present = Local SEO)
+//   result.localConfig   : property, city, radius, website url
+//   result.geoGrid       : 25 map coverage points (with rank)
 //   result.gridMeta      : scan status (pending/scanning/done/failed)
-//   result.trend         : roz ka average rank
+//   result.trend         : daily average rank
 //   result.summary       : totalKeywords, opportunities
-//   result.staleKeywords : kitne keyword ka data purana hai
+//   result.staleKeywords : how many keywords have old data
 // ============================================================
 
 import 'seo_common.dart';
@@ -39,7 +39,7 @@ class SeoIntelligenceResponse {
     );
   }
 
-  /// Screen par turant badlav dikhane ke liye (API ke baad)
+  /// To show the change on screen right away (after the API)
   SeoIntelligenceResponse copyWith({SeoIntelligence? result}) {
     return SeoIntelligenceResponse(
       success: success,
@@ -82,11 +82,11 @@ class SeoIntelligence {
     this.staleKeywords = 0,
   });
 
-  /// Local SEO page ke keyword (bina website link)
+  /// Local SEO page keywords (no website link)
   List<SeoKeyword> get localKeywords =>
       keywords.where((k) => !k.isWebsite).toList();
 
-  /// Website SEO page ke keyword
+  /// Keywords of the Website SEO page
   List<SeoKeyword> get websiteKeywords =>
       keywords.where((k) => k.isWebsite).toList();
 
@@ -166,7 +166,7 @@ class SeoTrendPoint {
 
   const SeoTrendPoint({required this.date, required this.avgRank});
 
-  /// Chart ke neeche: "10-05"
+  /// Below the chart: "10-05"
   String get label => date.length >= 10 ? date.substring(5, 10) : date;
 
   factory SeoTrendPoint.fromJson(Map<String, dynamic> json) {
@@ -185,10 +185,10 @@ class SeoKeyword {
   final double? searchVolume;
   final double? cpc;
 
-  /// Google Maps (GMB) par rank
+  /// Rank on Google Maps (GMB)
   final double? liveGmbRank;
 
-  /// Google search (organic) par rank
+  /// Rank on Google search (organic)
   final double? liveOrganicRank;
 
   /// 0 - 100
@@ -197,7 +197,7 @@ class SeoKeyword {
   /// TARGET / OPTIMIZE / DEFEND / RESEARCH
   final String actionBadge;
 
-  /// Website SEO wale keyword me website link
+  /// Website link in Website SEO keywords
   final String targetUrl;
   final String topCompetitor;
   final List<SeoRankSnapshot> rankHistory;
@@ -218,7 +218,7 @@ class SeoKeyword {
 
   bool get isWebsite => targetUrl.isNotEmpty;
 
-  /// Ek list me pehchan (id na ho to keyword)
+  /// Identity in a list (keyword if there is no id)
   String get key => id.isNotEmpty ? id : keyword;
 
   factory SeoKeyword.fromJson(Map<String, dynamic> json) {
@@ -379,7 +379,7 @@ class SeoLocalConfig {
   final bool onboardingComplete;
   final String selfDomain;
 
-  /// Website SEO: lock kiya hua link
+  /// Website SEO: the locked link
   final String websiteUrl;
 
   /// Website SEO: IN / US / ... / WORLD

@@ -1,11 +1,11 @@
 // ============================================================
 // TEMPLATE META
 //
-// Save API har call message ke saath chune hue template ki jaankari
-// maangti hai (web bhi bhejta hai):
+// The save API needs info about the chosen template with each call message
+// (the web sends it too):
 //   {"name", "language", "bodyText", "variables", "headerVariables",
 //    "headerType", "buttons"}
-// Ye sab WhatsApp template list se nikalta hai.
+// All of this comes from the WhatsApp template list.
 // ============================================================
 
 import 'package:eazotel/features/whatsapp/models/whatsappTemaplateModle.dart';
@@ -23,7 +23,7 @@ Map<String, dynamic> templateMetaOf(WhatsappTemplate template) {
     'name': template.name,
     'language': template.language,
     'bodyText': body?.text?.replaceAll('\r\n', '\n') ?? '',
-    // Template ke example values (jaise ["John", "91XXXXXXXX"])
+    // The template's example values (like ["John", "91XXXXXXXX"])
     'variables': body?.example?.bodyText?.firstOrNull ?? <String>[],
     'headerVariables': header?.example?.headerText ?? <String>[],
     'headerType': header?.format,

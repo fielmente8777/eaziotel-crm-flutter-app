@@ -33,13 +33,13 @@ class _LeadsFilterScreenState extends State<LeadsFilterScreen> {
     endDateTime = widget.controller.endDateTime.value;
   }
 
-  /// Abhi chune hue filter (badge): source + stage + date range (1)
+  /// Currently selected filters (badge): source + stage + date range (1)
   int get _count =>
       selectedSources.length +
       selectedStages.length +
       (startDateTime != null || endDateTime != null ? 1 : 0);
 
-  /// Jaldi wali date: aaj / pichhle 7 / 30 din (Apply par lagti hai)
+  /// Quick dates: today / last 7 / 30 days (applied on Apply)
   void _quickRange(int days) {
     final now = DateTime.now();
     final start = DateTime(

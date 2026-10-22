@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Jo tabs abhi bane nahi hain unke liye
+/// For tabs that are not built yet
 class SettingComingSoon extends StatelessWidget {
   const SettingComingSoon({super.key, required this.title});
 

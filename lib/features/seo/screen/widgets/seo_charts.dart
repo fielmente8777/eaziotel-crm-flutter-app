@@ -1,9 +1,9 @@
 // ============================================================
 // SEO CHARTS  (fl_chart)
 //
-//   SeoRankChart : rank ka trend. Rank me chhota = achha, isliye
-//                  chart ulta hai: #1 upar, #20 neeche.
-//                  (andar -rank plot karte hain, label me +rank)
+//   SeoRankChart : rank trend. For rank, lower = better, so
+//                  the chart is upside down: #1 on top, #20 at the bottom.
+//                  (inside we plot -rank, the label shows +rank)
 // ============================================================
 
 import 'dart:math' as math;
@@ -35,7 +35,7 @@ class SeoRankChart extends StatelessWidget {
   final Color color;
   final double height;
 
-  /// Chhota chart (keyword detail): kam label
+  /// Small chart (keyword detail): fewer labels
   final bool compact;
   final String name;
 
@@ -49,7 +49,7 @@ class SeoRankChart extends StatelessWidget {
     final best = ranks.reduce(math.min);
     final worst = ranks.reduce(math.max);
 
-    // Upar-neeche thodi jagah (#1 se upar nahi)
+    // A little space above and below (nothing above #1)
     final maxY = -math.max(0.5, best - 1.0);
     final minY = -(worst + 1);
 
@@ -75,7 +75,7 @@ class SeoRankChart extends StatelessWidget {
                 showTitles: true,
                 reservedSize: compact ? 30 : 38,
                 getTitlesWidget: (v, meta) {
-                  // Sirf poore number
+                  // Whole numbers only
                   if (v != v.roundToDouble()) return const SizedBox.shrink();
                   return Text('#${(-v).round()}', style: axis);
                 },

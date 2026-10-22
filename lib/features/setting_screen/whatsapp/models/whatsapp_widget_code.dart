@@ -1,9 +1,9 @@
 // ============================================================
 // WHATSAPP WIDGET CODE
 //
-// "WhatsApp Widget Integration" card me dikhne wala code banata hai.
-// Hotel ki ndid, hid aur phone number code ke andar bhar diye jaate hain.
-// User ise copy karke apni website me lagata hai.
+// Builds the code shown in the "WhatsApp Widget Integration" card.
+// The hotel's ndid, hid and phone number are filled into the code.
+// The user copies it into their website.
 // ============================================================
 
 class WhatsappWidgetCode {
@@ -16,10 +16,10 @@ class WhatsappWidgetCode {
   final String ndid;
   final String hid;
 
-  /// "+919759349941" jaisa number
+  /// A number like "+919759349941"
   final String phone;
 
-  /// Option 1: website ke body tag ke band hone se pehle lagane wala script
+  /// Option 1: a script to put before the closing body tag of the website
   String get script =>
       '''
 <script>
@@ -33,7 +33,7 @@ window.eazbotConfig = {
 
 <script src="https://whatsapp-widget-tau.vercel.app/widget/whatsapp.js"></script>''';
 
-  /// Option 2: khud API call karne wala code
+  /// Option 2: code that makes the API call itself
   String get manualApi =>
       '''
 try {

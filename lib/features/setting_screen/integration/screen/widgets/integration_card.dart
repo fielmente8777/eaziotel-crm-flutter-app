@@ -1,8 +1,8 @@
 // ============================================================
 // INTEGRATION CARDS
 //
-//   IntegrationCard    : ek integration (icon, naam, matlab, Connect / Disconnect)
-//   SearchConsoleCard  : Google Search Console ka status
+//   IntegrationCard    : one integration (icon, name, meaning, Connect / Disconnect)
+//   SearchConsoleCard  : Google Search Console status
 // ============================================================
 
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
@@ -23,7 +23,7 @@ class IntegrationCard extends StatelessWidget {
   final IntegrationItem item;
   final VoidCallback onTap;
 
-  /// Google login khul raha hai -> "Opening..."
+  /// Google login is opening -> "Opening..."
   final bool busy;
 
   @override
@@ -91,7 +91,7 @@ class SearchConsoleCard extends StatelessWidget {
 
   final GscSettings settings;
 
-  /// GA juda nahi to Search Console set nahi ho sakta
+  /// Search Console cannot be set if GA is not connected
   final bool gaConnected;
   final VoidCallback onEdit;
 
@@ -163,7 +163,7 @@ class SearchConsoleCard extends StatelessWidget {
 }
 
 // ============================================================
-// CHHOTE HISSE
+// SMALL PARTS
 // ============================================================
 
 class _Box extends StatelessWidget {

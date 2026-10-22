@@ -25,7 +25,7 @@ class LocationController extends GetxController {
   final selectedHotel = Rxn<HotelModel>();
   final showHotels = false.obs;
 
-  /// Owner: Select Hotel screen par 'Client accounts' tab khula hai
+  /// Owner: the 'Client accounts' tab is open on the Select Hotel screen
   final showClients = false.obs;
   final _workers = <Worker>[];
 
@@ -43,7 +43,7 @@ class LocationController extends GetxController {
 
     _workers.add(ever(dashboardController.user, (_) => loadHotels()));
 
-    // Role / assigned locations aaye -> list dobara (sirf allowed hotels)
+    // Role / assigned locations arrived -> rebuild the list (allowed hotels only)
     _workers.add(
       ever(dashboardController.authUser, (_) {
         loadHotels();
@@ -65,8 +65,8 @@ class LocationController extends GetxController {
   // ============================================================
 
   Future<void> loadHotels() async {
-    // Sirf wahi hotels jo is user ko dikhne chahiye (web jaisa):
-    // admin -> saare, team member -> sirf assigned
+    // Only the hotels this user should see (same as web):
+    // admin -> all, team member -> only assigned
     final apiHotels = dashboardController.allowedHotels;
 
     if (apiHotels.isEmpty) {
@@ -78,21 +78,21 @@ class LocationController extends GetxController {
     hotels.assignAll(apiHotels);
     filteredHotels.assignAll(apiHotels);
 
-    // Saved hotel ID storage se nikalo
+    // Get the saved hotel ID from storage
     final prefs = await SharedPreferences.getInstance();
 
     final savedHotelId = prefs.getString(hotelIdKey);
 
     // ============================================================
-    // SAVED HOTEL (agar ye user khol sakta hai), warna
-    // admin -> aakhri, team member -> pehli (web jaisa)
+    // SAVED HOTEL (if this user can open it), otherwise
+    // admin -> last one, team member -> first one (same as web)
     // ============================================================
 
     final hotelToSelect =
         dashboardController.pickHotel(apiHotels, savedHotelId) ??
         apiHotels.first;
 
-    // Dashboard pehle se isi hotel ka data la raha hai -> dobara mat laao
+    // The dashboard is already loading this hotel's data -> do not load it again
     if (dashboardController.selectedHotelId.value == hotelToSelect.hotelId) {
       selectedHotel.value = hotelToSelect;
       return;
@@ -104,7 +104,7 @@ class LocationController extends GetxController {
 
     selectedHotel.value = hotelToSelect;
 
-    // Storage mein bhi ensure karo
+    // Make sure it is in storage too
     await prefs.setString(hotelIdKey, hotelToSelect.hotelId);
 
     // Dashboard data load
@@ -135,9 +135,9 @@ class LocationController extends GetxController {
   }
 
   // ============================================================
-  // OWNER: CLIENT ACCOUNTS  (web ke "LocationSwitcher" jaisa)
-  //   saare clients ki list -> ek par tap -> switch-account se uska
-  //   token -> client data khulta hai, owner session preserve rehta hai
+  // OWNER: CLIENT ACCOUNTS  (like the web "LocationSwitcher")
+  //   list of all clients -> tap one -> switch-account gives its
+  //   token -> client data opens, the owner session is kept
   // ============================================================
 
   bool get isOwner => dashboardController.isOwner;
@@ -147,7 +147,7 @@ class LocationController extends GetxController {
   final isClientsLoading = false.obs;
   final clientSearch = ''.obs;
 
-  /// Jis client me switch ho raha hai (hotelEmail)
+  /// The client being switched to (hotelEmail)
   final switchingClient = ''.obs;
 
   List<ClientAccountModel> get visibleClients =>
@@ -167,7 +167,7 @@ class LocationController extends GetxController {
     }
   }
 
-  /// Client account me jao. Galti ho to [onError].
+  /// Go into the client account. On error, [onError].
   Future<void> switchClient(
     ClientAccountModel client, {
     required void Function(String) onError,
@@ -191,7 +191,7 @@ class LocationController extends GetxController {
         return;
       }
 
-      // Naya token + us client ki pehli location
+      // New token + that client's first location
       await TokenStorage.enterClient(token, client.firstHotelId);
 
       await onSwitched();
@@ -204,11 +204,11 @@ class LocationController extends GetxController {
   }
 
   // ============================================================
-  // REPLACE HOTELS (Settings me add / edit / delete ke baad)
+  // REPLACE HOTELS (after add / edit / delete in Settings)
   // ============================================================
 
-  /// Server ki nayi list lagao. Chuna hua hotel wahi rehta hai (naam badla ho
-  /// to naya naam dikhe). Wo hat gaya ho to pehla hotel chuno.
+  /// Use the server's new list. The selected hotel stays (if it was renamed,
+  /// the new name shows). If it was removed, pick the first hotel.
   Future<void> replaceHotels(List<HotelModel> list) async {
     hotels.assignAll(list);
     filteredHotels.assignAll(list);

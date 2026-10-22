@@ -24,7 +24,7 @@ class DashboardApiService {
   }
 
   // ============================================================
-  // LOGIN KIYA HUA USER (role, isAdmin, assigned_location)
+  // LOGGED-IN USER (role, isAdmin, assigned_location)
   // GET https://nexon.eazotel.com/user/user-details  (Bearer token)
   // ============================================================
 
@@ -66,7 +66,7 @@ class DashboardApiService {
     ];
   }
 
-  /// POST /admin/switch-account { Email } -> client ka naya token (null = fail)
+  /// POST /admin/switch-account { Email } -> the client's new token (null = failed)
   Future<String?> switchAccount(String email) async {
     final response = await ApiClient.post(
       AuthApiEndpoint.switchAccount,

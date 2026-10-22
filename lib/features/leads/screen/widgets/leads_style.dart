@@ -1,9 +1,9 @@
 // ============================================================
-// LEADS STYLE  (Leads feature ke saare screen ek jaisa dikhein)
+// LEADS STYLE  (so all screens of the Leads feature look the same)
 //
-//   LeadsPalette   : card, border, text ke rang (light / dark)
-//   LeadsStyle     : source / stage ka rang + icon, avatar ka rang
-//   LeadsShimmer   : loading ke time card jaise bhoore dabbe
+//   LeadsPalette   : colors for card, border, text (light / dark)
+//   LeadsStyle     : source / stage color + icon, avatar color
+//   LeadsShimmer   : grey card-like boxes while loading
 // ============================================================
 
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
@@ -24,31 +24,31 @@ class LeadsPalette {
   Color get subText =>
       isDark ? TAppColors.darkSecondaryText : TAppColors.lightSecondaryText;
 
-  /// Dark me thoda chamakdar indigo (bottom nav jaisa), light me brand primary
+  /// A slightly brighter indigo in dark (like the bottom nav), brand primary in light
   Color get primary => isDark ? const Color(0xFF6366F1) : TAppColors.primary;
 
-  /// Primary rang ka text / icon (dark me lavender taaki saaf padha jaye)
+  /// Primary color for text / icons (lavender in dark so it reads clearly)
   Color get accent => isDark ? const Color(0xFFA5B4FC) : TAppColors.primary;
 
-  /// Brand gradient (chuna hua tab, filter button)
+  /// Brand gradient (selected tab, filter button)
   List<Color> get brandGradient => isDark
       ? const [Color(0xFF6366F1), Color(0xFF8B5CF6)]
       : const [Color(0xFF4F46E5), Color(0xFF7C3AED)];
 
-  /// Halka rang wala background (chip / icon box)
+  /// Light tinted background (chip / icon box)
   Color tint(Color c) => c.withValues(alpha: isDark ? .18 : .10);
 
-  /// Chip ki halki border
+  /// Light border of the chip
   Color tintBorder(Color c) => c.withValues(alpha: isDark ? .40 : .25);
 
-  /// Rangeen background par us rang ka text: dark me thoda halka karo
+  /// Text in that color on a tinted background: make it a bit lighter in dark
   Color onTint(Color c) => isDark ? Color.lerp(c, Colors.white, .35)! : c;
 }
 
 class LeadsStyle {
   LeadsStyle._();
 
-  /// Lead kahan se aaya (eazbot, webform ...)
+  /// Where the lead came from (eazbot, webform ...)
   static ({Color color, IconData icon}) source(String source) {
     switch (source.toLowerCase()) {
       case 'eazbot':
@@ -75,7 +75,7 @@ class LeadsStyle {
     }
   }
 
-  /// Lead ka stage / status
+  /// The lead's stage / status
   static Color stage(String stage) {
     final s = stage.toLowerCase();
     if (s.contains('convert')) return const Color(0xFF16A34A);
@@ -88,7 +88,7 @@ class LeadsStyle {
     return const Color(0xFF64748B);
   }
 
-  /// Har tab ka apna rang: All | Contact | Converted | Hot
+  /// Each tab's own color: All | Contact | Converted | Hot
   static const tabColors = [
     Color(0xFF6366F1),
     Color(0xFF0EA5E9),
@@ -107,7 +107,7 @@ class LeadsStyle {
     Color(0xFFEF4444),
   ];
 
-  /// Naam ke hisaab se hamesha ek hi rang
+  /// Always the same color for the same name
   static Color avatar(String name) {
     if (name.isEmpty) return _avatarColors.first;
     final hash = name.codeUnits.fold<int>(0, (s, c) => s + c);
@@ -118,7 +118,7 @@ class LeadsStyle {
       v.isEmpty ? v : v[0].toUpperCase() + v.substring(1);
 }
 
-/// Loading: card jaise bhoore dabbe (gol ghoomne wala loader nahi)
+/// Loading: grey card-like boxes (no spinning loader)
 class LeadsShimmer extends StatelessWidget {
   const LeadsShimmer({super.key, this.count = 6, this.padding});
 

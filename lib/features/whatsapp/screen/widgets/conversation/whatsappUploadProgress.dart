@@ -5,21 +5,21 @@ import 'package:get/get.dart';
 // UPLOAD PROGRESS STORE
 // ============================================================
 
-/// Bheji ja rahi image / video ka upload progress (0.0 - 1.0),
-/// message id (temp id) ke hisab se.
+/// Upload progress of the image / video being sent (0.0 - 1.0),
+/// keyed by the message id (temp id).
 class WhatsappUploadProgress {
   WhatsappUploadProgress._();
 
   static final RxMap<String, double> _values = <String, double>{}.obs;
 
-  /// null = ye message upload nahi ho raha
+  /// null = this message is not uploading
   static double? of(String messageId) => _values[messageId];
 
   static void update(String messageId, double value) {
     final next = value.clamp(0.0, 1.0);
     final current = _values[messageId];
 
-    // Percent na badle to UI ko dobara mat banao
+    // Do not rebuild the UI if the percent did not change
     if (current != null && (current * 100).floor() == (next * 100).floor()) {
       return;
     }
@@ -34,7 +34,7 @@ class WhatsappUploadProgress {
 // UPLOAD OVERLAY
 // ============================================================
 
-/// Upload ke dauran image / video ke upar progress ring + percent dikhata hai.
+/// Shows a progress ring + percent over the image / video while uploading.
 class WhatsappUploadOverlay extends StatelessWidget {
   final String messageId;
   final Widget child;

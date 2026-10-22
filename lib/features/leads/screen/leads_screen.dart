@@ -1,13 +1,13 @@
 // ============================================================
 // LEADS SCREEN  (bottom tab: Leads)
 //
-//   upar    : ← Leads (kul leads)            [🔍 filter (3)]  <- badge = filter count
-//   search  : naam, phone, source
-//   tabs    : All Leads | Contact | Converted | Hot   (har tab me ginti)
-//   filter  : "3 filters applied" + chip (x se ek hatao) + Clear all
-//   list    : lead card, neeche kheencho = refresh, end par aur leads
+//   top     : ← Leads (total leads)          [🔍 filter (3)]  <- badge = filter count
+//   search  : name, phone, source
+//   tabs    : All Leads | Contact | Converted | Hot   (count in each tab)
+//   filter  : "3 filters applied" + chips (remove one with x) + Clear all
+//   list    : lead cards, pull down = refresh, more leads at the end
 //
-// Logic pehle jaisa: sab kaam LeadsController / DashboardController karte hain.
+// Logic is the same as before: LeadsController / DashboardController do all the work.
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/controllers/bottom_nav_controller.dart';
@@ -71,12 +71,12 @@ class LeadsScreen extends StatelessWidget {
     return Obx(() {
       final leads = leadsController.filteredLeads;
 
-      // ---------- Pehli baar loading ----------
+      // ---------- First-time loading ----------
       if (leadsController.isLoading && leads.isEmpty) {
         return const LeadsShimmer();
       }
 
-      // ---------- Khali ----------
+      // ---------- Empty ----------
       if (leads.isEmpty) {
         return RefreshIndicator(
           onRefresh: leadsController.refreshLeads,
@@ -117,7 +117,7 @@ class LeadsScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
             itemCount: leads.length + (leadsController.isLoadingMore ? 1 : 0),
             itemBuilder: (_, index) {
-              // Aur leads aa rahe hain
+              // More leads are loading
               if (index >= leads.length) {
                 return const LeadsShimmer(count: 1, padding: EdgeInsets.zero);
               }
@@ -230,7 +230,7 @@ class _Header extends StatelessWidget {
                         ),
                         if (active) ...[
                           const SizedBox(width: 6),
-                          // Badge: kitne filter lage hain
+                          // Badge: how many filters are applied
                           Container(
                             constraints: const BoxConstraints(minWidth: 20),
                             height: 20,
@@ -276,7 +276,7 @@ class _ActiveFilters extends StatelessWidget {
 
   String _date(DateTime d) => DateFormat('d MMM').format(d);
 
-  /// Ek filter hatao, baaki wahi rakho (same applyFilters logic)
+  /// Remove one filter, keep the rest (same applyFilters logic)
   Future<void> _apply({
     List<String>? sources,
     List<String>? stages,

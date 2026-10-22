@@ -1,7 +1,7 @@
 // ============================================================
 // PROFILE SETTING SERVICE
 //
-// Settings > Profile tab ki API calls. Sirf yahi file server se baat karti hai.
+// API calls for the Settings > Profile tab. Only this file talks to the server.
 //   changePassword : POST /eazotel/edit/password
 // ============================================================
 
@@ -17,8 +17,8 @@ import 'package:flutter/foundation.dart';
 
 import '../models/change_password_result.dart';
 
-/// Settings > Profile tab ki saari API calls yahan hain.
-/// Controller sirf state sambhalta hai, server se baat ye class karti hai.
+/// All API calls for the Settings > Profile tab are here.
+/// The controller only holds the state; this class talks to the server.
 class ProfileSettingService {
   /// POST /eazotel/edit/password
   /// body: {"token": "..", "oldAccessId": "..", "newAccessId": ".."}
@@ -54,11 +54,11 @@ class ProfileSettingService {
   }
 
   // ============================================================
-  // HOTEL LOCATIONS  (web dashboard jaisa)
+  // HOTEL LOCATIONS  (same as the web dashboard)
   //   add    : POST   /api/v1/profile/hotels          { hotelId, local, ... }
   //   edit   : PUT    /api/v1/profile/hotels/<id>     { local, city, ... }
   //   delete : DELETE /api/v1/profile/hotels/<id>
-  // Jawab me poori nayi list aati hai (null = list nahi aayi)
+  // The answer has the full new list (null = no list came)
   // ============================================================
 
   Future<List<HotelModel>?> addHotel({
@@ -110,7 +110,7 @@ class ProfileSettingService {
 
     final json = _decode(response.body);
 
-    // Kuch API 200 ke saath bhi success:false bhejti hain
+    // Some APIs send success:false even with a 200
     if (json['success'] == false) {
       throw Exception(
         '${json['responseMessage'] ?? json['message'] ?? 'Request failed'}',

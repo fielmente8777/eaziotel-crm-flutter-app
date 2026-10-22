@@ -1,10 +1,10 @@
 // ============================================================
-// EMAIL HTML PREVIEW  (email jaisa dikhta hai, waisa)
+// EMAIL HTML PREVIEW  (shows the email as it will look)
 //
-// Marketing email ~600px chaude bante hain. Phone par unhe 600 par
-// bana kar chhota (scale) karte hain, jaise Gmail dikhata hai.
-// Email hamesha safed kagaz par (dark theme me bhi), kyunki
-// email isi tarah design hote hain.
+// Marketing emails are made about 600px wide. On phones we build them at 600
+// and scale them down, like Gmail does.
+// The email is always on white paper (even in dark theme), because
+// that is how emails are designed.
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -22,7 +22,7 @@ class EmailHtmlPreview extends StatelessWidget {
 
   final String html;
 
-  /// Diya to itni oonchai ke andar scroll (card me thumbnail jaisa)
+  /// If given, scroll within this height (like a thumbnail in a card)
   final double? maxHeight;
   final double designWidth;
 
@@ -38,7 +38,7 @@ class EmailHtmlPreview extends StatelessWidget {
           textStyle: const TextStyle(color: Color(0xFF1F2937), fontSize: 14),
         );
 
-        // Jagah kam hai -> 600 par bana kar chhota karo
+        // Not enough space -> build at 600 and scale down
         if (width < designWidth) {
           return FittedBox(
             fit: BoxFit.fitWidth,

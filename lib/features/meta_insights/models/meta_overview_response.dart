@@ -50,7 +50,7 @@ class MetaOverviewResponse {
 }
 
 class MetaOverview {
-  /// Card isi kram me (web jaisa)
+  /// Cards in this order (same as web)
   final List<MetaCard> cards;
   final List<MetaDayPoint> reach;
   final List<MetaDayPoint> engagements;
@@ -94,10 +94,10 @@ class MetaCard {
   final String key;
   final double value;
 
-  /// up / down (ya kuch nahi)
+  /// up / down (or nothing)
   final String trend;
 
-  /// % badlav (null = server ne nahi bheja)
+  /// % change (null = the server did not send it)
   final double? growth;
 
   const MetaCard({
@@ -159,7 +159,7 @@ class MetaPost {
   final double reach;
   final double engagement;
 
-  /// Facebook par post ka link (na ho to '')
+  /// Link to the post on Facebook ('' if none)
   final String permalink;
 
   const MetaPost({

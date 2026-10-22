@@ -20,7 +20,7 @@ class GoogleAdsCampaignResponse {
     this.campaigns = const [],
   });
 
-  /// Web jaisa: sirf ENABLED, aur ek campaign id sirf ek baar
+  /// Same as web: only ENABLED, and each campaign id only once
   List<GoogleAdsCampaign> get enabled {
     final seen = <String>{};
     return campaigns

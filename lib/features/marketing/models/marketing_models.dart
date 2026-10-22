@@ -1,8 +1,8 @@
 // ============================================================
 // MARKETING MODELS
 //
-//   WhatsappCampaign      : WhatsApp campaign list ki ek line
-//   CampaignRecipient     : campaign ka ek number (sent / delivered / read ...)
+//   WhatsappCampaign      : one line of the WhatsApp campaign list
+//   CampaignRecipient     : one number of a campaign (sent / delivered / read ...)
 //   EmailRecipient        : Email Marketing > Recipients
 //   EmailCampaign         : Email Marketing > Campaigns
 //   MarketingPage         : pagination (page, total, totalPages)
@@ -138,7 +138,7 @@ class CampaignRecipient {
 class EmailRecipient {
   const EmailRecipient({this.id = '', required this.name, required this.email});
 
-  /// Lead ki id (select karke bhejne me lagti hai)
+  /// Lead id (needed when selecting and sending)
   final String id;
   final String name;
   final String email;
@@ -165,14 +165,14 @@ class EmailCampaign {
 
   final String id;
 
-  /// Email ka poora HTML (detail me preview)
+  /// The full HTML of the email (preview in the detail)
   final String html;
   final String subject;
   final String status;
   final String fromEmail;
   final int recipientCount;
 
-  /// Email ka saada text (preview ke liye)
+  /// Plain text of the email (for the preview)
   final String text;
 
   /// sent, delivered, failed, opened, clicked, unsubscribed
@@ -193,7 +193,7 @@ class EmailCampaign {
       status: _str(json['status']).toLowerCase(),
       fromEmail: _str(json['fromEmail']),
       recipientCount: _int(json['recipientCount']),
-      // Khali lines aur extra spaces hata kar
+      // With empty lines and extra spaces removed
       text: _str(json['text'])
           .split(RegExp(r'\r?\n'))
           .map((line) => line.trim())
@@ -208,7 +208,7 @@ class EmailCampaign {
   }
 }
 
-/// Email campaign ka ek recipient (detail screen)
+/// One recipient of an email campaign (detail screen)
 class EmailCampaignRecipient {
   const EmailCampaignRecipient({
     required this.email,
@@ -241,7 +241,7 @@ class EmailCampaignRecipient {
   }
 }
 
-/// Saved / AI se bana email template
+/// A saved / AI-made email template
 class EmailTemplate {
   const EmailTemplate({
     this.id = '',
@@ -259,7 +259,7 @@ class EmailTemplate {
   final String html;
   final String previewText;
 
-  /// AI ko diya gaya brief (dobara banane / badalne ke liye)
+  /// The brief given to the AI (to regenerate / change it)
   final String prompt;
   final DateTime? updatedAt;
 
@@ -300,14 +300,14 @@ class EmailTemplate {
   };
 }
 
-/// Lead kahan se aaya (WhatsApp campaign ki audience)
+/// Where the lead came from (audience of the WhatsApp campaign)
 class LeadSource {
   const LeadSource(this.value, this.label);
 
   final String value;
   final String label;
 
-  /// Web dashboard jaisi list. '' = All sources
+  /// Same list as the web dashboard. '' = All sources
   static const all = [
     LeadSource('', 'All sources'),
     LeadSource('eazbot', 'Eazbot'),

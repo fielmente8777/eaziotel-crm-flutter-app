@@ -1,7 +1,7 @@
 // ============================================================
 // STEP 4: INSTALL
 //
-// Website me lagane wala script (Next.js aur Plain HTML), Copy button ke saath.
+// The script to put on the website (Next.js and Plain HTML), with a Copy button.
 // ============================================================
 
 import 'package:flutter/material.dart';

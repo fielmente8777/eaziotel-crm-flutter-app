@@ -16,8 +16,8 @@ class CallsManagementScreen extends StatelessWidget {
   // ACTIONS
   // ============================================================
 
-  /// App ke andar wali WhatsApp conversation kholta hai.
-  /// Is number se conversation na ho to Add Contact sheet (number bhara hua).
+  /// Opens the in-app WhatsApp conversation.
+  /// If there is no conversation with this number, opens Add Contact (number pre-filled).
   Future<void> _openWhatsapp(
     BuildContext context,
     CallsController controller,
@@ -40,7 +40,7 @@ class CallsManagementScreen extends StatelessWidget {
   }
 
 
-  /// Dropdown se value badli. "Follow Up" par follow-up ki date bhi poochho.
+  /// Value changed from the dropdown. For "Follow Up", also ask for the follow-up date.
   Future<void> _changeField(
     BuildContext context,
     CallsController controller,
@@ -62,7 +62,7 @@ class CallsManagementScreen extends StatelessWidget {
         lastDate: today.add(const Duration(days: 365)),
       );
 
-      // Date nahi chuni -> stage mat badlo
+      // No date picked -> do not change the stage
       if (followUpDate == null) return;
     }
 
@@ -127,7 +127,7 @@ class CallsManagementScreen extends StatelessWidget {
             onRefresh: controller.loadCalls,
             child: NotificationListener<ScrollNotification>(
               onNotification: (notification) {
-                // Neeche pahunchne se thoda pehle agla page mangao
+                // Request the next page a little before reaching the bottom
                 if (notification.metrics.pixels >=
                     notification.metrics.maxScrollExtent - 300) {
                   controller.loadMore();

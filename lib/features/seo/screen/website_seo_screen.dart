@@ -1,12 +1,12 @@
 // ============================================================
 // WEBSITE SEO SCREEN  (Drawer > SEO > Website Seo)
 //
-// Web dashboard ke "Website SEO Tracker" jaisa:
-//   website link nahi -> link lock karo (hamesha ke liye, puchh kar)
-//   upar              -> link (tap = khulta hai), desh, Add keywords
+// Like "Website SEO Tracker" in the web dashboard:
+//   no website link -> lock the link (permanently, after asking)
+//   top               -> link (tap = opens), country, Add keywords
 //   summary           -> kitne keyword, top 3, top 10, avg position
 //   Organic Rankings  -> keyword, search volume, CPC, position,
-//                        difficulty, refresh, hatao (sort bhi)
+//                        difficulty, refresh, remove (sorting too)
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive.dart';

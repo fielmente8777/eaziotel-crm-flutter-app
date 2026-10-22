@@ -3,14 +3,14 @@ part of '../whatsappController.dart';
 // ============================================================
 // WHATSAPP STATE MIXIN
 //
-// Saari state (Rx variables) ek jagah. Baaki mixin inhi ko padhte / badalte hain.
+// All state (Rx variables) in one place. The other mixins read / change these.
 // ============================================================
 
 mixin WhatsappStateMixin on GetxController {
-  /// Main class (WhatsappController) me hai
+  /// It is in the main class (WhatsappController)
   String get hid;
 
-  /// WhatsappChatMixin me hai (conversation delete karte waqt list ko chahiye)
+  /// It is in WhatsappChatMixin (the list needs it when deleting a conversation)
   void clearCurrentConversation();
 
   final Whatsapptemplatecontroller templateController = Get.put(
@@ -36,7 +36,7 @@ mixin WhatsappStateMixin on GetxController {
 
   final RxString integrationErrorMessage = ''.obs;
 
-  /// API ka complete response yahan store hoga.
+  /// The full API response is stored here.
   final Rxn<Map<String, dynamic>> whatsappIntegration =
       Rxn<Map<String, dynamic>>();
 
@@ -56,7 +56,7 @@ mixin WhatsappStateMixin on GetxController {
   final RxString flowErrorMessage = ''.obs;
   final RxString selectedFlowId = ''.obs;
 
-  /// Flow bhejte waqt true rehta hai
+  /// Stays true while a flow is being sent
   final RxBool isFlowSending = false.obs;
 
   /// All flows from the API (empty list if nothing loaded)
@@ -69,7 +69,7 @@ mixin WhatsappStateMixin on GetxController {
     return flows.firstWhereOrNull((f) => f.flowId == id);
   }
 
-  /// Lead response se nikale gaye saare NDID (cache).
+  /// All NDIDs taken from the lead response (cache).
   Set<String> _leadNdids = <String>{};
 
   Worker? _leadWorker;
@@ -94,8 +94,8 @@ mixin WhatsappStateMixin on GetxController {
 
   final RxString currentConversationId = ''.obs;
 
-  /// Naya incoming message aaya (aur wo chat khuli nahi hai).
-  /// App ke notifications (bell + banner) isse sunte hain.
+  /// A new incoming message arrived (and that chat is not open).
+  /// The app's notifications (bell + banner) listen to this.
   void Function(
     WhatsappConversationModel chat,
     WhatsappSocketMessageModel message,

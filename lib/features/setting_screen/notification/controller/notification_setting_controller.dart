@@ -1,13 +1,13 @@
 // ============================================================
 // NOTIFICATION SETTING CONTROLLER
 //
-//   Screen (widgets)  --->  ye controller  --->  services  --->  API
+//   Screen (widgets)  --->  this controller  --->  services  --->  API
 //
-// Is file me 4 hisse hain:
+// This file has 4 parts:
 //   1. DATA LOAD          : config, WhatsApp switch, templates, flow, team
-//   2. CALL NOTIFICATION  : Not Answered / Missed Call / Busy ka message
-//   3. LEAD SOURCES       : kis source par kisko WhatsApp / Email jaye
-//   4. SAVE               : poori setting server par bhejna
+//   2. CALL NOTIFICATION  : message for Not Answered / Missed Call / Busy
+//   3. LEAD SOURCES       : who gets WhatsApp / Email for which source
+//   4. SAVE               : send the whole setting to the server
 // ============================================================
 
 import 'package:eazotel/core/api/apiexception/api_exception.dart';
@@ -39,7 +39,7 @@ class NotificationSettingController extends GetxController {
 
   final isLoading = true.obs;
 
-  /// null = sab theek. Text ho to poori screen par message + Retry.
+  /// null = all good. If there is text, a full-screen message + Retry.
   final errorMessage = RxnString();
 
   /// "Enable WhatsApp" switch
@@ -74,8 +74,8 @@ class NotificationSettingController extends GetxController {
     isLoading.value = true;
     errorMessage.value = null;
 
-    // Config zaroori hai. Baaki (switch, templates, flow, team) fail ho
-    // jayein to bhi page khulta hai.
+    // The config is required. The page still opens even if the rest
+    // (switch, templates, flow, team) fails.
     try {
       final docs = await NotificationSettingService.getConfig(hid: hid);
       final config = NotificationConfig.fromJson(docs);
@@ -133,7 +133,7 @@ class NotificationSettingController extends GetxController {
     }
   }
 
-  /// Team members dashboard ke paas pehle se hote hain; na hon to mangao
+  /// The dashboard already has the team members; if not, fetch them
   Future<void> _loadTeam() async {
     if (dashboard.userNameResponse.value != null) return;
 
@@ -146,12 +146,12 @@ class NotificationSettingController extends GetxController {
 
   // ============================================================
   // 2. CALL NOTIFICATION
-  // Badlav abhi sirf screen par hota hai (save ki API nahi mili).
+  // For now the change is only on screen (no save API found).
   // ============================================================
 
   void setCallType(CallMessage message, String type) {
     message.type = type;
-    message.selection = null; // type badla to purana chunav hata do
+    message.selection = null; // type changed -> clear the old selection
     callMessages.refresh();
   }
 
@@ -160,7 +160,7 @@ class NotificationSettingController extends GetxController {
     callMessages.refresh();
   }
 
-  /// Doosre dropdown ke option: template ke naam ya flow ki id
+  /// Options of the second dropdown: template names or flow ids
   List<String> optionsFor(CallMessage message) {
     if (message.isFlow) return flowIds.toList();
 
@@ -170,7 +170,7 @@ class NotificationSettingController extends GetxController {
         .toList();
   }
 
-  /// Chuna hua template (preview ke liye). Flow ho to null.
+  /// The selected template (for the preview). null for a flow.
   WhatsappTemplate? templateFor(CallMessage message) {
     if (message.isFlow) return null;
 
@@ -181,7 +181,7 @@ class NotificationSettingController extends GetxController {
   // 3. LEAD SOURCES
   // ============================================================
 
-  /// Team ke wo members jinke paas number (WhatsApp) / email (Email) hai
+  /// Team members who have a number (WhatsApp) / email (Email)
   List<NotificationRecipient> recipientsFor(NotificationChannel channel) {
     final users = dashboard.userNameResponse.value?.data ?? [];
 
@@ -195,7 +195,7 @@ class NotificationSettingController extends GetxController {
         .toList();
   }
 
-  /// Source ke chune hue number / email
+  /// The source's selected numbers / emails
   List<String> valuesOf(
     LeadSourceNotification source,
     NotificationChannel channel,
@@ -211,7 +211,7 @@ class NotificationSettingController extends GetxController {
         : source.isEmailAllowed;
   }
 
-  /// Chip par dikhne wala naam: member mila to uska naam, warna number / email
+  /// Name shown on the chip: the member's name if found, otherwise the number / email
   String labelOf(String value, NotificationChannel channel) {
     final match = recipientsFor(channel).firstWhereOrNull(
       (r) => channel == NotificationChannel.whatsapp
@@ -236,7 +236,7 @@ class NotificationSettingController extends GetxController {
     sources.refresh();
   }
 
-  /// Picker se aayi poori nayi list
+  /// The full new list from the picker
   void setValues(
     LeadSourceNotification source,
     NotificationChannel channel,
@@ -266,13 +266,13 @@ class NotificationSettingController extends GetxController {
   // ============================================================
   // 4. SAVE
   // POST /api/v1/setting/update-config
-  // "Enable WhatsApp" switch is API me nahi hai, isliye wo save nahi hota.
+  // The "Enable WhatsApp" switch is not in this API, so it is not saved.
   // ============================================================
 
-  /// true = Save chal raha hai (button par "Saving...")
+  /// true = Save is running ("Saving..." on the button)
   final isSaving = false.obs;
 
-  /// Server ka callConfig._id (load par milta hai, save me wapas jata hai)
+  /// The server's callConfig._id (comes on load, sent back on save)
   String? _callConfigId;
 
   Future<void> save() async {
@@ -306,7 +306,7 @@ class NotificationSettingController extends GetxController {
     }
   }
 
-  /// Web jaisa body: {"config": {...}, "callConfig": {...}}
+  /// Body same as web: {"config": {...}, "callConfig": {...}}
   Map<String, dynamic> _saveBody() {
     return {
       'config': {for (final source in sources) source.key: source.toJson()},

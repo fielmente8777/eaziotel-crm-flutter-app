@@ -1,13 +1,13 @@
 // ============================================================
 // TEAM MANAGEMENT TAB  (Settings > Team Management)
 //
-// Ye file sirf page ka dhancha hai:
-//   upar  : TeamHeader       (title, ginti, "Add New User")
-//   neeche: members ki list
+// This file is only the page frame:
+//   top   : TeamHeader       (title, count, "Add New User")
+//   bottom: the list of members
 //             phone  (< 640px)  -> TeamMemberCards
 //             tablet / window   -> TeamMemberTable
 //
-// Saare widget screen/widgets/ me hain, data controller/ me.
+// All widgets are in screen/widgets/, data in controller/.
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -19,7 +19,7 @@ import 'widgets/team_header.dart';
 import 'widgets/team_member_cards.dart';
 import 'widgets/team_member_table.dart';
 
-/// Isse chhoti width = phone (cards), isse badi = table
+/// Below this width = phone (cards), above it = table
 const double _tableBreakpoint = 640;
 
 class TeamManagementSettingTab extends StatelessWidget {
@@ -42,8 +42,8 @@ class TeamManagementSettingTab extends StatelessWidget {
                 TeamHeader(controller: controller, isPhone: isPhone),
                 const SizedBox(height: 16),
 
-                // members selected hotel padhta hai, isliye hotel badalne
-                // par ye Obx apne aap dobara banta hai
+                // members reads the selected hotel, so this Obx rebuilds
+                // by itself when the hotel changes
                 Obx(() {
                   final members = controller.members;
 

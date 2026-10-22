@@ -1,11 +1,11 @@
 // ============================================================
-// LOCAL SEO SETUP  (pehli baar, 3 step)
+// LOCAL SEO SETUP  (first time, 3 steps)
 //
-//   1. Business : naam, type, website
-//   2. Location : map par tap (Android/iOS) ya GPS ya haath se
-//   3. Keywords : sujhaav chuno / apna likho -> Finish
+//   1. Business : name, type, website
+//   2. Location : tap on the map (Android/iOS) or GPS or by hand
+//   3. Keywords : pick suggestions / type your own -> Finish
 //
-// Local SEO screen hi isse dikhata hai jab setup adhoora ho.
+// The Local SEO screen shows this when the setup is incomplete.
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive_builder.dart';
@@ -23,7 +23,7 @@ import 'widgets/seo_geo_grid.dart';
 class LocalSeoSetupView extends StatelessWidget {
   const LocalSeoSetupView({super.key, required this.onDone});
 
-  /// Setup ho gaya -> Local SEO dobara load
+  /// Setup done -> reload Local SEO
   final Future<void> Function() onDone;
 
   static const _steps = ['Business', 'Location', 'Keywords'];
@@ -114,7 +114,7 @@ class LocalSeoSetupView extends StatelessWidget {
 }
 
 // ============================================================
-// STEP BAR (1 — 2 — 3), poore hue step par tap karke wapas
+// STEP BAR (1 — 2 — 3), tap a finished step to go back
 // ============================================================
 
 class _StepBar extends StatelessWidget {
@@ -127,7 +127,7 @@ class _StepBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = SettingPalette(context);
 
-    // Chhoti screen par sirf chalu step ka naam
+    // On small screens only the current step's name
     final roomy = MediaQuery.sizeOf(context).width >= 480;
 
     return Row(
@@ -273,7 +273,7 @@ InputDecoration seoInput(BuildContext context, String? hint) {
   );
 }
 
-/// Do field ek line me (bahut chhoti screen par ek ke neeche ek)
+/// Two fields in one row (stacked on very small screens)
 class _Pair extends StatelessWidget {
   const _Pair(this.a, this.b);
 
@@ -467,7 +467,7 @@ class _LocationStepState extends State<_LocationStep> {
   }
 
   Future<void> _tapMap(LatLng point) async {
-    setState(() {}); // marker turant
+    setState(() {}); // marker right away
     await c.setPoint(point.latitude, point.longitude);
     if (mounted) setState(() {});
   }
@@ -498,7 +498,7 @@ class _LocationStepState extends State<_LocationStep> {
                 children: [
                   GoogleMap(
                     initialCameraPosition: CameraPosition(
-                      // Pehle se chuna ho to wahi, warna Delhi
+                      // The one already chosen, otherwise Delhi
                       target: picked ?? const LatLng(28.6139, 77.2090),
                       zoom: 13,
                     ),

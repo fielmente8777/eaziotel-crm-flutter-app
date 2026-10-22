@@ -5,8 +5,8 @@
 //        📞 +91 98765 43210
 //        [🤖 Eazbot]                     ⏱ 2 hours ago
 //
-// Tap = lead ki detail. Rang: source / stage ke hisaab se
-// (light + dark dono me theek).
+// Tap = lead details. Colors by source / stage
+// (fine in both light + dark).
 // ============================================================
 
 import 'package:eazotel/features/leads/models/leads_responce_modle.dart';
@@ -175,7 +175,7 @@ class LeadCard extends StatelessWidget {
                   ],
                 ),
               ),
-              // Baayein taraf stage ke rang ki patli patti
+              // Thin strip in the stage color on the left
               Positioned(
                 left: 0,
                 top: 0,

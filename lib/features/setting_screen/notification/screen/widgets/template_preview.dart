@@ -1,8 +1,8 @@
 // ============================================================
 // TEMPLATE PREVIEW
 //
-// Chune hue WhatsApp template ka chhota preview:
-//   header (mota)  ->  body  ->  footer (chhota)
+// Small preview of the chosen WhatsApp template:
+//   header (bold)  ->  body  ->  footer (small)
 // ============================================================
 
 import 'package:eazotel/features/whatsapp/models/whatsappTemaplateModle.dart';
@@ -16,7 +16,7 @@ class TemplatePreview extends StatelessWidget {
 
   final WhatsappTemplate template;
 
-  /// HEADER / BODY / FOOTER ka text (na ho to khali)
+  /// Text of HEADER / BODY / FOOTER (empty if missing)
   String _textOf(String type) {
     final component = template.components?.firstWhereOrNull(
       (c) => c.type?.toUpperCase() == type,

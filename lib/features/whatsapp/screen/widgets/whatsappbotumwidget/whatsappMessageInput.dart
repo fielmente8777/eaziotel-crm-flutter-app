@@ -101,7 +101,7 @@ class WhatsappMessageInput extends StatelessWidget {
 
         Container(
           padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
-          // Chat ke background jaisa (beech me alag patti na dikhe)
+          // Like the chat background (so no separate strip shows in the middle)
           color: WaPalette(context).wallpaper,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -132,7 +132,7 @@ class WhatsappMessageInput extends StatelessWidget {
               ),
 
               // ============================================
-              // SEND BUTTON (sirf 24 ghante ke andar)
+              // SEND BUTTON (only within 24 hours)
               // ============================================
               if (isWithin24Hours) ...[
                 const SizedBox(width: 6),
@@ -143,7 +143,7 @@ class WhatsappMessageInput extends StatelessWidget {
                     color: WaPalette.green,
                     shape: BoxShape.circle,
                   ),
-                  // Upload ka progress ab image / video ke upar dikhta hai
+                  // Upload progress now shows over the image / video
                   child: IconButton(
                     onPressed: controller.sendMessage,
                     icon: const Icon(Icons.send, color: Colors.white, size: 21),
@@ -355,7 +355,7 @@ class WhatsappMessageInput extends StatelessWidget {
   /// Return true on success (popup closes), false on failure (popup stays).
   Future<bool> _sendFlow(FlowSetupData data) {
     // Local chat + conversation list update, API call, temp id -> real id
-    // sab WhatsappConversationDetailController -> WhatsappController me hota hai.
+    // everything happens in WhatsappConversationDetailController -> WhatsappController.
     return controller.sendFlowMessage(
       flowId: data.flowId,
       body: data.body,
@@ -458,7 +458,7 @@ class WhatsappMessageInput extends StatelessWidget {
     );
   }
 
-  // Map par jagah chuno, phir bhejo
+  // Pick a place on the map, then send
   Future<void> _pickAndSendLocation(BuildContext context) async {
     final picked = await Navigator.of(context).push<PickedLocation>(
       MaterialPageRoute(builder: (_) => const WhatsappLocationPicker()),
@@ -563,10 +563,10 @@ class WhatsappMessageInput extends StatelessWidget {
   // ============================================================
 
   Future<bool> _sendTemplate(BuildContext context, dynamic template) async {
-    // Bhejne se pehle variables ({{1}}, {{2}} ...) edit karne ka popup
+    // Popup to edit the variables ({{1}}, {{2}} ...) before sending
     final data = await showTemplateParamsEditor(context, template);
 
-    // Cancel: template popup khula rahe
+    // Cancel: keep the template popup open
     if (data == null) return false;
 
     return controller.sendTemplateMessage(

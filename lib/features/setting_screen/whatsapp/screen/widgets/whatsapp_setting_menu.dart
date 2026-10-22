@@ -1,10 +1,10 @@
 // ============================================================
 // WHATSAPP SETTING MENU
 //
-// WhatsApp tab ke andar ka menu: Overview, Message Templates ...
-//   - Window          : left side me list  (vertical: true)
-//   - Phone / tablet  : upar chips         (vertical: false)
-// Chuna hua item controller.selectedMenu me rehta hai.
+// Menu inside the WhatsApp tab: Overview, Message Templates ...
+//   - Window          : list on the left  (vertical: true)
+//   - Phone / tablet  : chips on top        (vertical: false)
+// The selected item is kept in controller.selectedMenu.
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -13,8 +13,8 @@ import 'package:get/get.dart';
 import '../../../screen/widgets/setting_section_card.dart';
 import '../../controller/whatsapp_setting_controller.dart';
 
-/// WhatsApp tab ka andar wala menu (Overview, Message Templates ...).
-/// [vertical] true: left side ki list (window). false: upar ke chips.
+/// The inner menu of the WhatsApp tab (Overview, Message Templates ...).
+/// [vertical] true: list on the left (window). false: chips on top.
 class WhatsappSettingMenuBar extends StatelessWidget {
   const WhatsappSettingMenuBar({
     super.key,

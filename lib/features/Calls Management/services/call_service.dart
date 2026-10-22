@@ -62,11 +62,11 @@ class CallService {
 
   // ============================================================
   // RECORDING
-  // GET /api/v1/call/recording/{sid}  (login token chahiye)
+  // GET /api/v1/call/recording/{sid}  (needs the login token)
   // ============================================================
 
-  /// Recording ko phone par download karke uski file ka path deta hai.
-  /// Ek baar download ho jaye to dobara wahi file use hoti hai.
+  /// Downloads the recording to the phone and returns the file path.
+  /// Once downloaded, the same file is reused.
   Future<String> getRecordingFile(String sid) async {
     final dir = await getTemporaryDirectory();
 
@@ -78,7 +78,7 @@ class CallService {
 
     var response = await _recordingRequest(sid);
 
-    // Token expire ho gaya -> ApiClient se refresh karwao, phir dobara
+    // Token expired -> refresh it through ApiClient, then try again
     if (response.statusCode == 401) {
       try {
         await ApiClient.get(
@@ -93,7 +93,7 @@ class CallService {
 
     var bytes = _audioBytes(response);
 
-    // API ne audio ki jagah JSON me link bheja ho to us link se audio lo
+    // If the API sent a link in JSON instead of audio, get the audio from that link
     if (bytes == null) {
       final url = _findUrl(jsonDecode(utf8.decode(response.data ?? [])));
 
@@ -136,7 +136,7 @@ class CallService {
     );
   }
 
-  /// Response audio ho to uske bytes, warna (JSON / error) null
+  /// The bytes if the response is audio, otherwise (JSON / error) null
   List<int>? _audioBytes(Response<List<int>> response) {
     final status = response.statusCode ?? 0;
 
@@ -153,7 +153,7 @@ class CallService {
     return data;
   }
 
-  /// JSON ke andar pehla http link dhundho
+  /// Find the first http link inside the JSON
   String? _findUrl(dynamic json) {
     if (json is String) return json.startsWith('http') ? json : null;
 

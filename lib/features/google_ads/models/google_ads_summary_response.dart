@@ -5,7 +5,7 @@
 //   result.totals  : impressions, clicks, cost, conversions, conversionsValue
 //   result.derived : ctr, averageCpc, conversionRate, costPerConversion, roas,
 //                    searchImpressionShare, searchImpressionShareApprox
-//   result.series  : har din ka data (charts)
+//   result.series  : data for each day (charts)
 // ============================================================
 
 import 'google_ads_common.dart';
@@ -59,7 +59,7 @@ class GoogleAdsSummary {
     this.series = const [],
   });
 
-  /// Web jaisa: totals sab 0 ho to "data nahi"
+  /// Same as web: if all totals are 0 then "no data"
   bool get hasData => !totals.isEmpty;
 
   factory GoogleAdsSummary.fromJson(Map<String, dynamic> json) {
@@ -141,7 +141,7 @@ class GoogleAdsDerived {
   final double costPerConversion;
   final double roas;
 
-  /// null = data nahi (ad level par nahi aata)
+  /// null = no data (not sent at ad level)
   final double? searchImpressionShare;
   final bool searchImpressionShareApprox;
 
@@ -200,7 +200,7 @@ class GoogleAdsDayPoint {
     this.conversionsValue = 0,
   });
 
-  /// Chart ke neeche: "10-05"
+  /// Below the chart: "10-05"
   String get label => date.length >= 10 ? date.substring(5, 10) : date;
 
   factory GoogleAdsDayPoint.fromJson(Map<String, dynamic> json) {
@@ -226,7 +226,7 @@ class GoogleAdsDayPoint {
   }
 }
 
-/// Campaign Comparison table ki ek line (har campaign ka summary)
+/// One line of the Campaign Comparison table (summary of each campaign)
 class GoogleAdsCampaignRow {
   final String campaignId;
   final String name;

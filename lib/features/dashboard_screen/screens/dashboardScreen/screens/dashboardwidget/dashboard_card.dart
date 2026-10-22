@@ -49,7 +49,7 @@ Widget dashboardBody() {
     final whatsappConversations = docs?.totalWhatsappConversations ?? 0;
     final todayLeads = docs?.todayLeads ?? 0;
 
-    // Top source (bottom text ke liye)
+    // Top source (for the bottom text)
     final sources = [...?docs?.sourceBreakdown]
       ..sort((a, b) => (b.count ?? 0).compareTo(a.count ?? 0));
     final topSource = sources.isNotEmpty && (sources.first.id ?? '').isNotEmpty
@@ -106,7 +106,7 @@ Widget dashboardBody() {
       builder: (context, box) {
         final w = box.maxWidth;
 
-        // Phone 2 · Tablet 3 · Desktop sab ek row me
+        // Phone 2 · Tablet 3 · Desktop all in one row
         final cols = w >= 1100
             ? cards.length
             : w >= 700
@@ -128,7 +128,7 @@ Widget dashboardBody() {
           itemBuilder: (context, index) {
             final card = cards[index];
 
-            // Halka staggered entry animation
+            // Light staggered entry animation
             return TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: 1),
               duration: Duration(milliseconds: 400 + index * 90),

@@ -2,8 +2,8 @@
 // META INSIGHTS WIDGETS
 //
 //   MetaFormat       : 12,345 / 12.3K
-//   MetaStatCard     : bada number + ▲ 12% / ▼ 4%
-//   MetaLineChart    : Reach / Engagements (roz ka)
+//   MetaStatCard     : big number + ▲ 12% / ▼ 4%
+//   MetaLineChart    : Reach / Engagements (daily)
 //   MetaPostCard     : top post (photo, caption, reactions, comments,
 //                      reach, engagement)
 // ============================================================
@@ -32,7 +32,7 @@ class MetaFormat {
       d == null ? '' : DateFormat('d MMM yyyy, h:mm a').format(d);
 }
 
-/// Card ka rang (web ke chart rang jaise)
+/// Card color (like the web chart colors)
 const metaColors = {
   'followers': Color(0xFF1877F2),
   'newFollowers': Color(0xFF10B981),

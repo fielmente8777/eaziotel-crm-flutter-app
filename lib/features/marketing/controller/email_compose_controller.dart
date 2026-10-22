@@ -1,12 +1,12 @@
 // ============================================================
-// EMAIL COMPOSE CONTROLLER  (naya email likho aur bhejo)
+// EMAIL COMPOSE CONTROLLER  (write and send a new email)
 //
-// Web dashboard jaisa bhejna:
-//   1. batch nahi hai -> "To" ke emails se batch banao
-//   2. campaign banao (subject, HTML, attachments)
-//   3. campaign bhejo
+// Sending works like the web dashboard:
+//   1. no batch -> make a batch from the "To" emails
+//   2. create the campaign (subject, HTML, attachments)
+//   3. send the campaign
 //
-// Message: ya to apna likha text, ya template (AI / saved) ka HTML.
+// Message: either your own text, or the HTML of a template (AI / saved).
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
@@ -25,7 +25,7 @@ class EmailComposeController extends GetxController {
     if (template != null) useTemplate(template);
   }
 
-  /// Pehle se chune log (Recipients / Excel se). null = "To" se likho.
+  /// People already chosen (Recipients / from Excel). null = type them in "To".
   final String? batchId;
   final int recipientCount;
 
@@ -47,10 +47,10 @@ class EmailComposeController extends GetxController {
   final subject = ''.obs;
   final message = ''.obs;
 
-  /// Template laga hai to message box ki jagah iska HTML jaata hai
+  /// If a template is applied, its HTML is sent instead of the message box
   final template = Rxn<EmailTemplate>();
 
-  /// Attachment files ke raste
+  /// Paths of the attachment files
   final attachments = <String>[].obs;
 
   final isSending = false.obs;
@@ -59,7 +59,7 @@ class EmailComposeController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // Hotel ka email pehle se bhar do (badal sakte ho)
+    // Pre-fill the hotel's email (you can change it)
     final hotelEmail = dashboard.user.value?.profile.hotelEmail.trim() ?? '';
     if (EmailImport.isEmail(hotelEmail)) from.value = hotelEmail.toLowerCase();
   }
@@ -91,14 +91,14 @@ class EmailComposeController extends GetxController {
       .replaceAll('>', '&gt;')
       .replaceAll('"', '&quot;');
 
-  /// Saada text -> paragraph wala HTML
+  /// Plain text -> HTML with paragraphs
   static String textToHtml(String text) => text
       .trim()
       .split(RegExp(r'\n\s*\n'))
       .map((p) => '<p>${_escape(p.trim()).replaceAll('\n', '<br>')}</p>')
       .join();
 
-  /// HTML -> saada text (email ka text version)
+  /// HTML -> plain text (the text version of the email)
   static String htmlToText(String html) => html
       .replaceAll(
         RegExp(
@@ -126,7 +126,7 @@ class EmailComposeController extends GetxController {
   // CHECK
   // ============================================================
 
-  /// Pehli galti (null = sab theek)
+  /// First error (null = all good)
   String? get problem {
     final fromEmail = from.value.trim();
     if (fromEmail.isEmpty) return 'Please enter the From email.';
@@ -154,7 +154,7 @@ class EmailComposeController extends GetxController {
   // SEND
   // ============================================================
 
-  /// true = queue me chala gaya. Galti ho to [onError].
+  /// true = added to the queue. On error, [onError].
   Future<bool> send({required void Function(String) onError}) async {
     if (isSending.value) return false;
 
@@ -199,7 +199,7 @@ class EmailComposeController extends GetxController {
         return false;
       }
 
-      // 3. Bhejo
+      // 3. Send
       await MarketingService.sendEmailCampaign(
         hid: hid,
         campaignId: campaignId,

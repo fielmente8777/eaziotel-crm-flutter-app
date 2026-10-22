@@ -54,7 +54,7 @@ class GeoCity {
         users: _i(json['users']),
       );
 
-  /// GA "(not set)" aur "" dono ko ek hi bucket me
+  /// Put GA "(not set)" and "" in the same bucket
   bool get isUnknown => city.isEmpty || city == '(not set)';
 
   String get label => isUnknown ? 'Unknown' : city;

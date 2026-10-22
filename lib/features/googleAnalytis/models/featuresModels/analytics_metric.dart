@@ -48,7 +48,7 @@ extension AnalyticsMetricX on AnalyticsMetric {
 
   bool get isDuration => this == AnalyticsMetric.avgDuration;
 
-  /// Ek chart point (ek din) se is metric ki value
+  /// This metric's value from one chart point (one day)
   double valueOf(dynamic p) {
     switch (this) {
       case AnalyticsMetric.activeUsers:
@@ -66,11 +66,11 @@ extension AnalyticsMetricX on AnalyticsMetric {
     }
   }
 
-  /// Tab par dikhne wala total
+  /// Total shown on the tab
   double total(List points) {
     if (points.isEmpty) return 0;
     if (isDuration) {
-      // sessions ke hisaab se weighted average
+      // weighted average by sessions
       double weighted = 0, sessions = 0;
       for (final p in points) {
         weighted += _n(p.avgSessionDuration) * _n(p.sessions);

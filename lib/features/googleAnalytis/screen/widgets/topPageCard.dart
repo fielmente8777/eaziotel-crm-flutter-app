@@ -55,7 +55,7 @@ class _TopPagesCardState extends State<TopPagesCard> {
     final c = AnalyticsPalette.of(context);
     final l = widget.layout;
 
-    // API ranked bhejta hai, phir bhi views se sort (stable)
+    // The API sends it ranked, but still sort by views (stable)
     final pages = [...widget.pages]
       ..sort((a, b) => b.views.compareTo(a.views));
     final maxViews = pages.isEmpty ? 0 : pages.first.views;
@@ -367,7 +367,7 @@ class _TopPagesCardState extends State<TopPagesCard> {
     );
   }
 
-  /// <40% green, 40–60% amber, >=60% red (screenshot jaisa)
+  /// <40% green, 40–60% amber, >=60% red (like the screenshot)
   Widget _bounceChip(double pct, {bool small = false}) {
     final Color fg;
     if (pct < 40) {

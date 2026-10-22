@@ -1,13 +1,13 @@
 // ============================================================
 // BUSINESS PROFILE CARD
 //
-// "WhatsApp Business Profile" wala card. Iske do roop hain:
+// The "WhatsApp Business Profile" card. It has two modes:
 //
-//   Dekhne wala (_ProfileView)  : about, email, address ... sirf padhne ke liye
-//   Edit wala   (_ProfileForm)  : wahi cheezein text field me + Save / Cancel
+//   View mode (_ProfileView)  : about, email, address ... read only
+//   Edit mode (_ProfileForm)  : the same things in text fields + Save / Cancel
 //
-// "Edit" dabane par controller.isEditingProfile true hota hai aur form dikhta hai.
-// Save par controller.saveBusinessProfile() API ko call karta hai.
+// Pressing "Edit" sets controller.isEditingProfile to true and shows the form.
+// On Save, controller.saveBusinessProfile() calls the API.
 // ============================================================
 
 import 'dart:io';
@@ -73,7 +73,7 @@ class WhatsappBusinessProfileCard extends StatelessWidget {
 }
 
 // ============================================================
-// DEKHNE WALA ROOP
+// VIEW MODE
 // ============================================================
 
 class _ProfileView extends StatelessWidget {
@@ -136,7 +136,7 @@ class _ProfileView extends StatelessWidget {
 }
 
 // ============================================================
-// EDIT WALA ROOP
+// EDIT MODE
 // ============================================================
 
 class _ProfileForm extends StatefulWidget {
@@ -150,7 +150,7 @@ class _ProfileForm extends StatefulWidget {
 }
 
 class _ProfileFormState extends State<_ProfileForm> {
-  /// WhatsApp sirf yahi industry (vertical) maanta hai
+  /// WhatsApp accepts only these industries (verticals)
   static const List<String> _industries = [
     'UNDEFINED',
     'OTHER',
@@ -173,16 +173,16 @@ class _ProfileFormState extends State<_ProfileForm> {
     'NOT_A_BIZ',
   ];
 
-  // Form khulte hi purani value field me bhar di jaati hai ('-' = khali)
+  // When the form opens, the old value is filled into the field ('-' = empty)
   late final TextEditingController _about = _field(widget.info.about);
   late final TextEditingController _email = _field(widget.info.email);
   late final TextEditingController _address = _field(widget.info.address);
 
-  // WhatsApp do website tak rakhne deta hai
+  // WhatsApp allows up to two websites
   late final TextEditingController _website1 = _field(_websiteAt(0));
   late final TextEditingController _website2 = _field(_websiteAt(1));
 
-  /// Nayi chuni profile photo (null = purani hi rahegi)
+  /// Newly picked profile photo (null = keep the old one)
   String? _photoPath;
 
   Future<void> _pickPhoto() async {
@@ -268,7 +268,7 @@ class _ProfileFormState extends State<_ProfileForm> {
         decoration: InputDecoration(
           hintText: hint,
           isDense: true,
-          counterText: '', // "12/139" wala counter mat dikhao
+          counterText: '', // Do not show the "12/139" counter
         ),
       );
     }
@@ -280,7 +280,7 @@ class _ProfileFormState extends State<_ProfileForm> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ---------- Photo (tap = badlo) ----------
+          // ---------- Photo (tap = change) ----------
           Center(
             child: InkWell(
               borderRadius: BorderRadius.circular(44),

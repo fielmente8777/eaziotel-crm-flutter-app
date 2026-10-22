@@ -1,5 +1,5 @@
 // ============================================================
-// SUBSCRIPTION PLANS SCREEN  (web ke Billing page jaisa)
+// SUBSCRIPTION PLANS SCREEN  (like the web Billing page)
 //
 //   "Choose your plan & customize your tools"
 //   BASE PLAN     : BASIC | PRO (Most popular) | ENTERPRISE (Talk to sales)
@@ -7,9 +7,9 @@
 //   TEAM MEMBERS  : [-] 0 [+]   ₹500 / seat / mahina
 //   BILLING SUMMARY: Monthly | Quarterly | 6 Months | Yearly, total, Pay
 //
-//   window : left content + right summary (web jaisa)
-//   tablet : 2 column cards, summary neeche
-//   phone  : 1 column, summary neeche + niche total / Pay bar
+//   window : content on the left + summary on the right (same as web)
+//   tablet : 2-column cards, summary below
+//   phone  : 1 column, summary below + total / Pay bar at the bottom
 // ============================================================
 
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
@@ -23,7 +23,7 @@ import '../../screen/widgets/setting_section_card.dart';
 import '../controller/plan_builder_controller.dart';
 import '../model/billing_models.dart';
 
-/// Web ka "ternary" (orange) rang: chuna hua plan / app
+/// The web's "ternary" (orange) color: selected plan / app
 const Color _accent = Color(0xFFF26B1D);
 
 final _rupee = NumberFormat.decimalPattern('en_IN');
@@ -32,8 +32,8 @@ String _price(num v) => '₹${_rupee.format(v.round())}';
 class SubscriptionPlansScreen extends StatelessWidget {
   const SubscriptionPlansScreen({super.key, this.onRecheck, this.onSignOut});
 
-  /// Plan khatam hone par (dashboard ki jagah) yahi screen: back nahi,
-  /// upar "Check again" + "Sign out"
+  /// When the plan expires this screen shows (instead of the dashboard): no back,
+  /// "Check again" + "Sign out" on top
   final VoidCallback? onRecheck;
   final VoidCallback? onSignOut;
 
@@ -238,7 +238,7 @@ class _Content extends StatelessWidget {
               _AppCard(
                 app: app,
                 selected: c.selectedAppIds.contains(app.id),
-                // Renew: khareeda hua bhi add / remove ho sakta hai
+                // Renew: purchased ones can also be added / removed
                 purchased: c.isPurchasedApp(app.id) && !c.isRenewal,
                 purchasedEarlier: c.isPurchasedApp(app.id) && c.isRenewal,
                 locked: c.appsLocked,
@@ -664,7 +664,7 @@ class _AppCard extends StatelessWidget {
   final bool locked;
   final VoidCallback onToggle;
 
-  /// Pehle khareeda tha (renew me phir se le rahe hain)
+  /// Bought before (taking it again on renew)
   final bool purchasedEarlier;
 
   static const _icons = <String, IconData>{
@@ -967,7 +967,7 @@ class _BillingSummaryState extends State<_BillingSummary> {
       final newApps = c.newApps;
       final purchased = c.purchasedApps;
       final busy = c.isProcessing.value;
-      c.teamCount.value; // seats badle to dobara
+      c.teamCount.value; // rebuild when the seats change
 
       return Container(
         padding: const EdgeInsets.all(18),
@@ -1247,7 +1247,7 @@ class _BillingSummaryState extends State<_BillingSummary> {
 }
 
 // ============================================================
-// PHONE / TABLET: neeche chipka total + Pay
+// PHONE / TABLET: total + Pay stuck to the bottom
 // ============================================================
 
 class _PayBar extends StatelessWidget {

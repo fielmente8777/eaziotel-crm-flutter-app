@@ -1,7 +1,7 @@
 // ============================================================
 // WHATSAPP SETTING SERVICE
 //
-// Settings > WhatsApp tab ki API calls. Sirf yahi file server se baat karti hai.
+// API calls for the Settings > WhatsApp tab. Only this file talks to the server.
 //
 //   isWhatsappConnected : GET /api/v1/integration/get
 //   getAccountDetails   : GET /api/v1/whatsapp/account/connection/details
@@ -13,7 +13,7 @@
 //   updateAutoMessageConfig : PUT /api/v1/whatsapp/account/<id>/automessageConfig/update
 //   deleteTemplate      : DELETE /api/v1/whatsapp/message/template/delete
 //
-// Templates ki API pehle se WhatsappTemaplate.getWhatsappTemplates me hai.
+// The templates API already exists in WhatsappTemaplate.getWhatsappTemplates.
 // ============================================================
 
 import 'dart:convert';
@@ -30,7 +30,7 @@ class WhatsappSettingService {
   WhatsappSettingService._();
 
   // ============================================================
-  // WHATSAPP CONNECTED HAI YA NAHI
+  // IS WHATSAPP CONNECTED
   // GET /api/v1/integration/get?hid=<hid>
   // result.docs.metaWhatsapp == true  ->  connected
   // ============================================================
@@ -154,7 +154,7 @@ class WhatsappSettingService {
       final Map<String, dynamic> json =
           jsonDecode(response.body) as Map<String, dynamic>;
 
-      // result.doc  (yahan "doc" hai, "docs" nahi)
+      // result.doc  (here it is "doc", not "docs")
       final doc = json['result']?['doc'];
 
       return doc is Map ? Map<String, dynamic>.from(doc) : {};
@@ -174,7 +174,7 @@ class WhatsappSettingService {
   // ============================================================
   // BUSINESS PROFILE UPDATE
   // POST /api/v1/whatsapp/profile/update?hid=<hid>   (form-data)
-  // fields: about, vertical, email, address, websites (JSON list ka text)
+  // fields: about, vertical, email, address, websites (text of a JSON list)
   // ============================================================
 
   static Future<void> updateBusinessProfile({
@@ -185,7 +185,7 @@ class WhatsappSettingService {
     required String address,
     required List<String> websites,
 
-    /// Nayi profile photo (web jaisa "file" field me jaati hai)
+    /// New profile photo (goes in the "file" field, same as web)
     String? photoPath,
   }) async {
     try {
@@ -198,7 +198,7 @@ class WhatsappSettingService {
           'vertical': vertical,
           'email': email,
           'address': address,
-          // Web bhi list ko text bana kar bhejta hai: ["https://a.com/","https://b.com/"]
+          // The web also sends the list as text: ["https://a.com/","https://b.com/"]
           'websites': jsonEncode(websites),
         },
         files: [
@@ -217,7 +217,7 @@ class WhatsappSettingService {
       debugPrint('BODY: ${response.body}');
       debugPrint('==================================================');
 
-      // Server 200 ke saath bhi "success": false bhej sakta hai
+      // The server can send "success": false even with a 200
       final json = jsonDecode(response.body);
 
       if (json is Map && json['success'] == false) {
@@ -334,7 +334,7 @@ class WhatsappSettingService {
   }
 
   // ============================================================
-  // CHATBOT FLOW KI ID  (auto message ke "Flow" dropdown ke liye)
+  // CHATBOT FLOW ID  (for the auto message "Flow" dropdown)
   // GET /api/v1/whatsapp/flow?hid=<hid>
   // result.docs.flow._id
   // ============================================================
@@ -361,7 +361,7 @@ class WhatsappSettingService {
       final Map<String, dynamic> json =
           jsonDecode(response.body) as Map<String, dynamic>;
 
-      // result.docs.flow  (ek flow aaye ya list, dono chalenge)
+      // result.docs.flow  (works whether one flow or a list comes)
       final flow = json['result']?['docs']?['flow'];
       final flows = flow is List ? flow : [flow];
 

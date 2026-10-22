@@ -27,12 +27,12 @@ import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Logout par purane user ka saara data saaf karta hai:
-/// controllers (memory), SharedPreferences aur download hui call recordings.
+/// On logout, clears all data of the previous user:
+/// controllers (memory), SharedPreferences and downloaded call recordings.
 class SessionCleaner {
   SessionCleaner._();
 
-  /// Ye keys logout par bhi rehti hain (phone ki setting hain, user ka data nahi)
+  /// These keys stay after logout (they are phone settings, not user data)
   static const Set<String> _keepKeys = {'selected_theme'};
 
   static Future<void> clearAll() async {
@@ -46,9 +46,9 @@ class SessionCleaner {
   // CONTROLLERS
   // ============================================================
 
-  /// Login ke turant baad bhi chalta hai: logout ke dauran dashboard abhi
-  /// screen par hota hai aur bina token ke khali controller dobara bana deta
-  /// hai. Unhe hatane par naye user ke liye taaza controller bante hain.
+  /// Also runs right after login: during logout the dashboard is still
+  /// on screen and recreates empty controllers without a token.
+  /// Removing them gives the new user fresh controllers.
   static void deleteControllers() {
     // These keep references and settings belonging to the previous account.
     _delete<ProfileSettingController>();
@@ -65,10 +65,10 @@ class SessionCleaner {
       Get.find<DashboardController>().clearDashboardData();
     }
 
-    // Notifications pehle (ye hi WhatsappController ko chalata hai)
+    // Notifications first (it is what drives WhatsappController)
     _delete<NotificationController>();
 
-    // WhatsappController band hote hi socket bhi disconnect ho jata hai
+    // When WhatsappController closes, the socket disconnects too
     _delete<WhatsappController>();
     _delete<Whatsapptemplatecontroller>();
     _delete<WhatsappLeadFilterController>();
@@ -95,7 +95,7 @@ class SessionCleaner {
   }
 
   // ============================================================
-  // SHARED PREFERENCES (token, hotel id ... sab kuch)
+  // SHARED PREFERENCES (token, hotel id ... everything)
   // ============================================================
 
   static Future<void> _clearPreferences() async {

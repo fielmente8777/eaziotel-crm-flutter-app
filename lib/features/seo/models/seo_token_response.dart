@@ -2,7 +2,7 @@
 // SEO TOKEN RESPONSE
 // GET /api/v1/seo/seo-intelligence/tokens
 //
-//   result.balance : kitne credit bache hain
+//   result.balance : how many credits are left
 //   result.pricing : localPerKeyword, websitePerKeyword, geoGridScan
 // ============================================================
 
@@ -45,7 +45,7 @@ class SeoTokenResponse {
 }
 
 class SeoTokens {
-  /// null = pata nahi (API fail)
+  /// null = unknown (API failed)
   final int? balance;
   final SeoTokenPricing pricing;
 
@@ -65,8 +65,8 @@ class SeoTokens {
   }
 }
 
-/// Kis kaam ke kitne credit lagte hain.
-/// Default web dashboard (seoTokenPricing.ts) jaise hi hain.
+/// How many credits each action costs.
+/// The defaults are the same as the web dashboard (seoTokenPricing.ts).
 class SeoTokenPricing {
   final int localPerKeyword;
   final int websitePerKeyword;
@@ -78,7 +78,7 @@ class SeoTokenPricing {
     this.geoGridScan = 3,
   });
 
-  /// Website keyword: India 2 credit, baaki desh 3 credit
+  /// Website keyword: India 2 credits, other countries 3 credits
   static int websiteFor(String country) =>
       country.isEmpty || country.toUpperCase() == 'IN' ? 2 : 3;
 

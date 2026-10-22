@@ -1,11 +1,11 @@
 // ============================================================
 // SEO KEYWORD TILE
 //
-//   SeoKeywordHeader : tablet / window par table ki heading
-//   SeoKeywordTile   : ek keyword
-//       phone  -> card (keyword + rank upar, baaki neeche)
-//       wide   -> table ki line
-//       Local SEO me tap karne par detail khulti hai
+//   SeoKeywordHeader : table heading on tablet / window
+//   SeoKeywordTile   : one keyword
+//       phone  -> card (keyword + rank on top, the rest below)
+//       wide   -> a table row
+//       In Local SEO, tapping opens the detail
 //       (rank trend, next move, competitor)
 // ============================================================
 
@@ -94,10 +94,10 @@ class SeoKeywordTile extends StatelessWidget {
   final Color color;
   final int refreshCost;
 
-  /// Is keyword ka refresh chal raha hai
+  /// This keyword is being refreshed
   final bool refreshing;
 
-  /// Koi aur refresh chal raha hai (button band)
+  /// Another refresh is running (button disabled)
   final bool busy;
   final VoidCallback onRefresh;
   final VoidCallback onDelete;
@@ -178,7 +178,7 @@ class SeoKeywordTile extends StatelessWidget {
     );
   }
 
-  // ---------- Tablet / window: table ki line ----------
+  // ---------- Tablet / window: a table row ----------
 
   Widget _wideRow(SettingPalette p) {
     final number = TextStyle(
@@ -357,7 +357,7 @@ class SeoKeywordTile extends StatelessWidget {
 }
 
 // ============================================================
-// LOCAL SEO: keyword ki detail
+// LOCAL SEO: keyword detail
 // ============================================================
 
 class _KeywordDetail extends StatelessWidget {
@@ -366,7 +366,7 @@ class _KeywordDetail extends StatelessWidget {
   final SeoKeyword keyword;
   final bool wide;
 
-  /// Web jaisa: badge ke hisaab se agla kadam
+  /// Same as web: next step based on the badge
   String get _tip => switch (keyword.actionBadge) {
     'DEFEND' =>
       'Hold position: keep your Google Business Profile fresh — new photos, posts and review replies every week.',

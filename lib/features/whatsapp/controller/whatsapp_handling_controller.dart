@@ -1,14 +1,14 @@
 // ============================================================
-// WHATSAPP HANDLING CONTROLLER  (ek khuli chat: kaun reply karega)
+// WHATSAPP HANDLING CONTROLLER  (one open chat: who will reply)
 //
-// Web dashboard (ChatPanel) jaisa:
-//   AI on + koi aur team member reply kar raha  -> "A teammate is replying"
-//   AI on + AI reply kar raha                   -> "The AI is replying" [Take over]
-//   automated flow (form) chal raha             -> "An automated flow..." [Take over]
-//   warna                                       -> message box
-//                                                  (+ "Hand back to AI" agar maine liya)
+// Same as the web dashboard (ChatPanel):
+//   AI on + another team member is replying  -> "A teammate is replying"
+//   AI on + AI is replying                   -> "The AI is replying" [Take over]
+//   an automated flow (form) is running        -> "An automated flow..." [Take over]
+//   otherwise                                -> message box
+//                                                  (+ "Hand back to AI" if I took over)
 //
-// Har chat ka apna controller (tag = conversation id).
+// Each chat has its own controller (tag = conversation id).
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
@@ -21,22 +21,22 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 enum WaReplyMode {
-  /// Abhi pata nahi (load ho raha hai)
+  /// Not known yet (loading)
   loading,
 
-  /// AI reply kar raha hai -> Take over
+  /// AI is replying -> Take over
   ai,
 
-  /// Koi aur team member reply kar raha hai -> likh nahi sakte
+  /// Another team member is replying -> cannot type
   teammate,
 
-  /// Automated flow (form) chal raha hai -> Take over
+  /// An automated flow (form) is running -> Take over
   flow,
 
-  /// Main reply kar raha hoon (AI on hai to "Hand back to AI" bhi)
+  /// I am replying ("Hand back to AI" too if AI is on)
   me,
 
-  /// AI band hai: sab likh sakte hain
+  /// AI is off: everyone can type
   open,
 }
 
@@ -45,11 +45,11 @@ class WhatsappHandlingController extends GetxController {
 
   final WhatsappConversationModel chat;
 
-  /// AI on / off: pichhla jawab (chat khulte hi turant dikhe), par har
-  /// baar server se dobara poochte hain (Settings me badla ho sakta hai)
+  /// AI on / off: the previous answer (shows right away when the chat opens), but
+  /// each time we ask the server again (it may have changed in Settings)
   static final Map<String, bool> _aiCache = {};
 
-  /// Login kiye hue user ka email (/user/user-details), ek baar hi laate hain
+  /// Email of the logged-in user (/user/user-details), fetched only once
   static String _myEmail = '';
 
   final WhatsappController whatsapp = Get.find<WhatsappController>();
@@ -58,10 +58,10 @@ class WhatsappHandlingController extends GetxController {
   final RxBool aiEnabled = false.obs;
   final RxBool flowActive = false.obs;
 
-  /// Take over / hand back / stop flow chal raha hai
+  /// Take over / hand back / stop flow is running
   final RxBool isChanging = false.obs;
 
-  /// Server se mila naya handling (list wala purana ho sakta hai)
+  /// Fresh handling from the server (the list's one can be old)
   final Rxn<WhatsappHandlingModel> _handling = Rxn<WhatsappHandlingModel>();
 
   // ============================================================
@@ -72,14 +72,14 @@ class WhatsappHandlingController extends GetxController {
     if (_myEmail.isNotEmpty) return _myEmail;
     if (!Get.isRegistered<DashboardController>()) return '';
 
-    // App khulte hi aaya hua login user (user-details)
+    // The logged-in user loaded when the app opened (user-details)
     final authEmail =
         Get.find<DashboardController>().authUser.value?.email ?? '';
     if (authEmail.isNotEmpty) return authEmail;
     return Get.find<DashboardController>().user.value?.userEmail ?? '';
   }
 
-  /// Sabse taaza handling: pehle mera badla hua, phir list wala, phir chat ka
+  /// The freshest handling: my change first, then the list's, then the chat's
   WhatsappHandlingModel? get handling {
     if (_handling.value != null) return _handling.value;
 
@@ -93,7 +93,7 @@ class WhatsappHandlingController extends GetxController {
     if (isLoading.value) return WaReplyMode.loading;
 
     final h = handling;
-    // "AI" / "ai" / "HUMAN" / "human" sab chalein
+    // "AI" / "ai" / "HUMAN" / "human" all work
     final handlingMode = (h?.mode ?? '').trim().toUpperCase();
     final byHuman = handlingMode == 'HUMAN';
     final byAi = !byHuman;
@@ -136,7 +136,7 @@ class WhatsappHandlingController extends GetxController {
   Future<void> _loadAi() async {
     final hid = whatsapp.hid;
 
-    // Pehle pichhla jawab (agar hai), phir server ka taaza
+    // The previous answer first (if any), then the server's fresh one
     if (_aiCache.containsKey(hid)) aiEnabled.value = _aiCache[hid]!;
 
     try {
@@ -144,7 +144,7 @@ class WhatsappHandlingController extends GetxController {
       _aiCache[hid] = enabled;
       aiEnabled.value = enabled;
     } catch (_) {
-      // Pata na chale to pichhla jawab rakho, woh bhi na ho to AI band
+      // If unknown, keep the previous answer; if there is none, AI off
       aiEnabled.value = _aiCache[hid] ?? false;
     }
   }
@@ -155,13 +155,13 @@ class WhatsappHandlingController extends GetxController {
     try {
       _myEmail = await WhatsappHandlingService.getMyEmail();
     } catch (_) {
-      // Take over dabane par dobara koshish hogi
+      // It will try again when Take over is pressed
     }
   }
 
-  /// Is chat ka TAAZA handling (AI ya kaun insaan) server se.
-  /// App me chat list app khulne par ek baar aati hai; tab se web par
-  /// kisi ne take over / hand back kiya ho to purana dikhta tha.
+  /// This chat's FRESH handling (AI or which person) from the server.
+  /// In the app the chat list loads once when the app opens; since then, if
+  /// someone took over / handed back on the web, the old state showed.
   Future<void> _loadHandling() async {
     try {
       final json = await WhatsappService.getConversations(hid: whatsapp.hid);
@@ -199,18 +199,18 @@ class WhatsappHandlingController extends GetxController {
     }
   }
 
-  /// Logout par (naya user = naya email) aur AI setting badalne par
+  /// On logout (new user = new email) and when the AI setting changes
   static void clearCache() {
     _aiCache.clear();
     _myEmail = '';
   }
 
   // ============================================================
-  // TAKE OVER (AI se)
+  // TAKE OVER (from AI)
   // ============================================================
 
   Future<void> takeOver() async {
-    // Email abhi tak nahi aaya to ek baar aur laao
+    // If the email has not come yet, fetch it once more
     if (userEmail.isEmpty) {
       isChanging.value = true;
       await _loadEmail();
@@ -303,7 +303,7 @@ class WhatsappHandlingController extends GetxController {
   }
 
   // ============================================================
-  // TAKE OVER (automated flow se)
+  // TAKE OVER (from an automated flow)
   // ============================================================
 
   Future<void> stopFlow() async {
@@ -339,11 +339,11 @@ class WhatsappHandlingController extends GetxController {
   void _setHandling(WhatsappHandlingModel value) {
     _handling.value = value;
 
-    // Chat list me bhi wahi dikhe
+    // Show the same in the chat list too
     whatsapp.setConversationHandling(chat.id, value);
   }
 
-  /// Server ka message (ho to), warna [fallback]
+  /// The server's message (if any), otherwise [fallback]
   String _errorText(Object e, String fallback) =>
       WhatsappActionResponse.errorOf(e, fallback);
 

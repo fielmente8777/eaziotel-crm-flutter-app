@@ -5,15 +5,15 @@ import 'package:flutter/material.dart';
 // TEMPLATE SEND DATA
 // ============================================================
 
-/// Template bhejne ke liye final data.
-/// params / headerParams wahi values hain jo user ne edit ki hain.
+/// Final data for sending the template.
+/// params / headerParams are the values the user edited.
 class TemplateSendData {
   final String name;
   final String language;
   final List<String> params;
   final List<String> headerParams;
 
-  /// Body text jisme {{1}}, {{2}} values se replace ho chuke hain
+  /// Body text with {{1}}, {{2}} already replaced by the values
   final String preview;
 
   const TemplateSendData({
@@ -27,8 +27,8 @@ class TemplateSendData {
 
 final RegExp _variableRegex = RegExp(r'\{\{\s*(\w+)\s*\}\}');
 
-/// Text me jitne alag {{...}} variables hain unke naam.
-/// {{1}}, {{2}} jaise numbers ho to number ke order me.
+/// Names of the distinct {{...}} variables in the text.
+/// If they are numbers like {{1}}, {{2}}, in number order.
 List<String> _variablesIn(String text) {
   final keys = <String>[];
 
@@ -62,11 +62,11 @@ TemplateComponent? _findComponent(WhatsappTemplate template, String type) {
 // OPEN EDITOR
 // ============================================================
 
-/// Template ke variables ({{1}}, {{2}} ...) bhejne se pehle edit karne
-/// ka popup. Fields template ke example values se bhare hote hain.
+/// Popup to edit the template variables ({{1}}, {{2}} ...) before
+/// sending. The fields are filled with the template's example values.
 ///
-/// Cancel par null milta hai. Template me koi variable na ho to popup
-/// nahi khulta, seedha data mil jata hai.
+/// Cancel returns null. If the template has no variables the popup
+/// does not open, and the data comes back directly.
 Future<TemplateSendData?> showTemplateParamsEditor(
   BuildContext context,
   dynamic template, {
@@ -146,7 +146,7 @@ class _TemplateParamsDialogState extends State<_TemplateParamsDialog> {
     _bodyKeys = _variablesIn(_bodyText);
     _headerKeys = _variablesIn(_headerText);
 
-    // Example values se fields pehle se bhar do
+    // Pre-fill the fields with the example values
     final bodyExamples = body?.example?.bodyText;
     final bodyDefaults = (bodyExamples != null && bodyExamples.isNotEmpty)
         ? bodyExamples.first
@@ -181,7 +181,7 @@ class _TemplateParamsDialogState extends State<_TemplateParamsDialog> {
     return source.map((key, c) => MapEntry(key, c.text));
   }
 
-  // WhatsApp khali variable accept nahi karta
+  // WhatsApp does not accept an empty variable
   bool get _allFilled {
     return _bodyControllers.values.every((c) => c.text.trim().isNotEmpty) &&
         _headerControllers.values.every((c) => c.text.trim().isNotEmpty);

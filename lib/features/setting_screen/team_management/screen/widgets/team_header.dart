@@ -1,9 +1,9 @@
 // ============================================================
 // TEAM HEADER
 //
-// "Team Members", members ki ginti aur "Add New User" button.
-//   phone          : button title ke neeche, poori width
-//   tablet / window: button title ke daaye
+// "Team Members", the member count and the "Add New User" button.
+//   phone          : button below the title, full width
+//   tablet / window: button to the right of the title
 // ============================================================
 
 import 'package:flutter/material.dart';

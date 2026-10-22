@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import '../../controller/profile_setting_controller.dart';
 import '../../../screen/widgets/setting_section_card.dart';
 
-/// User / organization / contact wala upar ka card
+/// The top card with user / organization / contact
 class SettingProfileCard extends StatelessWidget {
   const SettingProfileCard({
     super.key,
@@ -130,7 +130,7 @@ class SettingProfileCard extends StatelessWidget {
           ],
         );
 
-        // Phone: ek ke neeche ek. Tablet / window: teen column.
+        // Phone: stacked. Tablet / window: three columns.
         if (r.isPhone) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,

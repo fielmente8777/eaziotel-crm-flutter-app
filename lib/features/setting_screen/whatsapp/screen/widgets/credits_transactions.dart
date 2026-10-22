@@ -1,12 +1,12 @@
 // ============================================================
 // CREDITS TRANSACTIONS  (Credits & Usage > Transactions tab)
 //
-// Recharge ki list:
+// List of recharges:
 //   - Tablet / window : table  (Date | Payment ID | Order ID | Status | Amount)
 //   - Phone           : card
-// Neeche "Showing 1–4 of 4" aur Prev / Next button.
+// "Showing 1–4 of 4" and Prev / Next buttons at the bottom.
 //
-// Data controller.transactions se aata hai.
+// The data comes from controller.transactions.
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive.dart';
@@ -76,7 +76,7 @@ class CreditsTransactions extends StatelessWidget {
           const SizedBox(height: 12),
 
           // ---------- Showing + Prev / Next ----------
-          // Poori chaudai: "Showing" baaye, buttons daaye
+          // Full width: "Showing" on the left, buttons on the right
           SizedBox(
             width: double.infinity,
             child: Wrap(
@@ -130,7 +130,7 @@ class CreditsTransactions extends StatelessWidget {
 // TABLE (tablet / window)
 // ============================================================
 
-/// Table ke column ki chaudai. Heading aur har line me yahi use hoti hai.
+/// Table column widths. Used in the heading and every line.
 const int _dateFlex = 5;
 const int _idFlex = 4;
 const double _statusWidth = 90;
@@ -300,10 +300,10 @@ class _TransactionTile extends StatelessWidget {
 }
 
 // ============================================================
-// CHHOTE HISSE
+// SMALL PARTS
 // ============================================================
 
-/// "Paid" ka hara pill (baaki status peele)
+/// Green pill for "Paid" (other statuses yellow)
 class _StatusPill extends StatelessWidget {
   const _StatusPill({required this.item});
 
@@ -331,7 +331,7 @@ class _StatusPill extends StatelessWidget {
   }
 }
 
-/// "+₹20.00" (paid ho to hara)
+/// "+₹20.00" (green if paid)
 class _Amount extends StatelessWidget {
   const _Amount({required this.item});
 
@@ -353,7 +353,7 @@ class _Amount extends StatelessWidget {
   }
 }
 
-/// Prev / Next button. [onTap] null ho to button band (grey) rehta hai.
+/// Prev / Next button. If [onTap] is null the button stays disabled (grey).
 class _PageButton extends StatelessWidget {
   const _PageButton({
     required this.label,
@@ -422,7 +422,7 @@ class _TransactionsShimmer extends StatelessWidget {
   }
 }
 
-/// Khali list ya error ke liye. [onRetry] diya ho to Retry button dikhta hai.
+/// For an empty list or an error. If [onRetry] is given, a Retry button shows.
 class _Message extends StatelessWidget {
   const _Message({required this.text, this.onRetry});
 

@@ -1,10 +1,10 @@
 // ============================================================
-// AUTH USER  (login kiya hua user: GET /user/user-details -> "User")
+// AUTH USER  (the logged-in user: GET /user/user-details -> "User")
 //
-// Kaun kya dekh sakta hai (web dashboard jaisa):
-//   isAdmin = true   -> account ki SAARI locations
-//   isAdmin = false  -> sirf assigned_location wali locations
-//   role = "owner"   -> upar se saare client accounts me switch kar sakta hai
+// Who can see what (same as the web dashboard):
+//   isAdmin = true   -> ALL locations of the account
+//   isAdmin = false  -> only assigned_location locations
+//   role = "owner"   -> can also switch into all client accounts
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
@@ -23,7 +23,7 @@ class AuthUserModel {
   final String role;
   final bool isAdmin;
 
-  /// Team member ko di gayi locations (hotel id)
+  /// Locations given to a team member (hotel ids)
   final List<String> assignedHids;
   final String displayName;
   final String email;
@@ -49,14 +49,14 @@ class AuthUserModel {
     );
   }
 
-  /// Ye user kaunsi locations khol sakta hai
+  /// Which locations this user can open
   List<HotelModel> allowedHotels(List<HotelModel> all) {
     if (isAdmin) return all;
     return all.where((h) => assignedHids.contains(h.hotelId)).toList();
   }
 
-  /// Kaunsi location kholein: pichhli baar wali (agar abhi bhi allowed),
-  /// warna admin -> aakhri, team member -> pehli (web jaisa)
+  /// Which location to open: the one from last time (if still allowed),
+  /// otherwise admin -> last one, team member -> first one (same as web)
   HotelModel? pickHotel(List<HotelModel> allowed, String? savedHid) {
     if (allowed.isEmpty) return null;
 
@@ -67,7 +67,7 @@ class AuthUserModel {
   }
 }
 
-/// Owner ke liye ek client account (GET /admin/get-all-clients -> data[])
+/// One client account for the owner (GET /admin/get-all-clients -> data[])
 class ClientAccountModel {
   const ClientAccountModel({
     required this.hotelName,
@@ -81,11 +81,11 @@ class ClientAccountModel {
 
   final String hotelName;
 
-  /// Isi email se switch hota hai
+  /// Switching uses this email
   final String hotelEmail;
   final String ndid;
 
-  /// Switch ke baad yahi location khulti hai
+  /// This location opens after switching
   final String firstHotelId;
   final String city;
   final String state;

@@ -62,7 +62,7 @@ class SubscriptionModel {
 
   bool get isActive => status.toUpperCase() == 'ACTIVE';
 
-  /// Bache hue din (aaj se endDate tak)
+  /// Remaining days (from today to endDate)
   int get daysLeft {
     final end = endDate;
     if (end == null) return 0;
@@ -100,7 +100,7 @@ class SubscriptionModel {
 // ============================================================
 
 class SubscriptionPlanModel {
-  /// Plan ki id (_id): "Current plan" pehchanne aur naya plan lene me
+  /// The plan's id (_id): used to spot the "Current plan" and to buy a new plan
   final String id;
   final String name;
   final num price;
@@ -139,7 +139,7 @@ class SubscriptionPlanModel {
 // ============================================================
 
 class SubscriptionAppModel {
-  /// App ki id (appId._id): "Purchased" pehchanne me
+  /// The app's id (appId._id): used to spot "Purchased"
   final String appId;
   final String name;
   final String code;
@@ -186,7 +186,7 @@ class PaymentModel {
   final String id;
   final String orderId;
   final String paymentId;
-  final num amountInPaise; // server paise me bhejta hai (299900 = Rs 2999)
+  final num amountInPaise; // the server sends it in paise (299900 = Rs 2999)
   final String currency;
   final String status; // SUCCESS / created
   final DateTime? createdAt;
@@ -201,7 +201,7 @@ class PaymentModel {
     required this.createdAt,
   });
 
-  /// Rupees me amount
+  /// Amount in rupees
   num get amount => amountInPaise / 100;
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) {

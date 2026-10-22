@@ -1,14 +1,14 @@
 // ============================================================
 // CHATBOT FLOW CONTROLLER  (Settings > WhatsApp > WhatsApp Flow)
 //
-//   load        : server se nodes + edges
-//   addNode     : naya step (chune hue step ke right me)
-//   moveNode    : canvas par kheench kar jagah badlo
-//   saveNode    : editor ka "Save" (data + kaun sa rasta kahan jaata hai)
-//   deleteNode  : step aur uske saare teer hatao
-//   publish     : sab kuch server par (web jaisa form-data)
+//   load        : nodes + edges from the server
+//   addNode     : new step (to the right of the selected step)
+//   moveNode    : drag on the canvas to move it
+//   saveNode    : the editor's "Save" (data + which path goes where)
+//   deleteNode  : remove the step and all its arrows
+//   publish     : everything to the server (form-data, same as web)
 //
-// "Publish" tak sab badlav sirf app me rehte hain (hasChanges).
+// Until "Publish" all changes stay only in the app (hasChanges).
 // ============================================================
 
 import 'package:eazotel/core/constants/api_base_url.dart';
@@ -50,13 +50,13 @@ class ChatbotFlowController extends GetxController {
   /// Canvas (tablet / window) ya list (phone)
   final view = ChatbotView.canvas.obs;
 
-  /// Abhi chuna hua step (naya step iske right me banta hai)
+  /// The currently selected step (a new step is created to its right)
   final selectedId = RxnString();
 
-  /// Send Message ki nayi files: blockId -> rasta (Publish par upload)
+  /// New files for Send Message: blockId -> path (uploaded on Publish)
   final Map<String, String> pendingFiles = {};
 
-  /// Form flow ki list (Flow step ke dropdown ke liye)
+  /// List of form flows (for the Flow step's dropdown)
   final formFlows = <FlowItemModel>[].obs;
 
   @override
@@ -107,17 +107,17 @@ class ChatbotFlowController extends GetxController {
   ChatbotNode? nodeById(String? id) =>
       id == null ? null : nodes.firstWhereOrNull((n) => n.id == id);
 
-  /// Is rasta se kaun sa step juda hai
+  /// Which step is connected to this path
   String? targetOf(String sourceId, String? handle) => edges
       .firstWhereOrNull(
         (e) => e.source == sourceId && e.handleKey == (handle ?? ''),
       )
       ?.target;
 
-  /// Kisi ne is step par teer nahi lagaya -> yahi se shuru
+  /// No arrow points to this step -> start from here
   bool isStart(String id) => !edges.any((e) => e.target == id);
 
-  /// Dropdown / card par step ka naam: "2. Buttons: Ask a question"
+  /// Step name on the dropdown / card: "2. Buttons: Ask a question"
   String titleOf(ChatbotNode node) {
     final index = nodes.indexOf(node) + 1;
     final text = node.summary.split('\n').first.trim();
@@ -125,7 +125,7 @@ class ChatbotFlowController extends GetxController {
     return '$index. ${node.type.label}${short.isEmpty ? '' : ': $short'}';
   }
 
-  /// Saved photo ka link (Send Message me media.mediaId)
+  /// Link of the saved photo (media.mediaId in Send Message)
   String mediaUrl(String mediaId) =>
       '${BaseUrl.production2}${WhatsappApiEndpoint.media(mediaId)}?ndid=$ndid';
 
@@ -167,8 +167,8 @@ class ChatbotFlowController extends GetxController {
     _changed();
   }
 
-  /// Editor ka Save.
-  /// [connections]: rasta (handle key) -> kis step par jaana hai (null = kahin nahi)
+  /// The editor's Save.
+  /// [connections]: path (handle key) -> which step to go to (null = nowhere)
   Future<void> saveNode({
     required String id,
     required Map<String, dynamic> data,
@@ -177,14 +177,14 @@ class ChatbotFlowController extends GetxController {
     final node = nodeById(id);
     if (node == null) return;
 
-    // Send Message: nayi files ko Publish ke liye rakh lo
+    // Send Message: keep the new files for Publish
     for (final block in chatbotList(data['blocks'])) {
       if (block is! Map) continue;
       final path = block.remove('_localPath');
       if (path != null) pendingFiles['${block['id']}'] = '$path';
     }
 
-    // Carousel: nayi photo pehle upload karo (web jaisa)
+    // Carousel: upload the new photo first (same as web)
     final cards = chatbotList(
       chatbotMap(chatbotMap(data['interactive'])['action'])['cards'],
     );
@@ -205,7 +205,7 @@ class ChatbotFlowController extends GetxController {
 
     node.data = data;
 
-    // Ab jo rasta bache hi nahi, unke teer hatao; baaki naye lagao
+    // Remove the arrows of paths that no longer exist; add the new ones
     final outputs = node.outputs.map((o) => o.key).toSet();
     edges.removeWhere((e) => e.source == id && !outputs.contains(e.handleKey));
     for (final entry in connections.entries) {
@@ -256,7 +256,7 @@ class ChatbotFlowController extends GetxController {
         _toast('Published', response.message('WhatsApp flow published.'));
         await load();
 
-        // Auto message ke "Flow" dropdown me naya flow aa jaaye
+        // So the new flow shows in the auto message "Flow" dropdown
         if (Get.isRegistered<WhatsappSettingController>()) {
           Get.find<WhatsappSettingController>().load();
         }

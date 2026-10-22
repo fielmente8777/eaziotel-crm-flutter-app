@@ -1,11 +1,11 @@
 // ============================================================
 // QUICK REPLIES PAGE  (Settings > WhatsApp > Quick Replies)
 //
-//   upar  : title + "New Reply"
+//   top   : title + "New Reply"
 //   tab   : Existing Replies | Create Reply (Edit Reply)
 //   list  : search + card (naam, message, kitni photo/video/document,
 //           Edit / Delete). Phone 1 column, tablet / window 2 column.
-//   form  : naam, message, teen upload box, chuni files (x se hatao)
+//   form  : name, message, three upload boxes, chosen files (remove with x)
 // ============================================================
 
 import 'dart:io';

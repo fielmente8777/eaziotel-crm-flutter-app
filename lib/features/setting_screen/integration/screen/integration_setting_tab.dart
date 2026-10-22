@@ -1,11 +1,11 @@
 // ============================================================
 // INTEGRATION SETTING TAB  (Settings > Integration)
 //
-//   upar   : "Integrations" heading + search + All / Communication / Analytics
-//   neeche : cards ka grid
+//   top    : "Integrations" heading + search + All / Communication / Analytics
+//   bottom : grid of cards
 //              phone 1 column, tablet 2, window 4
 //
-// Data controller/ me, card widgets/ me.
+// Data is in controller/, cards in widgets/.
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive_builder.dart';
@@ -48,7 +48,7 @@ class IntegrationSettingTab extends StatelessWidget {
               IntegrationCard(
                 item: item,
                 busy: controller.connectingKey.value == item.apiKey,
-                // Exotel Connect = form, baaki controller sambhalta hai
+                // Exotel Connect = form, the controller handles the rest
                 onTap: () => !item.connected && item.apiKey == 'exotel'
                     ? showExotelConnectDialog(context, controller)
                     : controller.onAction(item),
@@ -165,7 +165,7 @@ class _SearchAndTabs extends StatelessWidget {
 }
 
 // ============================================================
-// GRID  (har line ke card ek barabar unche)
+// GRID  (cards in each row have the same height)
 // ============================================================
 
 class _Grid extends StatelessWidget {

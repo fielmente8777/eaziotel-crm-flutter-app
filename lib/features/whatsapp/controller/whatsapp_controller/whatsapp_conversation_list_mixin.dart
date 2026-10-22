@@ -3,7 +3,7 @@ part of '../whatsappController.dart';
 // ============================================================
 // WHATSAPP CONVERSATION LIST MIXIN
 //
-// Conversation list: integration, load, tab, search, ginti,
+// Conversation list: integration, load, tabs, search, counts,
 // select + delete, read mark.
 // ============================================================
 
@@ -75,7 +75,7 @@ mixin WhatsappConversationListMixin
     }
   }
 
-  /// List dobara aane par socket se aayi chats ko phir upar rakho
+  /// When the list reloads, put chats that came from the socket on top again
   void _restoreSocketConversationOrder() {
     final matched = <WhatsappConversationModel>[];
 
@@ -105,7 +105,7 @@ mixin WhatsappConversationListMixin
 
     if (!selectedConversationIds.remove(id)) selectedConversationIds.add(id);
 
-    // Aakhri selection hataya to selection mode band
+    // Removing the last selection turns selection mode off
     isConversationSelectMode.value = selectedConversationIds.isNotEmpty;
   }
 
@@ -114,7 +114,7 @@ mixin WhatsappConversationListMixin
     isConversationSelectMode.value = false;
   }
 
-  /// Current tab me jo chats dikh rahi hain, sab select karo
+  /// Select all chats shown in the current tab
   void selectAllConversations() {
     isConversationSelectMode.value = true;
     selectedConversationIds.assignAll(filteredChats.map((c) => c.id));
@@ -184,7 +184,7 @@ mixin WhatsappConversationListMixin
   }
 
   // ============================================================
-  // HANDLING (Take over / Hand back ke baad list me bhi badlo)
+  // HANDLING (also update the list after Take over / Hand back)
   // ============================================================
 
   void setConversationHandling(
@@ -226,7 +226,7 @@ mixin WhatsappConversationListMixin
       conversations.fold(0, (total, c) => total + c.unreadCount);
 
   // ============================================================
-  // FILTERED CHATS  (tab -> search -> nayi pehle)
+  // FILTERED CHATS  (tab -> search -> newest first)
   //   tab 0 = Active, 1 = Inactive, 2 = Converted
   // ============================================================
 
@@ -262,7 +262,7 @@ mixin WhatsappConversationListMixin
     return list;
   }
 
-  /// Active = last message 24 ghante ke andar, warna Inactive
+  /// Active = last message within 24 hours, otherwise Inactive
   bool is24HoursCompleted(WhatsappConversationModel conversation) {
     final date = DateTime.tryParse(
       conversation.lastMessage?.updatedAt ?? conversation.updatedAt,

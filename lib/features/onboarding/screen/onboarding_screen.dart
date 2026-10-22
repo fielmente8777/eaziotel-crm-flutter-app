@@ -1,11 +1,11 @@
 // ============================================================
 // ONBOARD YOUR PROPERTY  (web: pages/Onboarding/OnboardingForm.jsx)
 //
-// Naya account jiska koi hotel nahi, use dashboard se pehle yahi dikhta hai
-// (DashboardBottomNav ka gate). Sirf basic details; baaki baad me.
+// A new account with no hotel sees this before the dashboard
+// (the DashboardBottomNav gate). Only basic details; the rest later.
 //
-//   Phone        : ek column
-//   Tablet / Web : beech me card, do column
+//   Phone        : one column
+//   Tablet / Web : card in the middle, two columns
 // ============================================================
 
 import 'package:eazotel/features/onboarding/controller/onboarding_controller.dart';
@@ -25,8 +25,8 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  // Screen ke saath bana, screen ke saath khatam (agle account ko purana
-  // form na mile)
+  // Created with the screen and removed with it (so the next account
+  // does not get the old form)
   late final OnboardingController c = Get.put(OnboardingController());
 
   @override
@@ -445,7 +445,7 @@ class _TextField extends StatelessWidget {
   }
 }
 
-/// Dropdown jaisa dabba; tap par neeche se list (search ke saath) khulti hai
+/// Dropdown-like box; tapping opens a list from the bottom (with search)
 class _Picker extends StatelessWidget {
   const _Picker({
     required this.c,
@@ -534,7 +534,7 @@ class _Picker extends StatelessWidget {
   }
 }
 
-/// Country / state / city: list mile to picker, na mile to text box
+/// Country / state / city: a picker if there is a list, otherwise a text box
 class _PlaceField extends StatelessWidget {
   const _PlaceField({
     required this.c,
@@ -564,7 +564,7 @@ class _PlaceField extends StatelessWidget {
       final items = list();
       final waiting = waitingFor?.call();
 
-      // places API ke paas kuch nahi: user khud likhe
+      // the places API has nothing: the user types it
       if (waiting == null && items != null && items.isEmpty) {
         return _TextField(
           c: c,
@@ -582,7 +582,7 @@ class _PlaceField extends StatelessWidget {
         label: label,
         icon: icon,
         value: value,
-        // pehle wala chuna nahi -> list ki zarurat nahi, khali hi sahi
+        // previous one not chosen -> no list needed, empty is fine
         options: () => waiting != null ? const [] : list(),
         placeholder: () => waiting,
         disabled: () => waiting != null,

@@ -210,14 +210,14 @@ static Future<http.Response> googleAuth(
   final response = await _client.post(
     url,
 
-    // Google ID token backend ko bhej rahe hain
+    // Sending the Google ID token to the backend
     headers: {
       'Authorization': 'Bearer $idToken',
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     },
 
-    // Backend empty JSON body expect karta hai
+    // The backend expects an empty JSON body
     body: jsonEncode({}),
   );
 

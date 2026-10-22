@@ -1,14 +1,14 @@
 // ============================================================
-// EMAIL IMPORT  (Excel / CSV file se email nikalo)
+// EMAIL IMPORT  (get emails from an Excel / CSV file)
 //
-// Web dashboard jaisa:
-//   1. pehli line me "email" jaisa column ho -> sirf wahi column
-//   2. warna poori sheet me jo bhi sahi email mile
-// Dobara aaye email ek hi baar, sab chhote akshar me.
+// Same as the web dashboard:
+//   1. if the first row has a column like "email" -> only that column
+//   2. otherwise any valid email found anywhere in the sheet
+// Duplicate emails only once, all in lowercase.
 //
-// .xlsx = zip ke andar XML. Use `archive` se kholte hain (alag Excel
-// package app ke `image` package se takrata tha).
-// .xls (purana Excel) nahi chalta -> .xlsx ya .csv me save karke do.
+// .xlsx = XML inside a zip. We open it with `archive` (a separate Excel
+// package clashed with the app's `image` package).
+// .xls (old Excel) does not work -> save it as .xlsx or .csv.
 // ============================================================
 
 import 'dart:convert';
@@ -41,7 +41,7 @@ class EmailImport {
 
   static bool isEmail(String value) => emailPattern.hasMatch(value.trim());
 
-  /// File padh kar saare email (khali list = kuch nahi mila)
+  /// Read the file and return all emails (empty list = nothing found)
   static Future<List<String>> fromFile(String path) async {
     final lower = path.toLowerCase();
     final bytes = await File(path).readAsBytes();
@@ -95,7 +95,7 @@ class EmailImport {
   }
 
   // ============================================================
-  // CSV  (quotes ke andar comma bhi chalta hai)
+  // CSV  (commas inside quotes work too)
   // ============================================================
 
   static List<List<String>> _csvRows(String text) {
@@ -143,7 +143,7 @@ class EmailImport {
   }
 
   // ============================================================
-  // XLSX  (har sheet ki rows)
+  // XLSX  (rows of each sheet)
   // ============================================================
 
   static List<List<List<String>>> _xlsxSheets(List<int> bytes) {
@@ -156,7 +156,7 @@ class EmailImport {
           : utf8.decode(file.first.content, allowMalformed: true);
     }
 
-    // Excel saare text ek jagah (sharedStrings) rakhta hai, cell me sirf number
+    // Excel keeps all text in one place (sharedStrings); cells hold only a number
     final shared = <String>[
       for (final si in RegExp(
         r'<si>(.*?)</si>',
@@ -225,7 +225,7 @@ class EmailImport {
   static int _column(String letters) =>
       letters.codeUnits.fold(0, (sum, c) => sum * 26 + (c - 64)) - 1;
 
-  /// `<t>...</t>` ke andar ka saara text
+  /// All the text inside `<t>...</t>`
   static String _xmlText(String xml) => _unescape(
     RegExp(
       r'<t[^>]*>(.*?)</t>',

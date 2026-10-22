@@ -1,7 +1,7 @@
 // ============================================================
 // LEADS EMPTY STATE
-// Koi lead nahi. Filter / search laga ho to "Clear filters" button.
-// (Home ke "Recent Leads" me bhi yahi dikhta hai)
+// No leads. If a filter / search is applied, a "Clear filters" button.
+// (The same shows in "Recent Leads" on Home)
 // ============================================================
 
 import 'package:flutter/material.dart';

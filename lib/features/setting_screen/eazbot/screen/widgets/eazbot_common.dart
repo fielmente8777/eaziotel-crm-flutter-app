@@ -1,10 +1,10 @@
 // ============================================================
 // EAZBOT COMMON
 //
-// Chaaron step ke kaam aane wale chhote widget:
+// Small widgets used by all four steps:
 //   EazbotField   : label + text box
-//   EazbotSwitch  : label + switch wala dabba
-//   EazbotStepper : upar ka 1-2-3-4 stepper
+//   EazbotSwitch  : box with a label + switch
+//   EazbotStepper : the 1-2-3-4 stepper on top
 // ============================================================
 
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
@@ -95,8 +95,8 @@ class EazbotStepper extends StatelessWidget {
     final p = SettingPalette(context);
     final steps = EazbotStep.values;
 
-    // Upar dots + lines, neeche labels. Har label apne hisse me fit hota hai,
-    // isliye phone par bhi line bahar nahi jaati.
+    // Dots + lines on top, labels below. Each label fits in its own part,
+    // so the line does not overflow even on phones.
     return Column(
       children: [
         Row(

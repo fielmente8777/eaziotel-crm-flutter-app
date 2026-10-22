@@ -20,7 +20,7 @@ class CallsController extends GetxController {
 
   final calls = <CallModel>[].obs;
 
-  final isLoading = true.obs; // pehla page
+  final isLoading = true.obs; // first page
   final isLoadingMore = false.obs; // agle page
   final errorMessage = RxnString();
 
@@ -36,10 +36,10 @@ class CallsController extends GetxController {
 
   final AudioPlayer _player = AudioPlayer();
 
-  /// Jis call ki recording chal rahi hai uski id ('' = koi nahi)
+  /// Id of the call whose recording is playing ('' = none)
   final playingCallId = ''.obs;
 
-  /// Jis call ki recording abhi download ho rahi hai ('' = koi nahi)
+  /// Id of the call whose recording is downloading now ('' = none)
   final loadingRecordingId = ''.obs;
 
   // ============================================================
@@ -52,7 +52,7 @@ class CallsController extends GetxController {
 
     _hotelId = locationController.selectedHotel.value?.hotelId ?? '';
 
-    // Hotel badalne par list dobara load
+    // Reload the list when the hotel changes
     ever(locationController.selectedHotel, (hotel) {
       _hotelId = hotel?.hotelId ?? '';
       loadCalls();
@@ -71,16 +71,16 @@ class CallsController extends GetxController {
   }
 
   // ============================================================
-  // WHATSAPP CHAT (app ke andar wali conversation)
+  // WHATSAPP CHAT (the in-app conversation)
   // ============================================================
 
-  /// Jis call ke liye WhatsApp chat khul rahi hai ('' = koi nahi)
+  /// Id of the call whose WhatsApp chat is opening ('' = none)
   final openingWhatsappId = ''.obs;
 
   String get hotelId => _hotelId;
 
   // ============================================================
-  // LOAD FIRST PAGE (pull to refresh bhi yahi)
+  // LOAD FIRST PAGE (also used by pull to refresh)
   // ============================================================
 
   Future<void> loadCalls() async {
@@ -97,7 +97,7 @@ class CallsController extends GetxController {
       return;
     }
 
-    // Pehli baar / hotel badalne par shimmer, refresh par purani list rehne do
+    // Shimmer the first time / on hotel change; keep the old list on refresh
     if (calls.isEmpty) isLoading.value = true;
 
     errorMessage.value = null;
@@ -105,7 +105,7 @@ class CallsController extends GetxController {
     try {
       final result = await _service.getCalls(hid: hid, page: 1, limit: _limit);
 
-      // Request ke dauran hotel badal gaya -> purana result chhod do
+      // Hotel changed during the request -> drop the old result
       if (hid != _hotelId) return;
 
       _page = 1;
@@ -181,7 +181,7 @@ class CallsController extends GetxController {
 
     if (index < 0 || call.sid.isEmpty) return;
 
-    // Turant UI me dikhao, fail ho to wapas purani value
+    // Show in the UI right away; if it fails, restore the old value
     calls[index] = call.withField(field, value, followUpDate: followUpDate);
 
     try {
@@ -219,13 +219,13 @@ class CallsController extends GetxController {
   Future<void> toggleRecording(CallModel call) async {
     if (call.sid.isEmpty) return;
 
-    // Yahi recording chal rahi hai -> band karo
+    // This recording is playing -> stop it
     if (playingCallId.value == call.id) {
       await stopRecording();
       return;
     }
 
-    // Yahi recording abhi load ho rahi hai
+    // This recording is loading right now
     if (loadingRecordingId.value == call.id) return;
 
     await stopRecording();
@@ -233,10 +233,10 @@ class CallsController extends GetxController {
     loadingRecordingId.value = call.id;
 
     try {
-      // /api/v1/call/recording/{sid} se audio lao (login token ke saath)
+      // Get the audio from /api/v1/call/recording/{sid} (with the login token)
       final path = await _service.getRecordingFile(call.sid);
 
-      // Is beech user ne koi aur recording chun li
+      // Meanwhile the user picked another recording
       if (loadingRecordingId.value != call.id) return;
 
       loadingRecordingId.value = '';

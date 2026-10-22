@@ -1,11 +1,11 @@
 // ============================================================
 // FLOW BUILDER CONTROLLER  (Flows > Create Flow)
 //
-//   Step 1: template chuno (Lead Generation / Feedback Form)
-//   Step 2: naam likho (dialog)
-//   Step 3: screen + field banao -> Publish
+//   Step 1: choose a template (Lead Generation / Feedback Form)
+//   Step 2: type a name (dialog)
+//   Step 3: build screens + fields -> Publish
 //
-// Publish ke baad "Flow Name" tab ki list taaza ho jaati hai.
+// After Publish, the list in the "Flow Name" tab is refreshed.
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
@@ -23,7 +23,7 @@ class FlowBuilderController extends GetxController {
 
   String get hid => dashboard.selectedHotelId.value;
 
-  /// null = abhi template nahi chuna (list dikhao)
+  /// null = no template chosen yet (show the list)
   final template = Rxn<FlowTemplateOption>();
   final flowName = ''.obs;
 
@@ -35,7 +35,7 @@ class FlowBuilderController extends GetxController {
       ? null
       : screens[activeIndex.value.clamp(0, screens.length - 1)];
 
-  /// Text badalne par preview badle
+  /// The preview changes when the text changes
   final _tick = 0.obs;
   void _touch() => _tick.value++;
   int get tick => _tick.value;
@@ -100,7 +100,7 @@ class FlowBuilderController extends GetxController {
   void selectScreen(int index) => activeIndex.value = index;
 
   // ============================================================
-  // FIELDS (chune hue screen me)
+  // FIELDS (in the selected screen)
   // ============================================================
 
   void addField() {
@@ -156,7 +156,7 @@ class FlowBuilderController extends GetxController {
         _toast('Flow created', response.message('Flow created successfully'));
         backToTemplates();
 
-        // "Flow Name" tab par naya flow dikhao
+        // Show the new flow in the "Flow Name" tab
         if (Get.isRegistered<WhatsappFlowPageController>()) {
           final list = Get.find<WhatsappFlowPageController>();
           list.changeTab(FlowTab.flowName);

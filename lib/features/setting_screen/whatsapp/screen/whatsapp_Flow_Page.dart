@@ -283,7 +283,7 @@ class _FlowTable extends StatelessWidget {
 }
 
 // ============================================================
-// FLOW PREVIEW DIALOG  (eye icon dabane par)
+// FLOW PREVIEW DIALOG  (when the eye icon is pressed)
 // ============================================================
 
 void showFlowPreviewDialog(BuildContext context, FlowItemModel flow) {
@@ -383,7 +383,7 @@ class _FlowPreviewDialog extends StatelessWidget {
   }
 }
 
-/// Ek field ka read-only preview (label + box)
+/// Read-only preview of one field (label + box)
 class _PreviewField extends StatelessWidget {
   const _PreviewField({required this.field});
 

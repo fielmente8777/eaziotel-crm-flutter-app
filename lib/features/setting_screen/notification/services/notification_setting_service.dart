@@ -1,16 +1,16 @@
 // ============================================================
 // NOTIFICATION SETTING SERVICE
 //
-// Settings > Notification tab ki nayi API. Sirf yahi file server se baat karti hai.
+// New API for the Settings > Notification tab. Only this file talks to the server.
 //
 //   getConfig    : GET  /api/v1/setting/get-config     -> lead source + call notification
 //   updateConfig : POST /api/v1/setting/update-config  -> Save button
 //
-// Baaki data pehle se bani services se aata hai (dobara nahi likha):
+// The rest of the data comes from existing services (not written again):
 //   WhatsappSettingService.getAccountDetails -> notification.enable ("Enable WhatsApp")
 //   WhatsappSettingService.getFlowIds        -> "Flow" dropdown
 //   WhatsappTemaplate.getWhatsappTemplates   -> "Template" dropdown + preview
-//   DashboardController.userNameResponse     -> team members ke naam
+//   DashboardController.userNameResponse     -> team member names
 // ============================================================
 
 import 'dart:convert';
@@ -98,7 +98,7 @@ class NotificationSettingService {
       debugPrint('BODY: ${response.body}');
       debugPrint('==================================================');
 
-      // Server 200 ke saath bhi "success": false bhej sakta hai
+      // The server can send "success": false even with a 200
       final json = jsonDecode(response.body);
 
       if (json is Map && json['success'] == false) {

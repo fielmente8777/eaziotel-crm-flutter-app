@@ -1,12 +1,12 @@
 // ============================================================
 // FLOW BUILDER MODELS  (Settings > WhatsApp > Flows > Create Flow)
 //
-// WhatsApp Flow = WhatsApp ke andar khulne wala form.
-//   FlowTemplateOption : kis tarah ka flow (Lead Generation / Feedback)
-//   FlowScreenDraft    : form ka ek page (title + fields)
-//   FlowFieldDraft     : ek sawaal (label, type, required)
+// WhatsApp Flow = a form that opens inside WhatsApp.
+//   FlowTemplateOption : what kind of flow (Lead Generation / Feedback)
+//   FlowScreenDraft    : one page of the form (title + fields)
+//   FlowFieldDraft     : one question (label, type, required)
 //
-// Server ko jaata hai (POST /api/v1/whatsapp/flow/create):
+// Sent to the server (POST /api/v1/whatsapp/flow/create):
 //   { flowName, category, screens: [ { id, title,
 //       fields: [ { label, type, required } ] } ] }
 // ============================================================
@@ -25,7 +25,7 @@ class FlowTemplateOption {
 
   final String id;
 
-  /// Server wala naam: LEAD_GENERATION / FEEDBACK_FORM
+  /// Server name: LEAD_GENERATION / FEEDBACK_FORM
   final String category;
   final String title;
   final String description;
@@ -49,7 +49,7 @@ class FlowTemplateOption {
   ];
 }
 
-/// Field ke type (web jaise)
+/// Field types (same as web)
 enum FlowFieldType {
   text('text', 'Short Answer', Icons.short_text),
   textarea('textarea', 'Long Text', Icons.notes),

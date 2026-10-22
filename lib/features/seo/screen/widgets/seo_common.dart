@@ -1,17 +1,17 @@
 // ============================================================
-// SEO COMMON WIDGETS  (Local SEO + Website SEO dono)
+// SEO COMMON WIDGETS  (both Local SEO + Website SEO)
 //
-//   SeoColors        : rang (light + dark dono me chalte hain)
+//   SeoColors        : colors (work in both light + dark)
 //   SeoFormat        : 1,234 / ₹12.50 / #3.2
-//   SeoRankTone      : rank ke hisaab se rang + label
-//   SeoPanel         : icon + title + subtitle wala dabba
-//   SeoHeaderIcon    : gradient wala gol-kona icon
+//   SeoRankTone      : color + label by rank
+//   SeoPanel         : box with icon + title + subtitle
+//   SeoHeaderIcon    : rounded-corner icon with a gradient
 //   SeoRankChip      : "#3" chip
-//   SeoDifficulty    : 0-100 patti
+//   SeoDifficulty    : 0-100 bar
 //   SeoActionBadge   : Target / Optimize / Defend / Research
-//   SeoStatCard      : bada number
-//   SeoVisibilityGauge: gol meter (animation ke saath)
-//   SeoCreditsChip   : AppBar me credits (tap = kis kaam ke kitne)
+//   SeoStatCard      : big number
+//   SeoVisibilityGauge: round meter (with animation)
+//   SeoCreditsChip   : credits in the AppBar (tap = what each action costs)
 //   SeoEmptyState / SeoErrorState / SeoShimmer / SeoGrid
 // ============================================================
 
@@ -51,7 +51,7 @@ class SeoFormat {
   /// Average rank: "#3.2"
   static String rank(num? v) => v == null ? '—' : '#${v.toStringAsFixed(1)}';
 
-  /// Ek keyword ka rank: "#3"
+  /// One keyword's rank: "#3"
   static String rankWhole(num? v) => v == null ? '—' : '#${v.round()}';
 
   static String date(DateTime? d) =>
@@ -82,7 +82,7 @@ class SeoRankTone {
     return const SeoRankTone(SeoColors.rose, 'Low');
   }
 
-  /// Map coverage ka ek point (web: getRankStyle)
+  /// One point of map coverage (web: getRankStyle)
   static SeoRankTone grid(num? rank) {
     if (rank == null) return const SeoRankTone(SeoColors.grey, 'Not ranked');
     if (rank <= 3) return const SeoRankTone(Color(0xFF22C55E), '1–3');
@@ -103,7 +103,7 @@ class SeoRankTone {
 }
 
 // ============================================================
-// DABBE
+// BOXES
 // ============================================================
 
 class SeoPanel extends StatelessWidget {
@@ -226,7 +226,7 @@ class SeoHeaderIcon extends StatelessWidget {
   }
 }
 
-/// Chhota rangeen label (badge / status)
+/// Small colored label (badge / status)
 class SeoTag extends StatelessWidget {
   const SeoTag({
     super.key,
@@ -258,7 +258,7 @@ class SeoTag extends StatelessWidget {
           else if (icon != null)
             Icon(icon, size: 13, color: color),
           if (loading || icon != null) const SizedBox(width: 4),
-          // Jagah kam ho to "Optim…" (tootega nahi)
+          // "Optim…" when there is little space (does not break)
           Flexible(
             child: Text(
               text,
@@ -277,7 +277,7 @@ class SeoTag extends StatelessWidget {
   }
 }
 
-/// Icon ghoomta rahe (refresh / scan ke time)
+/// Keep the icon spinning (during refresh / scan)
 class SeoSpin extends StatefulWidget {
   const SeoSpin({super.key, required this.child, this.spinning = true});
 
@@ -367,7 +367,7 @@ class SeoRankChip extends StatelessWidget {
   }
 }
 
-/// Keyword kitna mushkil hai (0-100)
+/// How hard the keyword is (0-100)
 class SeoDifficulty extends StatelessWidget {
   const SeoDifficulty({super.key, required this.value, this.width = 64});
 
@@ -530,7 +530,7 @@ class SeoStatCard extends StatelessWidget {
   }
 }
 
-/// Gol meter 0-100 (khulte hi bhar jaata hai)
+/// Round meter 0-100 (fills up when it opens)
 class SeoVisibilityGauge extends StatelessWidget {
   const SeoVisibilityGauge({super.key, required this.score, this.size = 132});
 
@@ -638,11 +638,11 @@ class SeoCreditsChip extends StatelessWidget {
     required this.lowAt,
   });
 
-  /// null = pata nahi
+  /// null = unknown
   final int? balance;
   final SeoTokenPricing pricing;
 
-  /// Isse kam ho to peela (ek kaam ke liye bhi nahi)
+  /// Yellow when below this (not enough for even one action)
   final int lowAt;
 
   @override
@@ -764,7 +764,7 @@ class SeoCreditsChip extends StatelessWidget {
 }
 
 // ============================================================
-// KHALI / ERROR / LOADING
+// EMPTY / ERROR / LOADING
 // ============================================================
 
 class SeoEmptyState extends StatelessWidget {
@@ -862,7 +862,7 @@ class SeoErrorState extends StatelessWidget {
   }
 }
 
-/// Barabar chaudai ke dabbe (phone 2, tablet/window 4)
+/// Equal-width boxes (phone 2, tablet/window 4)
 class SeoGrid extends StatelessWidget {
   const SeoGrid({
     super.key,
@@ -931,7 +931,7 @@ class SeoShimmer extends StatelessWidget {
   }
 }
 
-/// Rangeen chhota button (Row me bhi chalta hai)
+/// Small colored button (works inside a Row too)
 ButtonStyle seoButton(Color color) => ElevatedButton.styleFrom(
   backgroundColor: color,
   foregroundColor: Colors.white,
@@ -940,7 +940,7 @@ ButtonStyle seoButton(Color color) => ElevatedButton.styleFrom(
   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
 );
 
-/// Dabbe ke andar wala halka button
+/// Light button inside the box
 ButtonStyle seoOutlineButton(BuildContext context) {
   final p = SettingPalette(context);
   return OutlinedButton.styleFrom(

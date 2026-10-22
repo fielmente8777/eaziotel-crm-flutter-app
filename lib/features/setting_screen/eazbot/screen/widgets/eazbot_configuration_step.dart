@@ -2,7 +2,7 @@
 // STEP 3: CONFIGURATION
 //
 //   Basic Setup : messages, time interval, chaar switch
-//   Questions   : chatbot ke sawal (on / off + text badalna)
+//   Questions   : the chatbot's questions (on / off + edit text)
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -164,7 +164,7 @@ class _EazbotConfigurationStepState extends State<EazbotConfigurationStep> {
                 children: [
                   Expanded(
                     child: TextFormField(
-                      // key: sawal badalne par purana text na rahe
+                      // key: so the old text does not stay when the question changes
                       key: ValueKey(q.key),
                       initialValue: q.question,
                       onChanged: (v) => c.setQuestionText(q, v),

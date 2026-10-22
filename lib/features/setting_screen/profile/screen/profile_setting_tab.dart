@@ -1,9 +1,9 @@
 // ============================================================
 // PROFILE SETTING TAB  (Settings > Profile)
 //
-// Chaar card ek ke neeche ek (sab widgets/ folder me hain):
+// Four cards stacked (all in the widgets/ folder):
 //   1. profile_card           : user / organization / contact
-//   2. profile_hotels_card    : hotels ki list
+//   2. profile_hotels_card    : list of hotels
 //   3. profile_urls_card      : landing pages + websites
 //   4. profile_password_card  : password badalna
 //   5. profile_app_card       : Appearance (theme) + Account (log out, version)
@@ -20,7 +20,7 @@ import 'widgets/profile_password_card.dart';
 import 'widgets/profile_card.dart';
 import 'widgets/profile_urls_card.dart';
 
-/// Profile tab: chaaron card ek ke neeche ek
+/// Profile tab: all four cards stacked
 class ProfileSettingTab extends StatelessWidget {
   const ProfileSettingTab({super.key});
 

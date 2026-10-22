@@ -1,11 +1,11 @@
 // ============================================================
-// EMAIL MARKETING CONTROLLER  (web dashboard ke "EazoMail" jaisa)
+// EMAIL MARKETING CONTROLLER  (like "EazoMail" in the web dashboard)
 //
-//   Recipients : leads ki email list (server par search + page)
-//                select karo (ek-ek / poora page / search ke saare)
-//                -> "recipient batch" banta hai -> Compose -> bhejo
+//   Recipients : email list of leads (search + paging on the server)
+//                select (one by one / whole page / all search results)
+//                -> a "recipient batch" is created -> Compose -> send
 //   Campaigns  : bheje gaye email + stats, tap = detail
-//   Templates  : saved / AI se bane email (search, preview, delete)
+//   Templates  : saved / AI-made emails (search, preview, delete)
 // ============================================================
 
 import 'dart:async';
@@ -27,7 +27,7 @@ enum EmailSection {
   final String label;
 }
 
-/// Bhejne ke liye taiyaar log (server ka batch)
+/// People ready to send to (the server's batch)
 typedef RecipientBatch = ({String batchId, int count});
 
 class EmailMarketingController extends GetxController {
@@ -69,10 +69,10 @@ class EmailMarketingController extends GetxController {
   final recipientsError = RxnString();
   final recipientSearch = ''.obs;
 
-  /// Purana naam (screen me use hota hai). Search ab server karta hai.
+  /// Old name (used in the screen). Search is now done by the server.
   List<EmailRecipient> get visibleRecipients => recipients;
 
-  /// Search likhte hi nahi, ruk kar (0.4 sec) server se poochho
+  /// Do not search on every key; ask the server after a pause (0.4 sec)
   void searchRecipients(String value) {
     recipientSearch.value = value;
     _searchTimer?.cancel();
@@ -112,7 +112,7 @@ class EmailMarketingController extends GetxController {
 
   final selectedIds = <String>{}.obs;
 
-  /// true = search ke SAARE log chune (sirf is page ke nahi)
+  /// true = ALL people in the search are selected (not just this page)
   final allMatching = false.obs;
 
   final isPreparing = false.obs;
@@ -127,7 +127,7 @@ class EmailMarketingController extends GetxController {
       recipients.isNotEmpty &&
       recipients.every((r) => allMatching.value || selectedIds.contains(r.id));
 
-  /// "Select all N matching" dikhana hai? (poora page chuna, par aur bhi hain)
+  /// Show "Select all N matching"? (whole page selected, but there are more)
   bool get canSelectAllMatching =>
       isPageSelected &&
       !allMatching.value &&
@@ -158,7 +158,7 @@ class EmailMarketingController extends GetxController {
     selectedIds.clear();
   }
 
-  /// Chune hue logon ka batch. Galti ho to [onError].
+  /// Batch of the selected people. On error, [onError].
   Future<RecipientBatch?> prepareSelected({
     required void Function(String) onError,
   }) async {
@@ -182,7 +182,7 @@ class EmailMarketingController extends GetxController {
     );
   }
 
-  /// Excel / haath se likhe email ka batch
+  /// Batch of emails from Excel / typed by hand
   Future<RecipientBatch?> prepareEmails(
     List<String> emails, {
     required void Function(String) onError,
@@ -225,7 +225,7 @@ class EmailMarketingController extends GetxController {
     }
   }
 
-  /// Email chala gaya: selection hatao, campaign list taaza karo
+  /// Email sent: clear the selection, refresh the campaign list
   void onSent() {
     clearSelection();
     loadCampaigns(1);
@@ -263,7 +263,7 @@ class EmailMarketingController extends GetxController {
   }
 
   // ============================================================
-  // CAMPAIGN DETAIL (ek campaign + uske recipients, status se filter)
+  // CAMPAIGN DETAIL (one campaign + its recipients, filtered by status)
   // ============================================================
 
   final detail = Rxn<EmailCampaign>();
@@ -272,7 +272,7 @@ class EmailMarketingController extends GetxController {
   final isDetailLoading = false.obs;
   final detailError = RxnString();
 
-  /// '' = All, warna pending / sent / failed / opened / clicked
+  /// '' = All, otherwise pending / sent / failed / opened / clicked
   final detailStatus = ''.obs;
 
   String? _openCampaignId;
@@ -283,7 +283,7 @@ class EmailMarketingController extends GetxController {
     detailRecipients.clear();
     detailStatus.value = '';
 
-    // Poora campaign (HTML ke saath) + pehla page
+    // The full campaign (with HTML) + the first page
     unawaited(_loadCampaign(campaign.id));
     await loadDetailRecipients(1);
   }
@@ -388,7 +388,7 @@ class EmailMarketingController extends GetxController {
       await MarketingService.deleteEmailTemplate(hid: hid, id: template.id);
       templates.removeWhere((t) => t.id == template.id);
 
-      // Page khali ho gaya to pichhla page
+      // If the page became empty, go to the previous page
       final page = templatePage.value;
       final next = templates.isEmpty && page.page > 1
           ? page.page - 1

@@ -52,7 +52,7 @@ class CallsPagination {
   }
 }
 
-/// Call par jo fields dropdown se badle ja sakte hain (web table jaise).
+/// Call fields that can be changed from a dropdown (like the web table).
 enum CallField {
   segregation('Segregation', 'segregation', [
     'Payment',
@@ -77,25 +77,25 @@ enum CallField {
 
   final String label;
 
-  /// Update API ke body me jane wala key
+  /// Key sent in the update API body
   final String apiKey;
 
   final List<String> options;
 
-  /// Body me jane wali value. Segregation object me jata hai:
-  /// {"label": "Partnership", "value": "Partnership"}, baaki seedha string.
+  /// Value sent in the body. Segregation is sent as an object:
+  /// {"label": "Partnership", "value": "Partnership"}, the rest as plain strings.
   Object apiValue(String value) {
     return this == CallField.segregation
         ? {'label': value, 'value': value}
         : value;
   }
 
-  /// Dropdown me dikhne wala text (segregation web jaise capital me)
+  /// Text shown in the dropdown (segregation capitalized, like the web)
   String display(String value) {
     return this == CallField.segregation ? value.toUpperCase() : value;
   }
 
-  /// API ki value ko option list wali spelling me lao ("Follow up" -> "Follow Up")
+  /// Convert the API value to the spelling used in the option list ("Follow up" -> "Follow Up")
   String? normalize(String? value) {
     if (value == null || value.trim().isEmpty) return null;
 
@@ -113,7 +113,7 @@ class CallModel {
   final String from;
   final String to;
 
-  /// Hotel ka virtual number jisse call hui
+  /// The hotel's virtual number the call came through
   final String phoneNumber;
 
   /// inbound / outbound-dial / outbound-api
@@ -161,7 +161,7 @@ class CallModel {
       return value.isEmpty ? null : value;
     }
 
-    // Segregation {"label": .., "value": ..} ya seedha string aa sakta hai
+    // Segregation can come as {"label": .., "value": ..} or a plain string
     String? segregation() {
       final raw = json['segregation'];
 
@@ -213,7 +213,7 @@ class CallModel {
     }
   }
 
-  /// Ek field badal kar nayi copy
+  /// A new copy with one field changed
   CallModel withField(
     CallField field,
     String? value, {
@@ -239,9 +239,9 @@ class CallModel {
     );
   }
 
-  /// API do format bhejti hai:
+  /// The API sends two formats:
   ///   "2026-05-02T13:43:14.000Z"  -> UTC
-  ///   "2026-10-07 15:00:35"       -> local time (timezone nahi)
+  ///   "2026-10-07 15:00:35"       -> local time (no timezone)
   static DateTime? _parseTime(dynamic value) {
     final text = value?.toString().trim() ?? '';
     if (text.isEmpty) return null;
@@ -257,7 +257,7 @@ class CallModel {
 
   String get directionLabel => isIncoming ? 'Incoming' : 'Outgoing';
 
-  /// Guest ka number: incoming me "from", outgoing me "to"
+  /// The guest's number: "from" for incoming, "to" for outgoing
   String get customerNumber => isIncoming ? from : to;
 
   bool get isSuccessful => status.toLowerCase() == 'completed';
@@ -279,7 +279,7 @@ class CallModel {
     }
   }
 
-  /// "0m 35s" (0 second ho to "-")
+  /// "0m 35s" ("-" if 0 seconds)
   String get durationLabel {
     if (durationSeconds <= 0) return '-';
 

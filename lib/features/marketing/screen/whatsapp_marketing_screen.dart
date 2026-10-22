@@ -2,9 +2,9 @@
 // WHATSAPP MARKETING SCREEN  (Drawer > Marketing > WhatsApp Marketing)
 //
 // "Campaign Management": All / Sent / Scheduled / In Progress + Refresh.
-//   phone          : har campaign ka card
+//   phone          : a card for each campaign
 //   tablet / window: table
-// Campaign par tap -> WhatsappCampaignDetailScreen
+// Tap a campaign -> WhatsappCampaignDetailScreen
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive_builder.dart';
@@ -27,7 +27,7 @@ class WhatsappMarketingScreen extends StatelessWidget {
     Get.to(() => const WhatsappCampaignDetailScreen());
   }
 
-  /// Naya campaign screen; ban gaya to list dobara laao
+  /// New campaign screen; if created, reload the list
   Future<void> _create(WhatsappMarketingController controller) async {
     final created = await Get.to<bool>(
       () => const WhatsappCampaignCreateScreen(),
@@ -159,7 +159,7 @@ class _FilterChips extends StatelessWidget {
   }
 }
 
-/// Phone par ek campaign
+/// One campaign on phones
 class _CampaignCard extends StatelessWidget {
   const _CampaignCard({required this.campaign, required this.onTap});
 
@@ -244,7 +244,7 @@ class _CampaignCard extends StatelessWidget {
   }
 }
 
-/// Tablet / window par table
+/// Table on tablet / window
 class _CampaignTable extends StatelessWidget {
   const _CampaignTable({required this.campaigns, required this.onTap});
 
@@ -342,7 +342,7 @@ class _CampaignTable extends StatelessWidget {
 }
 
 // ============================================================
-// SUMMARY (saare campaign ka jod)
+// SUMMARY (total of all campaigns)
 //   Campaigns | Messages sent | Delivery rate | Read rate
 // ============================================================
 

@@ -4,17 +4,17 @@ import 'package:eazotel/features/whatsapp/screen/widgets/addcontect/addContect.d
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-/// Kisi bhi page (Calls, Lead details ...) se phone number ki
-/// app ke andar wali WhatsApp chat kholne ke liye.
+/// To open the in-app WhatsApp chat for a phone number
+/// from any page (Calls, Lead details ...).
 ///
-/// - Number ki conversation mil gayi  -> chat page
-/// - Nahi mili                        -> Add Contact sheet (number bhara hua)
+/// - Conversation for the number found  -> chat page
+/// - Not found                          -> Add Contact sheet (number pre-filled)
 class WhatsappChatOpener {
   WhatsappChatOpener._();
 
   static bool _busy = false;
 
-  /// Kitni khuli chat / sheet humare banaye WhatsappController par chal rahi hain
+  /// How many open chats / sheets are running on the WhatsappController we created
   static int _openCount = 0;
   static bool _ownsController = false;
 
@@ -52,7 +52,7 @@ class WhatsappChatOpener {
     _openCount++;
 
     try {
-      // WhatsApp tab khula nahi hai to controller yahin banao
+      // If the WhatsApp tab is not open, create the controller here
       if (!Get.isRegistered<WhatsappController>()) {
         Get.put<WhatsappController>(WhatsappController(hid: hid));
         _ownsController = true;
@@ -82,7 +82,7 @@ class WhatsappChatOpener {
       _busy = false;
       onLoaded?.call();
 
-      // Conversation nahi hai -> template bhej kar shuru karo
+      // No conversation -> start by sending a template
       if (chat == null) {
         await showModalBottomSheet(
           context: context,
@@ -118,12 +118,12 @@ class WhatsappChatOpener {
     }
   }
 
-  /// Chat / sheet band hone ke baad humara banaya controller hata do,
-  /// warna hotel badalne par WhatsApp tab purana data dikhayega.
+  /// After the chat / sheet closes, remove the controller we created,
+  /// otherwise the WhatsApp tab shows old data after changing hotel.
   static Future<void> _releaseController() async {
     if (!_ownsController || _openCount > 0) return;
 
-    // Page band hone ki animation poori hone do
+    // Let the page close animation finish
     await Future<void>.delayed(const Duration(milliseconds: 600));
 
     if (!_ownsController || _openCount > 0) return;

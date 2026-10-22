@@ -1,7 +1,7 @@
 // ============================================================
 // SUBSCRIPTION CONTROLLER
 //
-//   Screen  --->  ye controller  --->  SubscriptionService  --->  API
+//   Screen  --->  this controller  --->  SubscriptionService  --->  API
 // ============================================================
 
 import 'package:eazotel/features/setting_screen/subscription/controller/services/Subscription_services.dart';
@@ -13,7 +13,7 @@ import 'package:get/get.dart';
 class SubscriptionController extends GetxController {
   final isLoading = true.obs;
 
-  /// null = sab theek. Text ho to wahi message dikhta hai.
+  /// null = all good. If there is text, that message is shown.
   final errorMessage = RxnString();
 
   final data = Rxn<SubscriptionResponseModel>();
@@ -22,7 +22,7 @@ class SubscriptionController extends GetxController {
 
   List<PaymentModel> get payments => data.value?.payments ?? [];
 
-  // ---------- Payment list: pehle 10, "Show more" par aur ----------
+  // ---------- Payment list: first 10, more on "Show more" ----------
   static const int _pageSize = 10;
 
   final visibleCount = _pageSize.obs;
@@ -60,9 +60,9 @@ class SubscriptionController extends GetxController {
     }
   }
 
-  // ---------- Plan / apps khareedna (web ke Billing page jaisa) ----------
+  // ---------- Buying a plan / apps (like the web Billing page) ----------
 
-  /// Plans & billing screen kholo; wapas aane par subscription taaza
+  /// Open the Plans & billing screen; refresh the subscription on return
   Future<void> upgradePlan() async {
     await Get.to(() => const SubscriptionPlansScreen());
     load();

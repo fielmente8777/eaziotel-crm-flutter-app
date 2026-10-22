@@ -1,13 +1,13 @@
 // ============================================================
 // WHATSAPP CREDITS CONTROLLER
 //
-// Settings > WhatsApp > Credits & Usage page ka "dimaag".
+// The "brain" of the Settings > WhatsApp > Credits & Usage page.
 //
-//   Screen (widgets)  --->  ye controller  --->  WhatsappSettingService  --->  API
+//   Screen (widgets)  --->  this controller  --->  WhatsappSettingService  --->  API
 //
-// Page me do tab hain:
-//   Overview      : wallet, free messages, is mahine ka usage   (billing API)
-//   Transactions  : recharge ki list, page-by-page              (transactions API)
+// The page has two tabs:
+//   Overview      : wallet, free messages, this month's usage   (billing API)
+//   Transactions  : list of recharges, page by page              (transactions API)
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
@@ -17,7 +17,7 @@ import 'package:get/get.dart';
 import '../models/whatsapp_billing.dart';
 import '../services/whatsapp_setting_service.dart';
 
-/// Credits & Usage page ke do tab
+/// The two tabs of the Credits & Usage page
 enum CreditsTab {
   overview('Overview'),
   transactions('Transactions');
@@ -34,7 +34,7 @@ class WhatsappCreditsController extends GetxController {
 
   String get hid => dashboard.selectedHotelId.value;
 
-  /// Abhi kaunsa tab khula hai
+  /// Which tab is open now
   final selectedTab = CreditsTab.overview.obs;
 
   @override
@@ -51,13 +51,13 @@ class WhatsappCreditsController extends GetxController {
 
   final isBillingLoading = true.obs;
 
-  /// null = sab theek. Text ho to Overview me wahi message dikhta hai.
+  /// null = all good. If there is text, Overview shows that message.
   final billingError = RxnString();
 
-  /// null = abhi data nahi aaya
+  /// null = data has not come yet
   final billing = Rxn<WhatsappBilling>();
 
-  /// Page khulne par aur refresh button par chalta hai
+  /// Runs when the page opens and on the refresh button
   Future<void> loadBilling() async {
     isBillingLoading.value = true;
     billingError.value = null;
@@ -75,7 +75,7 @@ class WhatsappCreditsController extends GetxController {
     }
   }
 
-  /// "Add Credits" ke liye payment (Razorpay) ki API abhi nahi mili
+  /// The payment (Razorpay) API for "Add Credits" has not been found yet
   void addCredits() {
     Get.snackbar(
       'Not connected yet',
@@ -85,17 +85,17 @@ class WhatsappCreditsController extends GetxController {
   }
 
   // ============================================================
-  // 2. TRANSACTIONS (recharge ki list)
+  // 2. TRANSACTIONS (list of recharges)
   // ============================================================
 
-  /// Ek page par kitni entry
+  /// How many entries per page
   static const int _pageSize = 10;
 
   final isTransactionsLoading = true.obs;
 
   final transactionsError = RxnString();
 
-  /// Abhi dikh raha page (items + page number + total)
+  /// The page shown now (items + page number + total)
   final transactions = const WhatsappTransactionPage().obs;
 
   Future<void> loadTransactions({required int page}) async {

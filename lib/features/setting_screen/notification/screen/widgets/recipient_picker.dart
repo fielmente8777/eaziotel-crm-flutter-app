@@ -1,11 +1,11 @@
 // ============================================================
 // RECIPIENT PICKER
 //
-// Team members ki list checkbox ke saath. "Done" par chune hue members
-// ka number (WhatsApp) ya email (Email) source me chala jata hai.
+// List of team members with checkboxes. On "Done" the chosen members'
+// number (WhatsApp) or email (Email) goes into the source.
 //
-// Jo number / email pehle se chuna hai par kisi member ka nahi,
-// wo bhi list me dikhta hai, taaki galti se na hate.
+// A number / email that is already chosen but belongs to no member
+// also shows in the list, so it is not removed by mistake.
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -48,10 +48,10 @@ class _RecipientPicker extends StatefulWidget {
 class _RecipientPickerState extends State<_RecipientPicker> {
   bool get _isWhatsapp => widget.channel == NotificationChannel.whatsapp;
 
-  /// value (number / email) -> screen ka naam
+  /// value (number / email) -> name shown on screen
   late final Map<String, String> _options = _buildOptions();
 
-  /// Abhi chune hue values
+  /// Currently chosen values
   late final Set<String> _selected = widget.controller
       .valuesOf(widget.source, widget.channel)
       .toSet();
@@ -64,7 +64,7 @@ class _RecipientPickerState extends State<_RecipientPicker> {
       options[value] = recipient.name;
     }
 
-    // Pehle se chuna hua value jo kisi member ka nahi (ya alag format me hai)
+    // An already chosen value that belongs to no member (or is in a different format)
     for (final value in widget.controller.valuesOf(
       widget.source,
       widget.channel,
@@ -84,7 +84,7 @@ class _RecipientPickerState extends State<_RecipientPicker> {
     return options;
   }
 
-  /// "9528295631" aur "919528295631" ek hi number hain
+  /// "9528295631" and "919528295631" are the same number
   bool _same(String a, String b) {
     if (!_isWhatsapp) return a.toLowerCase() == b.toLowerCase();
 

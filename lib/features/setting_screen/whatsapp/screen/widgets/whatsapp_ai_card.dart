@@ -1,8 +1,8 @@
 // ============================================================
 // AI CARD
 //
-// "AI Configuration" wala card: AI ka switch, From / To time aur
-// Save button. Data controller.aiEnabled / aiFrom / aiTo me hai.
+// The "AI Configuration" card: AI switch, From / To time and
+// Save button. The data is in controller.aiEnabled / aiFrom / aiTo.
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive.dart';
@@ -13,7 +13,7 @@ import 'package:get/get.dart';
 import '../../../screen/widgets/setting_section_card.dart';
 import '../../controller/whatsapp_setting_controller.dart';
 
-/// "AI Configuration": AI on/off aur kis samay tak chalu rahe
+/// "AI Configuration": AI on/off and until what time it stays on
 class WhatsappAiCard extends StatelessWidget {
   const WhatsappAiCard({super.key, required this.controller, required this.r});
 
@@ -92,7 +92,7 @@ class WhatsappAiCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // Phone: ek ke neeche ek. Bade screen par saath saath.
+            // Phone: stacked. Side by side on big screens.
             if (r.isPhone) ...[
               fromField,
               const SizedBox(height: 10),

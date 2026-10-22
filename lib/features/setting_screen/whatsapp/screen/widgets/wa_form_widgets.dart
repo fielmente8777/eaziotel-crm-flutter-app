@@ -1,13 +1,13 @@
 // ============================================================
 // WHATSAPP FORM WIDGETS
-// Settings > WhatsApp ke naye page (Templates, Quick Replies,
-// Create Flow) me baar-baar lagne wale chhote widget:
+// Small widgets used again and again in the new Settings > WhatsApp pages
+// (Templates, Quick Replies, Create Flow):
 //
-//   waInput()      : TextField ka dabba (light / dark dono)
-//   WaLabel        : field ke upar ka naam (+ right side me kuch)
-//   WaSubTabs      : "Create Template | Template Library" jaise tab
-//   WaPageHeader   : page ka title + subtitle + button
-//   WaDropdown     : chhota dropdown
+//   waInput()      : TextField box (both light / dark)
+//   WaLabel        : name above a field (+ something on the right)
+//   WaSubTabs      : tabs like "Create Template | Template Library"
+//   WaPageHeader   : page title + subtitle + button
+//   WaDropdown     : small dropdown
 //   WaCounter      : "12/60"
 // ============================================================
 
@@ -71,7 +71,7 @@ class WaLabel extends StatelessWidget {
               ),
             ),
           ),
-          // Chhoti screen par right wala hissa bhi sikud sake
+          // So the right part can shrink on small screens too
           if (trailing != null)
             Flexible(
               child: Align(alignment: Alignment.centerRight, child: trailing),
@@ -102,7 +102,7 @@ class WaCounter extends StatelessWidget {
   }
 }
 
-/// Upar ke tab (Create | Library). [labels] me naam, [selected] chuna hua
+/// Top tabs (Create | Library). Names in [labels], [selected] is the chosen one
 class WaSubTabs extends StatelessWidget {
   const WaSubTabs({
     super.key,
@@ -215,7 +215,7 @@ class WaDropdown<T> extends StatelessWidget {
 
   final T value;
 
-  /// value -> screen par naam
+  /// value -> name on screen
   final Map<T, String> items;
   final ValueChanged<T>? onChanged;
 
@@ -240,7 +240,7 @@ class WaDropdown<T> extends StatelessWidget {
   }
 }
 
-/// Primary rang ka chhota button (Row me bhi chalta hai)
+/// Small button in the primary color (works in a Row too)
 ButtonStyle waPrimaryButton(BuildContext context, {Color? color}) =>
     ElevatedButton.styleFrom(
       backgroundColor: color ?? SettingPalette(context).primary,

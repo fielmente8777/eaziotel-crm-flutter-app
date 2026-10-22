@@ -1,6 +1,6 @@
 // lib/features/dashboard_screen/screens/dashboardScreen/screens/dashboardwidget/leads_insights_section.dart
 //
-// Usage (koi param nahi):
+// Usage (no params):
 //   const SliverToBoxAdapter(child: LeadsInsightsSection()),
 //
 // Data: DashboardController.analyticsResponse -> result.docs
@@ -1137,7 +1137,7 @@ class _StagesBreakdownCardState extends State<_StagesBreakdownCard> {
             ),
             child: Stack(
               children: [
-                // Row ke peeche share ka halka fill
+                // Light share fill behind the row
                 Positioned.fill(
                   child: TweenAnimationBuilder<double>(
                     tween: Tween(begin: 0, end: ratio),

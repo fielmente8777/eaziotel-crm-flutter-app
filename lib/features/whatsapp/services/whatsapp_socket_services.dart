@@ -26,7 +26,7 @@ class WhatsappSocketService {
   static void connect({required Function(Map<String, dynamic>) onMessage}) {
     _onMessage = onMessage;
 
-    // Manual disconnect ke baad connect kiya gaya hai
+    // Connected after a manual disconnect
     _isManuallyDisconnected = false;
 
     _reconnectTimer?.cancel();
@@ -79,10 +79,10 @@ class WhatsappSocketService {
     try {
       channel = WebSocketChannel.connect(Uri.parse(socketUrl));
 
-      // connect() turant return ho jata hai. Asli connection ka result
-      // "ready" me aata hai — internet na ho (Failed host lookup) to error
-      // yahin milta hai. Ise await na karein to wo error unhandled reh
-      // jata hai aur app ko rok deta hai.
+      // connect() returns right away. The real connection result
+      // comes in "ready" — with no internet (Failed host lookup) the error
+      // arrives here. If it is not awaited, the error stays unhandled
+      // and stops the app.
       await channel.ready.timeout(const Duration(seconds: 15));
     } catch (e) {
       print('');
@@ -103,7 +103,7 @@ class WhatsappSocketService {
 
     _isConnecting = false;
 
-    // Connect hote hote disconnect() call ho gaya
+    // disconnect() was called while connecting
     if (_isManuallyDisconnected) {
       _closeQuietly(channel);
       return;
@@ -132,7 +132,7 @@ class WhatsappSocketService {
         print('ERROR: $error');
         print('==================================================');
 
-        // Error ke baad automatically reconnect
+        // Reconnect automatically after an error
         _onChannelClosed(connected);
       },
 
@@ -142,7 +142,7 @@ class WhatsappSocketService {
         print('🔴 WHATSAPP SOCKET CLOSED');
         print('==================================================');
 
-        // Socket khud close hua to automatically reconnect
+        // If the socket closes by itself, reconnect automatically
         _onChannelClosed(connected);
       },
 
@@ -150,7 +150,7 @@ class WhatsappSocketService {
     );
   }
 
-  // Purane channel ka late error/close naye channel ko na hata de
+  // So a late error/close of the old channel does not remove the new channel
   static void _onChannelClosed(WebSocketChannel channel) {
     if (!identical(_channel, channel)) return;
 
@@ -171,18 +171,18 @@ class WhatsappSocketService {
   // RECONNECT
   // ============================================================
 
-  // Lagatar fail hone par wait badhta hai: 3s, 6s, 12s, 24s, phir 30s
+  // The wait grows after repeated failures: 3s, 6s, 12s, 24s, then 30s
   static int _reconnectAttempts = 0;
 
   static void _scheduleReconnect() {
-    // Agar manually disconnect kiya gaya hai
-    // to reconnect mat karo
+    // If it was disconnected manually
+    // do not reconnect
     if (_isManuallyDisconnected) {
       print('🛑 Manual disconnect detected. No reconnect.');
       return;
     }
 
-    // Agar already reconnect timer laga hua hai
+    // If a reconnect timer is already set
     if (_reconnectTimer != null) {
       return;
     }
@@ -426,7 +426,7 @@ class WhatsappSocketService {
       print('STACK: $stackTrace');
       print('==================================================');
 
-      // Send fail hone par bhi reconnect try karo
+      // Try to reconnect even if sending fails
       _channel = null;
 
       _scheduleReconnect();
@@ -444,7 +444,7 @@ class WhatsappSocketService {
     print('==================================================');
 
     // IMPORTANT:
-    // Is flag ki wajah se dispose ke baad auto reconnect nahi hoga.
+    // Because of this flag there is no auto reconnect after dispose.
     _isManuallyDisconnected = true;
 
     _reconnectTimer?.cancel();

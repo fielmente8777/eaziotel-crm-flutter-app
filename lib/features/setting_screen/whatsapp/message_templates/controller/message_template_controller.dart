@@ -2,13 +2,13 @@
 // MESSAGE TEMPLATE CONTROLLER
 // Settings > WhatsApp > Message Templates
 //
-//   Create Template  : naam, category, language, header (none/text/photo),
-//                      body, footer, buttons, {{1}} ke sample -> Create
-//   Edit             : Overview ke template card ka "Edit" (naam badal nahi sakte)
-//   Template Library : taiyaar template chuno -> form bhar jaata hai
+//   Create Template  : name, category, language, header (none/text/photo),
+//                      body, footer, buttons, samples for {{1}} -> Create
+//   Edit             : "Edit" on the Overview template card (the name cannot change)
+//   Template Library : pick a ready template -> the form gets filled
 //
-// Variable = body/header me {{1}}, {{2}} ... Meta ko har ek ka
-// sample (jaise "Rahul") chahiye, isliye unke liye alag box aate hain.
+// Variables = {{1}}, {{2}} ... in the body/header. Meta needs a sample
+// for each (like "Rahul"), so separate boxes appear for them.
 // ============================================================
 
 import 'dart:convert';
@@ -39,7 +39,7 @@ enum TemplateHeaderType {
 
   const TemplateHeaderType(this.value, this.label);
 
-  /// Server wala naam
+  /// Name used by the server
   final String value;
   final String label;
 
@@ -49,7 +49,7 @@ enum TemplateHeaderType {
   );
 }
 
-/// Form ka ek button (Visit website / Quick reply / Call)
+/// One button of the form (Visit website / Quick reply / Call)
 class TemplateButtonForm {
   TemplateButtonForm({
     this.type = 'visit',
@@ -60,7 +60,7 @@ class TemplateButtonForm {
        url = TextEditingController(text: url),
        urlType = urlType.obs;
 
-  /// visit (naya) / URL / QUICK_REPLY / CALL / PHONE_NUMBER
+  /// visit (new) / URL / QUICK_REPLY / CALL / PHONE_NUMBER
   final String type;
   final TextEditingController text;
   final TextEditingController url;
@@ -111,7 +111,7 @@ class MessageTemplateController extends GetxController {
   // FORM
   // ============================================================
 
-  /// null = naya template, warna edit ho rahe template ki id
+  /// null = new template, otherwise the id of the template being edited
   final editingId = RxnString();
   bool get isEditing => editingId.value != null;
 
@@ -124,23 +124,23 @@ class MessageTemplateController extends GetxController {
   final category = 'UTILITY'.obs;
   final headerType = TemplateHeaderType.none.obs;
 
-  /// Nayi chuni photo (phone / computer par)
+  /// Newly picked photo (on phone / computer)
   final headerImagePath = RxnString();
 
-  /// Pehle se lagi photo ka link (edit me)
+  /// Link of the photo already attached (on edit)
   final headerImageUrl = RxnString();
 
   final buttons = <TemplateButtonForm>[].obs;
 
-  /// {{1}} {{2}} ke sample (header me max 1)
+  /// Samples for {{1}} {{2}} (max 1 in the header)
   final headerSamples = <TextEditingController>[].obs;
   final bodySamples = <TextEditingController>[].obs;
 
-  /// Submit dabane ke baad hi galti dikhao
+  /// Show errors only after Submit is pressed
   final showErrors = false.obs;
   final isSaving = false.obs;
 
-  /// Text badalne par screen dobara bane
+  /// Rebuild the screen when the text changes
   final _tick = 0.obs;
   void _touch() => _tick.value++;
 
@@ -195,7 +195,7 @@ class MessageTemplateController extends GetxController {
     return variablesOf(body.text);
   }
 
-  /// Variable jitne hain utne sample box (purana likha hua bacha rehta hai)
+  /// As many sample boxes as there are variables (old text is kept)
   void _syncSamples() {
     void sync(RxList<TextEditingController> list, int count) {
       while (list.length < count) {
@@ -210,7 +210,7 @@ class MessageTemplateController extends GetxController {
     sync(bodySamples, bodyVariables.length);
   }
 
-  /// Header me sirf ek variable (Meta ka niyam)
+  /// Only one variable in the header (Meta's rule)
   void addHeaderVariable() {
     if (variablesOf(header.text).isNotEmpty) return;
     header.text = '${header.text}{{1}}';
@@ -266,7 +266,7 @@ class MessageTemplateController extends GetxController {
   }
 
   // ============================================================
-  // GALTIYAN (Submit par dikhti hain)
+  // ERRORS (shown on Submit)
   // ============================================================
 
   String? get nameError {
@@ -323,7 +323,7 @@ class MessageTemplateController extends GetxController {
       buttons.every((b) => buttonError(b) == null);
 
   // ============================================================
-  // PREVIEW ({{1}} ki jagah sample)
+  // PREVIEW (sample in place of {{1}})
   // ============================================================
 
   String _fill(String text, List<String> vars, List<TextEditingController> s) {
@@ -351,7 +351,7 @@ class MessageTemplateController extends GetxController {
   }
 
   // ============================================================
-  // FORM BHARNA: naya / edit / library se
+  // FILLING THE FORM: new / edit / from the library
   // ============================================================
 
   void _reset() {
@@ -378,7 +378,7 @@ class MessageTemplateController extends GetxController {
     subTab.value = TemplateSubTab.create;
   }
 
-  /// Overview ke template card ka "Edit"
+  /// "Edit" on the Overview template card
   void startEdit(WhatsappTemplate template) {
     _reset();
 
@@ -428,7 +428,7 @@ class MessageTemplateController extends GetxController {
     subTab.value = TemplateSubTab.create;
   }
 
-  /// Template Library se
+  /// From the Template Library
   void useLibrary(LibraryTemplate template) {
     _reset();
 
@@ -516,7 +516,7 @@ class MessageTemplateController extends GetxController {
           response.message('Sent to Meta for review.'),
         );
 
-        // Overview ki list taaza karo
+        // Refresh the Overview list
         if (Get.isRegistered<WhatsappSettingController>()) {
           Get.find<WhatsappSettingController>().reloadTemplates();
         }

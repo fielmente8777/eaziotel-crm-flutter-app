@@ -3,7 +3,7 @@ part of '../whatsappController.dart';
 // ============================================================
 // WHATSAPP CHAT MIXIN
 //
-// Khuli hui chat: messages load, bheja hua message jodna,
+// The open chat: load messages, add a sent message,
 // temp id -> asli id, select + delete.
 // ============================================================
 
@@ -46,7 +46,7 @@ mixin WhatsappChatMixin
   // ============================================================
   // ADD SENT MESSAGE (text / image / template / flow)
   //
-  // conversationId do to wahi chat badalti hai, warna khuli hui chat.
+  // if conversationId is given that chat changes, otherwise the open chat.
   // ============================================================
 
   void addSentMessageToCurrentConversation({
@@ -54,7 +54,7 @@ mixin WhatsappChatMixin
     required String text,
     String? messageId,
     String messageType = 'text', // 'text' ya 'image'
-    String? caption, // image ke saath bheja gaya text
+    String? caption, // text sent with the image
     Map<String, dynamic>? media, // {'id': ..., 'mimeType': ...}
     String? conversationId,
   }) {
@@ -67,7 +67,7 @@ mixin WhatsappChatMixin
     final now = DateTime.now().toIso8601String();
     final caption0 = (caption ?? '').trim();
 
-    // 1. Khuli chat me message jodo (pehle se ho to nahi)
+    // 1. Add the message to the open chat (not if it is already there)
     if (messagesResponse.value != null &&
         convId == currentConversationId.value) {
       final old = _openMessages;
@@ -103,7 +103,7 @@ mixin WhatsappChatMixin
       }
     }
 
-    // 2. List me chat upar le jao, last message badlo (apne message par unread nahi badhta)
+    // 2. Move the chat to the top of the list, update the last message (unread does not grow for own messages)
     final index = _conversationIndex(convId);
 
     if (index != -1) {
@@ -124,8 +124,8 @@ mixin WhatsappChatMixin
   // ============================================================
   // TEMP ID -> ASLI ID
   //
-  // Local message ka id "temp_xxxxx" hota hai. API se asli messageId
-  // milne par badalte hain, taaki status (tick) sahi message par lage.
+  // A local message's id is "temp_xxxxx". It is replaced when the real messageId
+  // comes from the API, so the status (tick) goes on the right message.
   // ============================================================
 
   void updateMessageId({required String tempId, required String realId}) {
@@ -148,7 +148,7 @@ mixin WhatsappChatMixin
       }
     }
 
-    // 2. Conversation list ka last_message
+    // 2. last_message of the conversation list
     final convIndex = _conversationIndexByLastMessageId(tempId);
 
     if (convIndex != -1) {
@@ -179,14 +179,14 @@ mixin WhatsappChatMixin
 
   void clearSelection() => selectedMessageIds.clear();
 
-  /// Success par true
+  /// true on success
   Future<bool> deleteSelectedMessages() =>
       deleteMessages(selectedMessageIds.toList());
 
   Future<bool> deleteMessages(List<String> allIds) async {
     if (allIds.isEmpty || isDeleting.value) return false;
 
-    // "temp_" wale server par nahi hote, sirf local se hatao
+    // "temp_" ones are not on the server, only remove them locally
     final apiIds = allIds.where((id) => !id.startsWith('temp_')).toList();
 
     try {

@@ -4,12 +4,12 @@
 //   createTemplate : POST /api/v1/whatsapp/message/template/create?hid=
 //   updateTemplate : PUT  /api/v1/whatsapp/message/template/<id>?hid=
 //
-// Dono form-data bhejte hain (web jaisa):
+// Both send form-data (same as web):
 //   name, language, category, headerType, header, body, footer,
 //   headerVariables (JSON), bodyVariables (JSON), buttons (JSON),
-//   file (header ki photo, sirf IMAGE header me)
+//   file (header photo, only for an IMAGE header)
 //
-// Delete Overview wale card se hota hai (WhatsappSettingService).
+// Delete happens from the Overview card (WhatsappSettingService).
 // ============================================================
 
 import 'dart:convert';

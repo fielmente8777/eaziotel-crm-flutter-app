@@ -9,7 +9,7 @@ class WhatsappLeadFilterController extends GetxController {
   final DashboardController dashboardController =
       Get.find<DashboardController>();
 
-  // Chat se aane wali values
+  // Values coming from the chat
   final String conversationId;
   final String hid;
   final String ndid;
@@ -188,7 +188,7 @@ class WhatsappLeadFilterController extends GetxController {
   }
 
   // ============================================================
-  // NOTES (future ke liye ready)
+  // NOTES (ready for the future)
   // ============================================================
   Future<bool> addNote(String message, {String source = 'whatsapp'}) {
     return updateLead({

@@ -1,14 +1,14 @@
 // ============================================================
 // EAZBOT SETTING CONTROLLER
 //
-//   Screen (widgets)  --->  ye controller  --->  EazbotSettingService  --->  API
+//   Screen (widgets)  --->  this controller  --->  EazbotSettingService  --->  API
 //
-// Is file me 5 hisse hain:
+// This file has 5 parts:
 //   1. STEPS          : 1 Bot Builder, 2 Profile, 3 Configuration, 4 Install
-//   2. FORM           : saare field (rang, naam, messages, switch, sawal)
-//   3. CHECK          : Next / Publish se pehle form check
+//   2. FORM           : all fields (color, name, messages, switches, questions)
+//   3. CHECK          : check the form before Next / Publish
 //   4. PUBLISH        : POST /leadeazbot/create
-//   5. INSTALL CODE   : website me lagane wala script
+//   5. INSTALL CODE   : the script to put on the website
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
@@ -44,7 +44,7 @@ class EazbotSettingController extends GetxController {
 
   final step = EazbotStep.builder.obs;
 
-  /// Error ho to us step par hi ruko, warna agla step
+  /// If there is an error stay on that step, otherwise go to the next step
   void next() {
     final error = _checkStep(step.value);
 
@@ -61,7 +61,7 @@ class EazbotSettingController extends GetxController {
     }
   }
 
-  /// Upar ke stepper se: sirf pichhe ya poore hue step par ja sakte hain
+  /// From the top stepper: you can only go back or to finished steps
   void goTo(EazbotStep target) {
     if (target.index <= step.value.index) step.value = target;
   }
@@ -70,7 +70,7 @@ class EazbotSettingController extends GetxController {
   // 2. FORM
   // ============================================================
 
-  /// Builder > Customize ke tayyar rang
+  /// Ready-made colors of Builder > Customize
   static const List<Color> presetColors = [
     Color(0xFF6366F1),
     Color(0xFF10B981),
@@ -99,7 +99,7 @@ class EazbotSettingController extends GetxController {
 
   final questions = EazbotQuestion.defaults().obs;
 
-  /// Greeting likhte waqt preview turant badle
+  /// The preview changes right away while typing the greeting
   final greetingPreview = ''.obs;
 
   @override
@@ -139,7 +139,7 @@ class EazbotSettingController extends GetxController {
     return '#${rgb.toRadixString(16).padLeft(6, '0').toUpperCase()}';
   }
 
-  /// "#F59E0B" / "F59E0B" -> Color. Galat ho to null.
+  /// "#F59E0B" / "F59E0B" -> Color. null if invalid.
   static Color? fromHex(String value) {
     final hex = value.trim().replaceFirst('#', '');
     if (!RegExp(r'^[0-9a-fA-F]{6}$').hasMatch(hex)) return null;
@@ -183,7 +183,7 @@ class EazbotSettingController extends GetxController {
   Future<void> publish() async {
     if (isPublishing.value) return;
 
-    // Saare step check karo; jisme galti ho wahan le jao
+    // Check all steps; take the user to the one with an error
     for (final target in EazbotStep.values) {
       final error = _checkStep(target);
 
@@ -210,7 +210,7 @@ class EazbotSettingController extends GetxController {
     }
   }
 
-  /// Web jaisa body
+  /// Body same as web
   Map<String, dynamic> _body() => {
     'bot_name': botName.text.trim(),
     'email': email.text.trim(),

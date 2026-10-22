@@ -44,7 +44,7 @@ class EventItem {
         users: _i(json['users']),
       );
 
-  /// Ek user ne average kitni baar trigger kiya
+  /// How many times one user triggered it on average
   double get perUser => users == 0 ? 0 : eventCount / users;
 }
 
@@ -69,8 +69,8 @@ class DashboardMetrics {
   int get total => callClicks + formSubmissions + whatsappClicks;
 }
 
-/// `conversions` abhi empty aa raha hai — shape pakka nahi,
-/// isliye common keys tolerate kar rahe hain.
+/// `conversions` comes back empty for now — the shape is not certain,
+/// so we accept the common keys.
 class ConversionItem {
   final String name;
   final int count;

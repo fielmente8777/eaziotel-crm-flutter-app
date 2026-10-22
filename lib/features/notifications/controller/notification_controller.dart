@@ -1,17 +1,17 @@
 // ============================================================
 // NOTIFICATION CONTROLLER
 //
-//   1. App khulte hi WhatsApp shuru: WhatsappController + socket
-//      (pehle sirf WhatsApp tab kholne par judta tha)
-//      Hotel badla -> purana band, naye hotel ka shuru
-//   2. Socket par customer ka naya message -> notification
-//        - list me jodo (Home ki ghanti par ginti)
-//        - upar chhota banner (tap = wahi chat khule)
-//   3. Notification par tap -> wahi WhatsApp chat khulti hai
-//   4. Chat khuli -> us chat ki notifications "read"
+//   1. WhatsApp starts as soon as the app opens: WhatsappController + socket
+//      (earlier it connected only when the WhatsApp tab was opened)
+//      Hotel changed -> close the old one, start the new hotel's
+//   2. A new customer message on the socket -> notification
+//        - add to the list (count on the Home bell)
+//        - a small banner on top (tap = opens that chat)
+//   3. Tap a notification -> that WhatsApp chat opens
+//   4. A chat is opened -> that chat's notifications become "read"
 //
-// Notifications phone me save hoti hain (SharedPreferences),
-// logout par SessionCleaner sab saaf kar deta hai.
+// Notifications are saved on the phone (SharedPreferences);
+// on logout SessionCleaner clears them all.
 // ============================================================
 
 import 'dart:convert';
@@ -34,13 +34,13 @@ class NotificationController extends GetxController {
   static const String _storageKey = 'app_notifications_v1';
   static const String _soundKey = 'app_notifications_sound';
 
-  /// Itni hi purani notifications rakhte hain
+  /// Only this many old notifications are kept
   static const int _maxItems = 100;
 
-  /// Saari notifications (sab hotels ki), nayi sabse upar
+  /// All notifications (for all hotels), newest on top
   final RxList<AppNotification> _all = <AppNotification>[].obs;
 
-  /// Abhi chuna hua hotel
+  /// The currently selected hotel
   final RxString currentHid = ''.obs;
 
   Worker? _hotelWorker;
@@ -49,10 +49,10 @@ class NotificationController extends GetxController {
   late final DashboardController _dashboard;
 
   // ============================================================
-  // SOUND (naya notification aate hi phone ki default awaaz)
+  // SOUND (the phone's default sound when a new notification arrives)
   // ============================================================
 
-  /// Notification page par on / off, phone me yaad rehta hai
+  /// On / off on the notifications page, remembered on the phone
   final RxBool soundOn = true.obs;
 
   final FlutterRingtonePlayer _ringtone = FlutterRingtonePlayer();
@@ -62,7 +62,7 @@ class NotificationController extends GetxController {
   // GETTERS (screen + ghanti)
   // ============================================================
 
-  /// Sirf chune hue hotel ki notifications
+  /// Notifications of the selected hotel only
   List<AppNotification> get items {
     final hid = currentHid.value;
     return _all.where((n) => n.hid == hid).toList();
@@ -85,7 +85,7 @@ class NotificationController extends GetxController {
     _load();
     _loadSoundSetting();
 
-    // Hotel id baad me aata hai (getUser) aur badal bhi sakta hai
+    // The hotel id comes later (getUser) and can also change
     _hotelWorker = ever<String>(_dashboard.selectedHotelId, _startWhatsapp);
     _startWhatsapp(_dashboard.selectedHotelId.value);
   }
@@ -103,13 +103,13 @@ class NotificationController extends GetxController {
   }
 
   // ============================================================
-  // 1. WHATSAPP + SOCKET (app khulte hi)
+  // 1. WHATSAPP + SOCKET (as soon as the app opens)
   // ============================================================
 
   void _startWhatsapp(String rawHid) {
     final hid = rawHid.trim();
 
-    // Hotel abhi nahi aaya (ya save hi nahi tha)
+    // The hotel has not arrived yet (or was never saved)
     if (hid.isEmpty || hid == 'null') return;
 
     currentHid.value = hid;
@@ -117,17 +117,17 @@ class NotificationController extends GetxController {
     if (Get.isRegistered<WhatsappController>()) {
       final current = Get.find<WhatsappController>();
 
-      // Wahi hotel: bas jod do
+      // Same hotel: just add it
       if (current.hid == hid) {
         _attach(current);
         return;
       }
 
-      // Hotel badla: purana controller + socket band
+      // Hotel changed: close the old controller + socket
       Get.delete<WhatsappController>(force: true);
     }
 
-    // Naya controller: conversations + socket turant shuru (onInit me)
+    // New controller: conversations + socket start right away (in onInit)
     final whatsapp = Get.put(WhatsappController(hid: hid), permanent: true);
     _attach(whatsapp);
   }
@@ -135,7 +135,7 @@ class NotificationController extends GetxController {
   void _attach(WhatsappController whatsapp) {
     whatsapp.onIncomingMessage = _onWhatsappMessage;
 
-    // Koi chat khuli -> us chat ki notifications padh li gayi
+    // A chat was opened -> that chat's notifications are marked read
     _openChatWorker?.dispose();
     _openChatWorker = ever<String>(whatsapp.currentConversationId, (id) {
       if (id.isNotEmpty) markConversationRead(id);
@@ -143,7 +143,7 @@ class NotificationController extends GetxController {
   }
 
   // ============================================================
-  // 2. NAYA MESSAGE -> NOTIFICATION
+  // 2. NEW MESSAGE -> NOTIFICATION
   // ============================================================
 
   void _onWhatsappMessage(
@@ -180,7 +180,7 @@ class NotificationController extends GetxController {
     _playSound();
   }
 
-  /// Message ka chhota text (photo / video ... ke liye label)
+  /// Short text of the message (a label for photo / video ...)
   static String previewText(String? type, String? body) {
     final text = body?.trim() ?? '';
 
@@ -209,15 +209,15 @@ class NotificationController extends GetxController {
   // SOUND
   // ============================================================
 
-  /// Phone ki apni (default) notification awaaz:
-  ///   Android : Settings me chuni hui notification tone
-  ///   iOS     : system ki notification awaaz
-  ///   Windows / baaki : system alert
-  /// Phone silent / vibrate par ho to system khud awaaz nahi bajata.
+  /// The phone's own (default) notification sound:
+  ///   Android : the notification tone chosen in Settings
+  ///   iOS     : the system notification sound
+  ///   Windows / others : system alert
+  /// If the phone is on silent / vibrate, the system does not play the sound.
   Future<void> _playSound() async {
     if (!soundOn.value) return;
 
-    // Ek saath bahut message aaye to baar baar nahi bajta
+    // Does not ring again and again when many messages arrive together
     final now = DateTime.now();
     if (_lastSoundAt != null &&
         now.difference(_lastSoundAt!) < const Duration(milliseconds: 1500)) {
@@ -241,7 +241,7 @@ class NotificationController extends GetxController {
   Future<void> toggleSound() async {
     soundOn.value = !soundOn.value;
 
-    // On karte hi ek baar suna do
+    // Play it once when it is turned on
     if (soundOn.value) {
       _lastSoundAt = null;
       _playSound();
@@ -263,7 +263,7 @@ class NotificationController extends GetxController {
   }
 
   // ============================================================
-  // BANNER (app ke upar chhota sa)
+  // BANNER (a small one on top of the app)
   // ============================================================
 
   void _showBanner(AppNotification n) {
@@ -327,7 +327,7 @@ class NotificationController extends GetxController {
   }
 
   // ============================================================
-  // 3. TAP -> CHAT KHOLO
+  // 3. TAP -> OPEN THE CHAT
   // ============================================================
 
   void open(AppNotification n) {
@@ -351,7 +351,7 @@ class NotificationController extends GetxController {
       return;
     }
 
-    // Wahi kaam jo WhatsApp list me chat par tap karne se hota hai
+    // Does the same as tapping a chat in the WhatsApp list
     whatsapp.getConversationMessages(conversationId: chat.id);
     whatsapp.markConversationAsReadLocally(chat.id);
 
@@ -403,7 +403,7 @@ class NotificationController extends GetxController {
   }
 
   // ============================================================
-  // SAVE / LOAD (phone me)
+  // SAVE / LOAD (on the phone)
   // ============================================================
 
   Future<void> _load() async {
@@ -421,7 +421,7 @@ class NotificationController extends GetxController {
           .where((n) => n.id.isNotEmpty)
           .toList();
 
-      // Load hote hote socket se jo aa gayi, wo bhi rakho
+      // Also keep the ones that came from the socket while loading
       final ids = _all.map((n) => n.id).toSet();
       _all.addAll(saved.where((n) => !ids.contains(n.id)));
     } catch (e) {

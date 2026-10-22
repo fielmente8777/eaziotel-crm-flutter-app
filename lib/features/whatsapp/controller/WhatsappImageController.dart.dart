@@ -45,7 +45,7 @@ class WhatsappMediaController extends GetxController {
   // Media info
   // ------------------------------------------------------------
 
-  /// media Map ho ya typed model (WhatsappMediaModel) - dono se value padhta hai.
+  /// Reads the value whether media is a Map or a typed model (WhatsappMediaModel).
   String? _read(String key) {
     final m = media;
     if (m == null) return null;
@@ -96,7 +96,7 @@ class WhatsappMediaController extends GetxController {
       ? '$_baseUrl/$mediaId/thumbnail/?ndid=$ndid'
       : null;
 
-  /// Document ka original naam (agar API deti hai), warna default.
+  /// The document's original name (if the API gives it), otherwise a default.
   String get fileName {
     final name = _read('filename') ?? _read('file_name') ?? _read('name');
     if (name != null && name.trim().isNotEmpty) return name;
@@ -211,7 +211,7 @@ class WhatsappMediaController extends GetxController {
 
     await checkThumbnail();
 
-    // Image already full downloaded hai to thumbnail ki zarurat nahi.
+    // If the image is already fully downloaded, no thumbnail is needed.
     final needThumb = !(type == WhatsappMediaType.image && isDownloaded);
 
     if (thumbnailPath.value == null && needThumb) {

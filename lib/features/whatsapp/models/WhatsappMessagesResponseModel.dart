@@ -412,7 +412,7 @@ class WhatsappInteractiveModel {
 
   final WhatsappInteractiveActionModel? action;
 
-  /// flow_response ka data (Name, Date, ...)
+  /// data of flow_response (Name, Date, ...)
   final Map<String, dynamic>? data;
 
   const WhatsappInteractiveModel({
@@ -501,7 +501,7 @@ class WhatsappInteractiveBodyModel {
 
 class WhatsappInteractiveActionModel {
   final String? button;
-  final String? flowCta; // flow ke liye
+  final String? flowCta; // for the flow
   final List<WhatsappInteractiveButtonModel> buttons;
   final List<WhatsappInteractiveSectionModel> sections;
   final List<WhatsappInteractiveCardModel> cards;

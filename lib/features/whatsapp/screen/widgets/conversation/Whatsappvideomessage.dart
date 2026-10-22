@@ -193,7 +193,7 @@ class _WhatsappVideoPlayerPageState extends State<WhatsappVideoPlayerPage> {
       return;
     }
 
-    // video khatam ho gaya ho to shuru se chalao
+    // if the video has ended, play it from the start
     if (value.duration > Duration.zero && value.position >= value.duration) {
       await _video.seekTo(Duration.zero);
     }
@@ -263,7 +263,7 @@ class _WhatsappVideoPlayerPageState extends State<WhatsappVideoPlayerPage> {
                 const Center(child: CircularProgressIndicator()),
 
               // ==================================================
-              // BACK BUTTON (loading / error ke time)
+              // BACK BUTTON (during loading / error)
               // ==================================================
               if (!_ready)
                 Positioned(

@@ -209,7 +209,7 @@ class DeviceTechSection extends StatelessWidget {
               );
             }
 
-            // Tablet: device full width, neeche 2 columns
+            // Tablet: device at full width, 2 columns below
             if (w >= 600) {
               return Column(
                 children: [
@@ -245,7 +245,7 @@ class DeviceTechSection extends StatelessWidget {
 }
 
 // ===================================================================
-// SHARED SHELL (top par gradient accent line)
+// SHARED SHELL (gradient accent line on top)
 // ===================================================================
 
 class _Shell extends StatelessWidget {
@@ -497,7 +497,7 @@ class _DeviceCategoryCardState extends State<DeviceCategoryCard> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Soft glow ring peeche
+          // Soft glow ring behind
           Container(
             width: size * 0.92,
             height: size * 0.92,
@@ -567,7 +567,7 @@ class _DeviceCategoryCardState extends State<DeviceCategoryCard> {
     return PieChartSectionData(
       value: _v(d).toDouble(),
       radius: active == i ? grow : base,
-      // Slice par percent — chhote slice (<7%) par nahi, wahan pill kaafi hai
+      // Percent on the slice — not on small slices (<7%), the pill is enough there
       showTitle: pct >= 7,
       title: '${pct.toStringAsFixed(pct >= 10 ? 0 : 1)}%',
       titlePositionPercentageOffset: 0.55,
@@ -599,7 +599,7 @@ class _DeviceCategoryCardState extends State<DeviceCategoryCard> {
         : null;
     final color = dev == null ? c.text : _deviceColor(dev.name, i!);
 
-    // Default: sabse bada device ka % dikhao
+    // Default: show the % of the biggest device
     final top = widget.devices.isEmpty
         ? null
         : widget.devices.reduce((a, b) => _v(a) >= _v(b) ? a : b);
@@ -673,7 +673,7 @@ class _DeviceCategoryCardState extends State<DeviceCategoryCard> {
             ),
             child: Stack(
               children: [
-                // Pill ke andar percent fill
+                // Percent fill inside the pill
                 Positioned.fill(
                   child: TweenAnimationBuilder<double>(
                     tween: Tween(begin: 0, end: pct / 100),
@@ -745,7 +745,7 @@ class _DeviceCategoryCardState extends State<DeviceCategoryCard> {
 }
 
 // ===================================================================
-// RANKED BARS (Browsers / OS) — sab percent me
+// RANKED BARS (Browsers / OS) — all in percent
 // ===================================================================
 
 class RankedBarsCard extends StatefulWidget {
@@ -757,7 +757,7 @@ class RankedBarsCard extends StatefulWidget {
   final AnalyticsLayout layout;
   final bool isLoading;
 
-  /// Itne se zyada ho to "Show all" aata hai
+  /// "Show all" appears when there are more than this
   final int collapsedCount;
 
   const RankedBarsCard({
@@ -872,7 +872,7 @@ class _RankedBarsCardState extends State<RankedBarsCard> {
     );
   }
 
-  /// 100% stacked strip — har segment ek item ka share
+  /// 100% stacked strip — each segment is one item's share
   Widget _distributionStrip(
     AnalyticsPalette c,
     List<NameValue> items,
@@ -1039,7 +1039,7 @@ class _RankedBarsCardState extends State<RankedBarsCard> {
                         ),
                       ),
                     ),
-                    // Active par count dikhao
+                    // Show the count when active
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 180),
                       transitionBuilder: (child, a) => FadeTransition(

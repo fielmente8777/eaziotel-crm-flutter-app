@@ -5,8 +5,8 @@ import 'package:eazotel/features/whatsapp/controller/WhatsappImageController.dar
  import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-/// Image / Video / Sticker ka common preview:
-/// thumbnail (blur agar download nahi hua) + download / progress / play button.
+/// Common preview for Image / Video / Sticker:
+/// thumbnail (blurred if not downloaded) + download / progress / play button.
 class WhatsappMediaPreview extends StatelessWidget {
   final WhatsappMediaController controller;
   final double width;

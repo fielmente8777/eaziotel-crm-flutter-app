@@ -1,20 +1,20 @@
 // ============================================================
 // CHATBOT FLOW MODELS  (Settings > WhatsApp > WhatsApp Flow)
 //
-// Web ka "FlowBuilder" (React Flow) jaisa hi data:
+// Same data as the web "FlowBuilder" (React Flow):
 //   nodes: [ { id, type, position: {x, y}, data: {...} } ]
 //   edges: [ { id, source, sourceHandle, target, type, animated } ]
 //
-// Node ke type:
+// Node types:
 //   sendMessage : text / photo / video / audio / document (blocks)
-//   button      : sawaal + 3 tak button     (har button ka alag rasta)
-//   list        : sawaal + list ke option   (har option ka alag rasta)
-//   question    : sawaal, jawab variable me (ek rasta "next")
-//   carousel    : photo wale card            (quick reply ka rasta)
-//   flow        : WhatsApp form (Create Flow wala) kholta hai
+//   button      : question + up to 3 buttons     (each button has its own path)
+//   list        : question + list options        (each option has its own path)
+//   question    : a question, the answer goes into a variable (one path "next")
+//   carousel    : cards with photos            (the quick reply path)
+//   flow        : opens a WhatsApp form (from Create Flow)
 //
-// "data" ko waise hi rakhte hain jaisa server bhejta hai, taaki web aur
-// app dono ek hi flow badal sakein (koi field gum na ho).
+// "data" is kept exactly as the server sends it, so both the web and the
+// app can change the same flow (no field gets lost).
 // ============================================================
 
 import 'dart:convert';
@@ -75,25 +75,25 @@ enum ChatbotNodeType {
     this.color,
   );
 
-  /// Server wala naam
+  /// Name used by the server
   final String key;
   final String label;
   final String description;
   final IconData icon;
   final Color color;
 
-  /// "Add step" menu me dikhne wale
+  /// Shown in the "Add step" menu
   static const addable = [sendMessage, button, list, question, carousel, flow];
 
   static ChatbotNodeType from(String? key) =>
       values.firstWhere((t) => t.key == key, orElse: () => unknown);
 }
 
-/// Node se nikalne wala ek rasta (button / option / next)
+/// One path out of a node (button / option / next)
 class ChatbotOutput {
   const ChatbotOutput(this.handle, this.label);
 
-  /// React Flow ka sourceHandle (null = node ka akela rasta)
+  /// React Flow's sourceHandle (null = the node's only path)
   final String? handle;
   final String label;
 
@@ -109,13 +109,13 @@ Map<String, dynamic> chatbotMap(dynamic v) =>
 
 List<dynamic> chatbotList(dynamic v) => v is List ? v : const [];
 
-/// JSON ki gehri copy (editor me badlo, Cancel par asli na badle)
+/// Deep copy of JSON (change it in the editor; Cancel leaves the original unchanged)
 Map<String, dynamic> chatbotDeepCopy(Map<String, dynamic> data) =>
     chatbotMap(jsonDecode(jsonEncode(data)));
 
 final _random = Random();
 
-/// Web ke uuid jaisa id
+/// An id like the web's uuid
 String chatbotId([String? prefix]) {
   String hex(int n) =>
       List.generate(n, (_) => _random.nextInt(16).toRadixString(16)).join();
@@ -144,7 +144,7 @@ class ChatbotNode {
   double y;
   Map<String, dynamic> data;
 
-  /// Server ke baaki field (width, height ...) jaise the waise wapas
+  /// The server's other fields (width, height ...) sent back as they were
   final Map<String, dynamic> extra;
 
   ChatbotNodeType get type => ChatbotNodeType.from(typeKey);
@@ -174,7 +174,7 @@ class ChatbotNode {
     'data': data,
   };
 
-  /// Naya node (web ke addNode jaisa shuru ka data)
+  /// A new node (starting data like the web's addNode)
   factory ChatbotNode.create(ChatbotNodeType type, double x, double y) {
     return ChatbotNode(
       id: chatbotId(),
@@ -267,11 +267,11 @@ class ChatbotNode {
     }
   }
 
-  // ---------- Rasta (outputs) ----------
+  // ---------- Paths (outputs) ----------
 
   List<ChatbotOutput> get outputs => outputsOf(typeKey, data);
 
-  /// Data se rasta nikalo (editor me bhi kaam aata hai)
+  /// Get the paths from the data (also used in the editor)
   static List<ChatbotOutput> outputsOf(
     String typeKey,
     Map<String, dynamic> data,
@@ -325,7 +325,7 @@ class ChatbotNode {
     }
   }
 
-  // ---------- Card par chhota sa matlab ----------
+  // ---------- Short meaning on the card ----------
 
   String get summary {
     final interactive = chatbotMap(data['interactive']);
@@ -359,7 +359,7 @@ class ChatbotNode {
 }
 
 // ============================================================
-// EDGE (teer: ek node se dusre tak)
+// EDGE (arrow: from one node to another)
 // ============================================================
 
 class ChatbotEdge {
@@ -387,7 +387,7 @@ class ChatbotEdge {
       target: target,
       sourceHandle: sourceHandle,
       extra: {
-        // React Flow jaisa id
+        // An id like React Flow's
         'id': 'reactflow__edge-$source${sourceHandle ?? ''}-$target',
         'type': 'smoothstep',
         'animated': true,
@@ -426,7 +426,7 @@ class ChatbotFlowResponse {
   final int? responseStatusCode;
   final String? responseMessage;
 
-  /// Server par flow ka _id (auto message ke "Flow" me yahi chunte hain)
+  /// The flow's _id on the server (this is what gets chosen in the auto message "Flow")
   final String flowId;
   final List<ChatbotNode> nodes;
   final List<ChatbotEdge> edges;

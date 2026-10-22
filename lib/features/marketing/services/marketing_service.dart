@@ -1,7 +1,7 @@
 // ============================================================
 // MARKETING SERVICE
 //
-// WhatsApp + Email Marketing ki API calls. Sirf yahi file server se baat karti hai.
+// API calls for WhatsApp + Email Marketing. Only this file talks to the server.
 //
 //   getWhatsappCampaigns : GET /api/v1/whatsapp/campaign?hid=
 //   getCampaignDetail    : GET /api/v1/whatsapp/campaign/broadcast/<id>?page=&limit=
@@ -23,7 +23,7 @@ import '../models/marketing_models.dart';
 class MarketingService {
   MarketingService._();
 
-  /// Galti ka saaf message: server ka ho to wahi, warna [fallback]
+  /// A clear error message: the server's if there is one, otherwise [fallback]
   static String errorText(Object e, String fallback) {
     if (e is ApiException) return WhatsappActionResponse.errorOf(e, fallback);
 
@@ -136,7 +136,7 @@ class MarketingService {
     final json = await _get(
       'EMAIL CAMPAIGNS',
       '${MarketingApiEndpoint.emailCampaigns}?hid=$hid&page=$page&limit=$limit',
-      // Campaign me poora HTML aata hai, log bhar jata hai
+      // The campaign comes with the full HTML, which floods the log
       logBody: false,
     );
 
@@ -157,10 +157,10 @@ class MarketingService {
   }
 
   // ============================================================
-  // WHATSAPP: NAYA CAMPAIGN
+  // WHATSAPP: NEW CAMPAIGN
   // ============================================================
 
-  /// Kitne contacts tak campaign jayega ('' source = sab)
+  /// How many contacts the campaign will reach ('' source = all)
   static Future<int> getCampaignAudience({
     required String hid,
     String source = '',
@@ -198,8 +198,8 @@ class MarketingService {
   }
 
   // ============================================================
-  // EMAIL: RECIPIENT BATCH (kisko bhejna hai)
-  // Teeno ka jawab: result.doc { recipientBatchId, count }
+  // EMAIL: RECIPIENT BATCH (who to send to)
+  // Answer of all three: result.doc { recipientBatchId, count }
   // ============================================================
 
   static Future<({String batchId, int count})> createBatchFromLeads({
@@ -210,7 +210,7 @@ class MarketingService {
     'leadIds': leadIds,
   });
 
-  /// Search se milne wale SAARE lead (sirf is page ke nahi)
+  /// ALL leads matching the search (not just this page)
   static Future<({String batchId, int count})> createBatchFromSearch({
     required String hid,
     required String search,
@@ -243,10 +243,10 @@ class MarketingService {
   }
 
   // ============================================================
-  // EMAIL: CAMPAIGN BANAO + BHEJO
+  // EMAIL: CREATE + SEND CAMPAIGN
   // ============================================================
 
-  /// Multipart (attachments ke saath). Jawab: result.doc.campaign._id
+  /// Multipart (with attachments). Answer: result.doc.campaign._id
   static Future<String> createEmailCampaign({
     required String hid,
     required String name,
@@ -400,7 +400,7 @@ class MarketingService {
     );
   }
 
-  /// Naya ya purana (id ho to update). Jawab: saved template
+  /// New or existing (update if there is an id). Answer: the saved template
   static Future<EmailTemplate> saveEmailTemplate({
     required String hid,
     required EmailTemplate template,
@@ -424,7 +424,7 @@ class MarketingService {
     return doc.isEmpty
         ? template
         : EmailTemplate.fromJson(doc).copyWith(
-            // Server html na bheje to apna rakho
+            // If the server does not send html, keep ours
             html: '${doc['html'] ?? ''}'.isEmpty ? template.html : null,
           );
   }
@@ -441,8 +441,8 @@ class MarketingService {
     );
   }
 
-  /// AI se email banao. [previous] diya to usi ko badalta hai (refine).
-  /// 20-60 second lag sakte hain.
+  /// Create an email with AI. If [previous] is given, it changes that one (refine).
+  /// Can take 20-60 seconds.
   static Future<EmailTemplate> generateEmailTemplate({
     required String hid,
     required String prompt,
@@ -485,7 +485,7 @@ class MarketingService {
   }
 
   // ============================================================
-  // COMMON: URL (khali value hata kar)
+  // COMMON: URL (with empty values removed)
   // ============================================================
 
   static String _url(String path, Map<String, String> query) => Uri(
@@ -557,7 +557,7 @@ class MarketingService {
 
       final json = _map(jsonDecode(response.body));
 
-      // Kuch API 200 ke saath bhi success:false bhejti hain
+      // Some APIs send success:false even with a 200
       if (json['success'] == false) {
         throw Exception(
           '${json['message'] ?? json['responseMessage'] ?? 'Request failed'}',

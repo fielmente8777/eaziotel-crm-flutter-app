@@ -2,14 +2,14 @@
 // QUICK REPLY SERVICE
 //
 //   getQuickReplies  : GET    /api/v1/quick-reply?hid=
-//   saveQuickReply   : POST   /api/v1/quick-reply?hid=        (naya)
+//   saveQuickReply   : POST   /api/v1/quick-reply?hid=        (new)
 //                      PUT    /api/v1/quick-reply/<id>?hid=   (edit)
 //   deleteQuickReply : DELETE /api/v1/quick-reply/<id>?hid=
 //
-// Save form-data bhejta hai (web jaisa):
+// Save sends form-data (same as web):
 //   title, text, shortcut,
 //   file  (har nayi photo / video / document, ek hi naam se kai baar),
-//   media (JSON: pehle se upload hui files jo rakhni hain)
+//   media (JSON: already uploaded files to keep)
 // ============================================================
 
 import 'dart:convert';

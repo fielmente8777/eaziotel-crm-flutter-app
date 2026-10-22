@@ -3,9 +3,9 @@
 //
 //   Home | Leads | WhatsApp | Settings
 //
-// Chuna hua tab: rangeen "pill" ke andar bhara (filled) icon.
-// Settings tab me sab hai: profile, locations (hotel badalna), theme,
-// logout, app version. Drawer ke upar "View profile" se yahi khulta hai.
+// Selected tab: filled icon inside a colored "pill".
+// The Settings tab has everything: profile, locations (change hotel), theme,
+// logout, app version. "View profile" at the top of the drawer opens it too.
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/controllers/bottom_nav_controller.dart';
@@ -37,14 +37,14 @@ class DashboardBottomNav extends StatelessWidget {
     }
 
     return Obx(() {
-      // Naya account, koi hotel nahi: pehle "Onboard your property"
+      // New account, no hotel: "Onboard your property" first
       if (dashboard.needsOnboarding.value == true) {
         return OnboardingScreen(onSignOut: signOut);
       }
 
       final active = dashboard.isSubscriptionActive.value;
       if (active == false) {
-        // Plan khatam: seedha "Choose your plan" (renew) screen
+        // Plan expired: go straight to the "Choose your plan" (renew) screen
         return SubscriptionPlansScreen(
           onRecheck: dashboard.getUser,
           onSignOut: signOut,
@@ -72,8 +72,8 @@ class _DashboardContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(BottomNavController());
 
-    // App khulte hi: WhatsApp socket judta hai + notifications shuru
-    // (WhatsApp tab kholne ka intezaar nahi)
+    // As soon as the app opens: WhatsApp socket connects + notifications start
+    // (no need to wait for the WhatsApp tab to open)
     if (!Get.isRegistered<NotificationController>()) {
       Get.put(NotificationController(), permanent: true);
     }
@@ -85,7 +85,7 @@ class _DashboardContent extends StatelessWidget {
         ? TAppColors.darkSecondaryText
         : TAppColors.lightSecondaryText;
     // Dark theme: chamakdar indigo pill + safed icon + lavender label
-    // Light theme: pehle jaisa primary
+    // Light theme: primary, same as before
     final pill = isDark
         ? const Color(0xFF6366F1)
         : TAppColors.primary.withValues(alpha: .12);

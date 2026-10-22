@@ -1,12 +1,12 @@
 // ============================================================
 // PROFILE SETTING CONTROLLER  (Settings > Profile)
 //
-//   Screen (widgets)  --->  ye controller  --->  ProfileSettingService  --->  API
+//   Screen (widgets)  --->  this controller  --->  ProfileSettingService  --->  API
 //
-// Is file me 4 hisse hain:
-//   1. PROFILE DATA    : user, hotel ki jaankari (dashboard se, nayi API nahi)
-//   2. HOTELS          : edit / delete (API abhi nahi mili)
-//   3. URLS            : landing pages / websites ke link
+// This file has 4 parts:
+//   1. PROFILE DATA    : user, hotel info (from the dashboard, no new API)
+//   2. HOTELS          : edit / delete (no API found yet)
+//   3. URLS            : links of landing pages / websites
 //   4. CHANGE PASSWORD : form check + API call
 // ============================================================
 
@@ -21,7 +21,7 @@ import 'package:get/get.dart';
 
 import '../services/profile_setting_service.dart';
 
-/// Settings > Profile tab ki state. API calls [ProfileSettingService] me hain.
+/// State of the Settings > Profile tab. API calls are in [ProfileSettingService].
 class ProfileSettingController extends GetxController {
   final ProfileSettingService _service = ProfileSettingService();
 
@@ -34,7 +34,7 @@ class ProfileSettingController extends GetxController {
       : Get.put(LocationController());
 
   // ============================================================
-  // PROFILE DATA (dashboard se, alag API call nahi)
+  // PROFILE DATA (from the dashboard, no separate API call)
   // ============================================================
 
   ProfileModel? get profile => dashboard.user.value?.profile;
@@ -49,19 +49,19 @@ class ProfileSettingController extends GetxController {
   // HOTELS
   // ============================================================
 
-  /// Add / edit / delete sirf admin kar sakta hai (web jaisa)
+  /// Only an admin can add / edit / delete (same as web)
   bool get canManageHotels =>
       dashboard.authUser.value?.isAdmin ?? dashboard.user.value?.admin ?? false;
 
-  /// Abhi app me chuna hua hotel
+  /// The hotel currently selected in the app
   String get currentHotelId => location.selectedHotel.value?.hotelId ?? '';
 
   final isSavingHotel = false.obs;
 
-  /// Jis hotel ka delete chal raha hai ('' = koi nahi)
+  /// The hotel being deleted ('' = none)
   final deletingHotelId = ''.obs;
 
-  /// Card par tap: app ka hotel badlo (header ke location selector jaisa)
+  /// Tap a card: change the app's hotel (like the header location selector)
   Future<void> switchHotel(HotelModel hotel) async {
     if (hotel.hotelId == currentHotelId) return;
 
@@ -69,8 +69,8 @@ class ProfileSettingController extends GetxController {
     _toast('Location changed', 'Now showing ${_nameOf(hotel)}.');
   }
 
-  /// Naye hotel ki id app chunta hai (web jaisa): sab number hain to
-  /// sabse badi + 1, warna abhi ka time
+  /// The app picks the new hotel's id (same as web): if all are numbers,
+  /// the biggest + 1, otherwise the current time
   String _nextHotelId() {
     final ids = hotels.map((h) => h.hotelId).toList();
     final numbers = ids.map(int.tryParse).toList();
@@ -81,7 +81,7 @@ class ProfileSettingController extends GetxController {
     return '${DateTime.now().millisecondsSinceEpoch}';
   }
 
-  /// Add (hotel == null) ya edit. true = save ho gaya (dialog band karo)
+  /// Add (hotel == null) or edit. true = saved (close the dialog)
   Future<bool> saveHotel(HotelModel? hotel, Map<String, String> fields) async {
     if (isSavingHotel.value) return false;
 
@@ -97,7 +97,7 @@ class ProfileSettingController extends GetxController {
           ? await _service.addHotel(hotelId: hotelId, fields: clean)
           : await _service.updateHotel(hotelId: hotelId, fields: clean);
 
-      // Server ne list na bheji to apni taraf se badlo
+      // If the server did not send the list, update it ourselves
       await location.replaceHotels(
         list ??
             [
@@ -174,7 +174,7 @@ class ProfileSettingController extends GetxController {
     }
   }
 
-  /// Server ka message (ho to), warna seedha sa
+  /// The server's message (if any), otherwise a simple one
   String _errorText(Object e) {
     if (e is ApiException) {
       return WhatsappActionResponse.errorOf(e, 'Please try again.');
@@ -211,7 +211,7 @@ class ProfileSettingController extends GetxController {
     r'^(https?://)?[\w-]+(\.[\w-]+)+(/\S*)?$',
   );
 
-  /// Link list me jodta hai. Galat / duplicate ho to error text deta hai.
+  /// Adds a link to the list. Returns error text if it is invalid / a duplicate.
   String? addLink(RxList<String> list, String value) {
     final link = value.trim();
 
@@ -242,7 +242,7 @@ class ProfileSettingController extends GetxController {
   final passwordError = RxnString();
   final isChangingPassword = false.obs;
 
-  /// Form sahi ho to null, warna dikhane wala error
+  /// null if the form is valid, otherwise the error to show
   String? _validatePassword() {
     final current = currentPassword.text;
     final next = newPassword.text;
@@ -303,7 +303,7 @@ class ProfileSettingController extends GetxController {
   // HELPERS
   // ============================================================
 
-  /// TODO: backend API milne par [ProfileSettingService] me call jodni hai
+  /// TODO: add the call in [ProfileSettingService] when the backend API is available
   void _notConnected(String action) {
     Get.snackbar(
       'Not connected yet',

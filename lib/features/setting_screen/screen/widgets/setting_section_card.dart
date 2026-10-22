@@ -1,15 +1,15 @@
 // ============================================================
-// SETTING SECTION CARD  (saare tab ke kaam aata hai)
+// SETTING SECTION CARD  (used by all tabs)
 //
-//   SettingPalette      : light / dark theme ke rang
-//   settingSmallButton  : chhota button (app theme ka button poori width leta hai)
-//   SettingSectionCard  : har block ka dabba (icon + title + content)
+//   SettingPalette      : colors of the light / dark theme
+//   settingSmallButton  : small button (the app theme's button takes full width)
+//   SettingSectionCard  : the box for each block (icon + title + content)
 // ============================================================
 
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
 import 'package:flutter/material.dart';
 
-/// Settings ke saare widgets ke liye theme ke rang (light / dark)
+/// Theme colors (light / dark) for all Settings widgets
 class SettingPalette {
   SettingPalette(BuildContext context)
     : theme = Theme.of(context),
@@ -28,14 +28,14 @@ class SettingPalette {
   Color get primary => theme.colorScheme.primary;
 }
 
-/// App theme ke button poori width lete hain; yahan chhote button chahiye
+/// The app theme's buttons take full width; small buttons are needed here
 ButtonStyle settingSmallButton() => ElevatedButton.styleFrom(
   minimumSize: const Size(0, 40),
   padding: const EdgeInsets.symmetric(horizontal: 20),
   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
 );
 
-/// Har block ka dabba: icon + title + subtitle + content
+/// The box for each block: icon + title + subtitle + content
 class SettingSectionCard extends StatelessWidget {
   const SettingSectionCard({
     super.key,

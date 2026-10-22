@@ -1,18 +1,18 @@
 // ============================================================
-// CHATBOT STEP EDITORS  (har step type ka form, web jaisi limit ke saath)
+// CHATBOT STEP EDITORS  (a form for each step type, with the same limits as web)
 //
-//   Send Message : Message / Image / Video / Audio / Document jodo
+//   Send Message : add Message / Image / Video / Audio / Document
 //   Buttons      : header (60), body (1024), footer (60), 3 button (20)
 //   List         : header, body (4096), footer, list button (20),
 //                  section (24) + option (24)
-//   Question     : sawaal, variable, jawab ka type, required
-//   Carousel     : body, button type (CTA URL / Quick Reply), 10 card tak
+//   Question     : question, variable, answer type, required
+//   Carousel     : body, button type (CTA URL / Quick Reply), up to 10 cards
 //                  (photo link ya upload, description, button)
-//   Form Flow    : header, body, footer, kaunsa form, button ka naam (30)
+//   Form Flow    : header, body, footer, which form, button name (30)
 //
-// Sab form seedha `data` (copy) badalte hain aur onChanged bulate hain.
-// Button / option ki id kabhi nahi badalti, isliye juda hua teer
-// (connection) nahi tootta. (Web me har save par nayi id banti thi.)
+// All forms change `data` (the copy) directly and call onChanged.
+// Button / option ids never change, so a connected arrow
+// (connection) does not break. (On the web a new id was made on every save.)
 // ============================================================
 
 import 'dart:io';
@@ -68,7 +68,7 @@ class ChatbotStepEditor extends StatelessWidget {
 // HELPERS
 // ============================================================
 
-/// m[key] ko Map bana kar do (na ho to bana do)
+/// Return m[key] as a Map (create it if missing)
 Map<String, dynamic> _obj(Map<String, dynamic> m, String key) {
   final v = m[key];
   if (v is Map<String, dynamic>) return v;
@@ -77,7 +77,7 @@ Map<String, dynamic> _obj(Map<String, dynamic> m, String key) {
   return fresh;
 }
 
-/// m[key] ko List bana kar do
+/// Return m[key] as a List
 List<dynamic> _arr(Map<String, dynamic> m, String key) {
   final v = m[key];
   if (v is List) return v;
@@ -92,7 +92,7 @@ Map<String, dynamic> _interactive(Map<String, dynamic> data) =>
 String _text(Map<String, dynamic> m, String key) =>
     (m[key] is Map ? (m[key] as Map)['text'] : null)?.toString() ?? '';
 
-/// Header / footer: khali ho to hata do (web jaisa)
+/// Header / footer: remove if empty (same as web)
 void _setOptional(Map<String, dynamic> m, String key, String text) {
   if (text.trim().isEmpty) {
     m.remove(key);
@@ -302,7 +302,7 @@ class _SendMessageEditorState extends State<_SendMessageEditor> {
     block['_localPath'] = path;
     block['file'] = true;
     block['url'] = null;
-    block.remove('media'); // nayi file, purani hatao
+    block.remove('media'); // new file, remove the old one
     _changed();
   }
 
@@ -347,7 +347,7 @@ class _SendMessageEditorState extends State<_SendMessageEditor> {
     final kind = _kinds[type] ?? ('Item', Icons.circle_outlined);
     final id = '${block['id']}';
 
-    // Photo: nayi chuni, pehle chuni (Publish baaki), ya server wali
+    // Photo: newly picked, picked earlier (Publish pending), or the server's
     final local = block['_localPath']?.toString() ?? widget.c.pendingFiles[id];
     final mediaId = block['media'] is Map ? block['media']['mediaId'] : null;
     final hasFile = local != null || mediaId != null || block['file'] == true;
@@ -765,7 +765,7 @@ class _QuestionEditorState extends State<_QuestionEditor> {
   @override
   Widget build(BuildContext context) {
     final d = widget.data;
-    // Purane data me sawaal "message" me hota tha
+    // In old data the question was in "message"
     d['question'] ??= d['message'] ?? '';
     final type = _types.containsKey(d['type']) ? '${d['type']}' : 'text';
     d['type'] = type;
@@ -840,7 +840,7 @@ class _FlowEditorState extends State<_FlowEditor> {
   Map<String, dynamic> get _params =>
       _obj(_obj(_interactive(widget.data), 'action'), 'parameters');
 
-  /// Web jaisa: "Sign up" -> "SIGN_UP"
+  /// Same as web: "Sign up" -> "SIGN_UP"
   static String _screenId(String title) => title
       .trim()
       .toUpperCase()
@@ -939,7 +939,7 @@ class _CarouselEditorState extends State<_CarouselEditor> {
   List<dynamic> get _cards =>
       _arr(_obj(_interactive(widget.data), 'action'), 'cards');
 
-  /// cta_url / quick_reply (sab card me ek jaisa, web jaisa)
+  /// cta_url / quick_reply (the same in every card, same as web)
   late String _buttonType =
       _cards.isNotEmpty &&
           (_cards.first is Map) &&
@@ -950,7 +950,7 @@ class _CarouselEditorState extends State<_CarouselEditor> {
       : 'cta_url';
 
   void _changed() {
-    // card_index hamesha 0, 1, 2 ...
+    // card_index is always 0, 1, 2 ...
     for (var i = 0; i < _cards.length; i++) {
       (_cards[i] as Map)['card_index'] = i;
     }
