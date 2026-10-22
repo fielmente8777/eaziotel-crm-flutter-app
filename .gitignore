@@ -44,7 +44,60 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Secrets / keys (kabhi GitHub par mat bhejo)
+# ============================================================
+# SECRETS / KEYS - never push these to GitHub (the repo is public)
+# ============================================================
+
+# Environment files
 .env
 .env.*
 !.env.example
+
+# Android signing: keystore + its passwords
+*.jks
+*.keystore
+key.properties
+**/key.properties
+local.properties
+**/local.properties
+
+# SHA-1 / SHA-256 signature and fingerprint notes, signing reports
+*sha1*.txt
+*sha-1*.txt
+*sha256*.txt
+*sha-256*.txt
+*SHA1*
+*SHA256*
+*fingerprint*.txt
+*signing*report*.txt
+signingReport*.txt
+*certificate*.txt
+
+# Google Play app signing exports (PEPK tool output, upload certificate)
+*.pepk
+pepk*.jar
+encrypted_private_key*
+private_key*.zip
+upload_certificate*
+deployment_cert*
+*.der
+*.pem
+
+# iOS signing: certificates, profiles, App Store Connect API keys
+*.p12
+*.p8
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile
+AuthKey_*
+
+# Firebase / Google service configs (contain project keys)
+google-services.json
+GoogleService-Info.plist
+
+# Built app files (share these outside git)
+*.apk
+*.aab
+*.ipa
+*.app.dSYM.zip
