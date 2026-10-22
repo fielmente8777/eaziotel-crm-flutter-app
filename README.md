@@ -39,7 +39,7 @@ lib/
   main.dart              app start (opens Login or Dashboard)
   core/
     api/                 ApiClient + ApiException
-    config/app_env.dart  build-time config (Razorpay key id)
+    config/              app config (keys come from a local file, not git)
     constants/           base URLs and all API endpoints
     local_storage/       token storage, logout cleanup
   features/
@@ -60,7 +60,8 @@ Each feature folder follows the same idea: **screen → controller → service �
    ```
    flutter pub get
    ```
-3. Run the app:
+3. Create the local keys file: copy `lib/core/config/app_secrets.example.dart` to `lib/core/config/app_secrets.dart` and ask the project owner for the values. This file is in `.gitignore`, so it never goes to GitHub.
+4. Run the app:
    ```
    flutter run
    ```
@@ -74,11 +75,7 @@ flutter run -d windows --dart-define=DEVICE_PREVIEW=true
 
 - **Server URLs:** [lib/core/constants/api_base_url.dart](lib/core/constants/api_base_url.dart)
 - **Endpoints:** [lib/core/constants/api_endpoints.dart](lib/core/constants/api_endpoints.dart)
-- **Razorpay key id:** [lib/core/config/app_env.dart](lib/core/config/app_env.dart) has the same default as the web dashboard. To use another key without changing code:
-  ```
-  flutter build apk --release --dart-define=RAZORPAY_BILLING_KEY_ID=<key id>
-  ```
-  Only the key **id** goes in the app. The Razorpay **secret** stays on the server and must never be added to this project.
+- **Keys:** `lib/core/config/app_secrets.dart` (local only, see Getting started). Payment secrets live only on the server, never in this app.
 
 ## Release build (Android)
 
@@ -98,12 +95,11 @@ Release builds are signed with the upload keystore. The keystore and its passwor
    flutter build apk --release         # APK for testing
    ```
 
-R8 rules for Razorpay are in [android/app/proguard-rules.pro](android/app/proguard-rules.pro).
-
 ## Do not commit
 
 These are listed in `.gitignore` and must stay out of the repo (it is public):
 
+- `lib/core/config/app_secrets.dart` (app keys)
 - Keystore files (`*.jks`, `*.keystore`) and `key.properties`
 - SHA-1 / SHA-256 notes and signing reports
 - `.env` files, certificates and private keys (`*.pem`, `*.p12`, `*.p8`)

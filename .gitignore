@@ -53,6 +53,9 @@ app.*.map.json
 .env.*
 !.env.example
 
+# App keys (Razorpay key etc.). Copy app_secrets.example.dart to create it.
+lib/core/config/app_secrets.dart
+
 # Android signing: keystore + its passwords
 *.jks
 *.keystore
