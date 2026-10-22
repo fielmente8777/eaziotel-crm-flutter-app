@@ -4,16 +4,12 @@ import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_cont
 import 'package:eazotel/features/dashboard_screen/controllers/headerLocationController.dart';
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/dashboard_screen.dart';
-import 'package:eazotel/theme_controller.dart';
+import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/widgets/app_account_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 
 class ProfileScreen extends StatelessWidget {
   final BottomNavController controller;
-
-  // App version info (ek hi baar load hoga)
-  final Future<PackageInfo> _packageInfo = PackageInfo.fromPlatform();
 
   ProfileScreen({super.key, required this.controller}) {
     Get.lazyPut<LoginController>(() => LoginController());
@@ -26,8 +22,6 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final LoginController loginController = Get.find<LoginController>();
-    final ThemeController themeController = Get.find<ThemeController>();
     final LocationController locationController =
         Get.find<LocationController>();
     final DashboardController dashboardController =
@@ -134,96 +128,23 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               // ==============================
-              // THEME SWITCH
+              // THEME SWITCH (drawer me bhi yahi)
               // ==============================
-              Obx(
-                () => Container(
-                  height: 52,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _themeOption(
-                          context: context,
-                          title: 'System',
-                          icon: Icons.settings_brightness_outlined,
-                          selected: themeController.isSystem,
-                          onTap: () {
-                            themeController.changeTheme(ThemeMode.system);
-                          },
-                        ),
-                      ),
-
-                      Expanded(
-                        child: _themeOption(
-                          context: context,
-                          title: 'Light',
-                          icon: Icons.light_mode_outlined,
-                          selected: themeController.isLight,
-                          onTap: () {
-                            themeController.changeTheme(ThemeMode.light);
-                          },
-                        ),
-                      ),
-
-                      Expanded(
-                        child: _themeOption(
-                          context: context,
-                          title: 'Dark',
-                          icon: Icons.dark_mode_outlined,
-                          selected: themeController.isDark,
-                          onTap: () {
-                            themeController.changeTheme(ThemeMode.dark);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              const AppThemeSwitch(),
 
               const SizedBox(height: 30),
 
               // ==============================
               // LOGOUT
               // ==============================
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () async {
-                  await loginController.logoutUser(context);
-                },
-                child: const Text('Logout'),
-              ),
+              const AppLogoutButton(),
 
               const SizedBox(height: 16),
 
               // ==============================
               // APP VERSION
               // ==============================
-              FutureBuilder<PackageInfo>(
-                future: _packageInfo,
-                builder: (context, snapshot) {
-                  final info = snapshot.data;
-
-                  return Text(
-                    info == null
-                        ? ''
-                        : 'Version ${info.version} (${info.buildNumber})',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  );
-                },
-              ),
+              const AppVersionText(),
             ],
           ),
         ),
@@ -410,60 +331,6 @@ class ProfileScreen extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  // ============================================================
-  // THEME OPTION
-  // ============================================================
-
-  Widget _themeOption({
-    required BuildContext context,
-    required String title,
-    required IconData icon,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      margin: const EdgeInsets.symmetric(horizontal: 2),
-      decoration: BoxDecoration(
-        color: selected ? theme.colorScheme.primary : Colors.transparent,
-        borderRadius: BorderRadius.circular(9),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(9),
-          onTap: onTap,
-          child: Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 18,
-                  color: selected
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  title,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                    color: selected
-                        ? theme.colorScheme.onPrimary
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

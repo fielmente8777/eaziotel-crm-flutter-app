@@ -47,19 +47,21 @@ class SettingHotelsCard extends StatelessWidget {
         icon: Icons.apartment_rounded,
         title: 'Locations · ${hotels.length}',
         subtitle: 'Each location has its own website, bookings and leads.',
+        headerAction: canManage
+            ? OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, 36),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  textStyle: const TextStyle(fontSize: 12),
+                ),
+                onPressed: () => HotelFormDialog.open(controller),
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('Add location'),
+              )
+            : null,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (canManage)
-              Align(
-                alignment: Alignment.centerRight,
-                child: OutlinedButton.icon(
-                  onPressed: () => HotelFormDialog.open(controller),
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Add location'),
-                ),
-              ),
-            if (canManage) const SizedBox(height: 10),
             if (hotels.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),

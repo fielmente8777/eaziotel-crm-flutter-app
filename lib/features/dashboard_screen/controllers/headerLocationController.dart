@@ -1,7 +1,8 @@
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
-import 'package:eazotel/features/googleAnalytis/controller/analytisController.dart';
-import 'package:flutter/widgets.dart';
+import 'package:eazotel/core/local_storage/token_storage.dart';
+import 'package:eazotel/features/dashboard_screen/models/auth_user_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,13 +25,39 @@ class LocationController extends GetxController {
   final selectedHotel = Rxn<HotelModel>();
   final showHotels = false.obs;
 
+  /// Owner: Select Hotel screen par 'Client accounts' tab khula hai
+  final showClients = false.obs;
+  final _workers = <Worker>[];
+
   @override
   void onInit() {
     super.onInit();
 
     loadHotels();
+    if (isOwner) loadClients();
+    _workers.add(
+      ever(dashboardController.ownerUser, (_) {
+        if (isOwner) loadClients();
+      }),
+    );
 
-    ever(dashboardController.user, (_) => loadHotels());
+    _workers.add(ever(dashboardController.user, (_) => loadHotels()));
+
+    // Role / assigned locations aaye -> list dobara (sirf allowed hotels)
+    _workers.add(
+      ever(dashboardController.authUser, (_) {
+        loadHotels();
+        if (isOwner) loadClients();
+      }),
+    );
+  }
+
+  @override
+  void onClose() {
+    for (final worker in _workers) {
+      worker.dispose();
+    }
+    super.onClose();
   }
 
   // ============================================================
@@ -38,9 +65,13 @@ class LocationController extends GetxController {
   // ============================================================
 
   Future<void> loadHotels() async {
-    final apiHotels = dashboardController.user.value?.profile.hotels ?? [];
+    // Sirf wahi hotels jo is user ko dikhne chahiye (web jaisa):
+    // admin -> saare, team member -> sirf assigned
+    final apiHotels = dashboardController.allowedHotels;
 
     if (apiHotels.isEmpty) {
+      hotels.clear();
+      filteredHotels.clear();
       return;
     }
 
@@ -52,23 +83,20 @@ class LocationController extends GetxController {
 
     final savedHotelId = prefs.getString(hotelIdKey);
 
-    HotelModel? hotelToSelect;
-
     // ============================================================
-    // SAVED HOTEL FIND KARO
+    // SAVED HOTEL (agar ye user khol sakta hai), warna
+    // admin -> aakhri, team member -> pehli (web jaisa)
     // ============================================================
 
-    if (savedHotelId != null && savedHotelId.isNotEmpty) {
-      hotelToSelect = apiHotels.firstWhereOrNull(
-        (hotel) => hotel.hotelId == savedHotelId,
-      );
+    final hotelToSelect =
+        dashboardController.pickHotel(apiHotels, savedHotelId) ??
+        apiHotels.first;
+
+    // Dashboard pehle se isi hotel ka data la raha hai -> dobara mat laao
+    if (dashboardController.selectedHotelId.value == hotelToSelect.hotelId) {
+      selectedHotel.value = hotelToSelect;
+      return;
     }
-
-    // ============================================================
-    // AGAR SAVED ID NAHI MILI TO FIRST HOTEL
-    // ============================================================
-
-    hotelToSelect ??= apiHotels.first;
 
     // ============================================================
     // SELECT HOTEL
@@ -104,6 +132,75 @@ class LocationController extends GetxController {
     // ============================================================
 
     await dashboardController.changeHotel(hotel.hotelId);
+  }
+
+  // ============================================================
+  // OWNER: CLIENT ACCOUNTS  (web ke "LocationSwitcher" jaisa)
+  //   saare clients ki list -> ek par tap -> switch-account se uska
+  //   token -> client data khulta hai, owner session preserve rehta hai
+  // ============================================================
+
+  bool get isOwner => dashboardController.isOwner;
+  bool get isViewingClient => dashboardController.isViewingClient;
+
+  final clients = <ClientAccountModel>[].obs;
+  final isClientsLoading = false.obs;
+  final clientSearch = ''.obs;
+
+  /// Jis client me switch ho raha hai (hotelEmail)
+  final switchingClient = ''.obs;
+
+  List<ClientAccountModel> get visibleClients =>
+      clients.where((c) => c.matches(clientSearch.value)).toList();
+
+  Future<void> loadClients() async {
+    if (!isOwner || isClientsLoading.value) return;
+
+    isClientsLoading.value = true;
+    try {
+      clients.assignAll(await dashboardController.apiService.getAllClients());
+    } catch (e) {
+      debugPrint('ALL CLIENTS ERROR: $e');
+      clients.clear();
+    } finally {
+      isClientsLoading.value = false;
+    }
+  }
+
+  /// Client account me jao. Galti ho to [onError].
+  Future<void> switchClient(
+    ClientAccountModel client, {
+    required void Function(String) onError,
+    required Future<void> Function() onSwitched,
+  }) async {
+    if (!isOwner || switchingClient.value.isNotEmpty) return;
+    if (client.hotelEmail.isEmpty) {
+      onError(
+        'This client has no account email. Add it to the client record before switching.',
+      );
+      return;
+    }
+
+    switchingClient.value = client.hotelEmail;
+    try {
+      final token = await dashboardController.apiService.switchAccount(
+        client.hotelEmail,
+      );
+      if (token == null || token.isEmpty) {
+        onError('Could not switch to ${client.hotelName}. Please try again.');
+        return;
+      }
+
+      // Naya token + us client ki pehli location
+      await TokenStorage.enterClient(token, client.firstHotelId);
+
+      await onSwitched();
+    } catch (e) {
+      debugPrint('SWITCH ACCOUNT ERROR: $e');
+      onError('Could not switch to ${client.hotelName}. Please try again.');
+    } finally {
+      switchingClient.value = '';
+    }
   }
 
   // ============================================================

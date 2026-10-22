@@ -4,8 +4,9 @@
 //   Screen  --->  ye controller  --->  SubscriptionService  --->  API
 // ============================================================
 
- import 'package:eazotel/features/setting_screen/subscription/controller/services/Subscription_services.dart';
+import 'package:eazotel/features/setting_screen/subscription/controller/services/Subscription_services.dart';
 import 'package:eazotel/features/setting_screen/subscription/model/subscription_model.dart';
+import 'package:eazotel/features/setting_screen/subscription/screen/subscription_plans_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
@@ -59,17 +60,13 @@ class SubscriptionController extends GetxController {
     }
   }
 
-  // ---------- Buttons jinki API abhi nahi mili ----------
+  // ---------- Plan / apps khareedna (web ke Billing page jaisa) ----------
 
-  void upgradePlan() => _notConnected('Upgrading the plan');
-
-  void manageBilling() => _notConnected('Managing billing');
-
-  void _notConnected(String action) {
-    Get.snackbar(
-      'Not connected yet',
-      '$action needs its API. The screen is ready.',
-      snackPosition: SnackPosition.BOTTOM,
-    );
+  /// Plans & billing screen kholo; wapas aane par subscription taaza
+  Future<void> upgradePlan() async {
+    await Get.to(() => const SubscriptionPlansScreen());
+    load();
   }
+
+  void manageBilling() => upgradePlan();
 }

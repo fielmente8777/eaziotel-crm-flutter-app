@@ -190,18 +190,7 @@ class _HandBackRow extends StatelessWidget {
         children: [
           Icon(Icons.person_rounded, size: 15, color: p.accent),
           const SizedBox(width: 5),
-          Expanded(
-            child: Text(
-              'You are replying to this guest',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: p.subText,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+          Expanded(child: _ReplyingText(color: p.subText)),
           Obx(() {
             final busy = controller.isChanging.value;
 
@@ -223,6 +212,78 @@ class _HandBackRow extends StatelessWidget {
           }),
         ],
       ),
+    );
+  }
+}
+
+// ============================================================
+// ANIMATED REPLYING STATUS
+// ============================================================
+
+class _ReplyingText extends StatefulWidget {
+  const _ReplyingText({required this.color});
+
+  final Color color;
+
+  @override
+  State<_ReplyingText> createState() => _ReplyingTextState();
+}
+
+class _ReplyingTextState extends State<_ReplyingText>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1600),
+  );
+  late final Animation<int> _dots = StepTween(
+    begin: 0,
+    end: 4,
+  ).animate(_controller);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.stop();
+      _controller.value = .75;
+    } else {
+      _controller.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _dots,
+      builder: (context, child) {
+        final count = _dots.value.clamp(0, 3);
+        return Text.rich(
+          TextSpan(
+            text: 'You are replying',
+            children: [
+              TextSpan(text: '.' * count),
+              TextSpan(
+                text: '.' * (3 - count),
+                style: const TextStyle(color: Colors.transparent),
+              ),
+            ],
+          ),
+          semanticsLabel: 'You are replying',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: widget.color,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        );
+      },
     );
   }
 }

@@ -6,6 +6,7 @@
 //   2. profile_hotels_card    : hotels ki list
 //   3. profile_urls_card      : landing pages + websites
 //   4. profile_password_card  : password badalna
+//   5. profile_app_card       : Appearance (theme) + Account (log out, version)
 // ============================================================
 
 import 'package:eazotel/utils/res/t_responsive_builder.dart';
@@ -13,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controller/profile_setting_controller.dart';
+import 'widgets/profile_app_card.dart';
 import 'widgets/profile_hotels_card.dart';
 import 'widgets/profile_password_card.dart';
 import 'widgets/profile_card.dart';
@@ -44,6 +46,10 @@ class ProfileSettingTab extends StatelessWidget {
                 SizedBox(height: gap),
                 SettingPasswordCard(controller: controller),
                 SizedBox(height: gap),
+                const SettingAppearanceCard(),
+                SizedBox(height: gap),
+                const SettingAccountCard(),
+                SizedBox(height: gap + 8),
               ],
             ),
           ),

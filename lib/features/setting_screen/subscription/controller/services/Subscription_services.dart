@@ -12,7 +12,6 @@ import 'package:eazotel/core/constants/api_endpoints.dart';
 import 'package:eazotel/features/setting_screen/subscription/model/subscription_model.dart';
 import 'package:flutter/foundation.dart';
 
- 
 class SubscriptionService {
   SubscriptionService._();
 
@@ -33,7 +32,9 @@ class SubscriptionService {
 
       if (!result.success) {
         throw Exception(
-          result.message.isEmpty ? 'Unable to load subscription' : result.message,
+          result.message.isEmpty
+              ? 'Unable to load subscription'
+              : result.message,
         );
       }
 

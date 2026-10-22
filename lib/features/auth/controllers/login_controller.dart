@@ -18,7 +18,14 @@ class LoginController extends GetxController {
   final passwordController = TextEditingController();
 
   final RxBool showPassword = false.obs;
+  /// Sirf "Sign In" (email / password) button ka loader
   final isLoading = false.obs;
+
+  /// Sirf "Continue with Google" button ka loader
+  final isGoogleLoading = false.obs;
+
+  /// Koi bhi login chal raha ho to dono button band
+  bool get isBusy => isLoading.value || isGoogleLoading.value;
 
   void toggleShowPassword() {
     showPassword.value = !showPassword.value;
@@ -33,7 +40,7 @@ class LoginController extends GetxController {
 
     final password = passwordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
+    if (email.isEmpty || password.isEmpty || isBusy) {
       return false;
     }
 
@@ -100,11 +107,11 @@ class LoginController extends GetxController {
   // ============================================================
 
   Future<bool> loginWithGoogle() async {
-    if (isLoading.value) {
+    if (isBusy) {
       return false;
     }
 
-    isLoading.value = true;
+    isGoogleLoading.value = true;
 
     try {
       debugPrint('🔵 GOOGLE LOGIN STARTED');
@@ -166,7 +173,7 @@ class LoginController extends GetxController {
 
       return false;
     } finally {
-      isLoading.value = false;
+      isGoogleLoading.value = false;
     }
   }
 

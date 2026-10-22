@@ -5,7 +5,7 @@
 //              (Profile bottom tab me hai; yahan alag item nahi)
 //   INSIGHTS : Google Analytics, Google Ads Insights, Meta Insights, SEO
 //   ENGAGE   : Marketing (WhatsApp / Email), Calls Management, Social Media
-//   neeche   : Settings
+//   (Settings, theme, logout, version ab bottom tab "Settings" me hain)
 //
 // Poori list scroll hoti hai (chhote phone par bhi kuch nahi katta).
 // ============================================================
@@ -22,7 +22,6 @@ import 'package:eazotel/features/meta_insights/screen/meta_insights_screen.dart'
 import 'package:eazotel/features/marketing/screen/whatsapp_marketing_screen.dart';
 import 'package:eazotel/features/seo/screen/local_seo_screen.dart';
 import 'package:eazotel/features/seo/screen/website_seo_screen.dart';
-import 'package:eazotel/features/setting_screen/setting_screen.dart';
 import 'package:eazotel/features/social_media/screen/social_media_screen.dart';
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -67,100 +66,98 @@ class DashboardDrawer extends StatelessWidget {
               },
               onClose: () => Navigator.pop(context),
             ),
+            // Menu (lamba ho to scroll)
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                children: [
-                  const _GroupLabel('Insights'),
-                  _Item(
-                    icon: Icons.insights_rounded,
-                    color: const Color(0xFFF59E0B),
-                    title: 'Google Analytics',
-                    onTap: () =>
-                        go(() => const Analytis(), binding: AnalytisBinding()),
-                  ),
-                  // _Item(
-                  //   icon: Icons.ads_click_rounded,
-                  //   color: const Color(0xFFEF4444),
-                  //   title: 'Google Ads Insights',
-                  //   onTap: () => go(() => const GoogleAdsScreen()),
-                  // ),
-                  // _Item(
-                  //   icon: Icons.facebook,
-                  //   color: const Color(0xFF1877F2),
-                  //   title: 'Meta Insights',
-                  //   onTap: () => go(() => const MetaInsightsScreen()),
-                  // ),
-                  _Group(
-                    icon: Icons.query_stats_rounded,
-                    color: const Color(0xFF10B981),
-                    title: 'SEO',
-                    children: [
-                      _Item(
-                        icon: Icons.map_outlined,
-                        color: const Color(0xFF10B981),
-                        title: 'Local Seo',
-                        small: true,
-                        onTap: () => go(() => const LocalSeoScreen()),
-                      ),
-                      _Item(
-                        icon: Icons.travel_explore,
-                        color: const Color(0xFF3B82F6),
-                        title: 'Website Seo',
-                        small: true,
-                        onTap: () => go(() => const WebsiteSeoScreen()),
-                      ),
-                    ],
-                  ),
-                  const _GroupLabel('Engage'),
+              child: CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                    sliver: SliverList.list(
+                      children: [
+                        const _GroupLabel('Insights'),
+                        _Item(
+                          icon: Icons.insights_rounded,
+                          color: const Color(0xFFF59E0B),
+                          title: 'Google Analytics',
+                          onTap: () => go(
+                            () => const Analytis(),
+                            binding: AnalytisBinding(),
+                          ),
+                        ),
+                        _Item(
+                          icon: Icons.ads_click_rounded,
+                          color: const Color(0xFFEF4444),
+                          title: 'Google Ads Insights',
+                          onTap: () => go(() => const GoogleAdsScreen()),
+                        ),
+                        _Item(
+                          icon: Icons.facebook,
+                          color: const Color(0xFF1877F2),
+                          title: 'Meta Insights',
+                          onTap: () => go(() => const MetaInsightsScreen()),
+                        ),
+                        _Group(
+                          icon: Icons.query_stats_rounded,
+                          color: const Color(0xFF10B981),
+                          title: 'SEO',
+                          children: [
+                            _Item(
+                              icon: Icons.map_outlined,
+                              color: const Color(0xFF10B981),
+                              title: 'Local Seo',
+                              small: true,
+                              onTap: () => go(() => const LocalSeoScreen()),
+                            ),
+                            _Item(
+                              icon: Icons.travel_explore,
+                              color: const Color(0xFF3B82F6),
+                              title: 'Website Seo',
+                              small: true,
+                              onTap: () => go(() => const WebsiteSeoScreen()),
+                            ),
+                          ],
+                        ),
+                        const _GroupLabel('Engage'),
 
-                  _Group(
-                    icon: Icons.campaign_rounded,
-                    color: const Color(0xFFEC4899),
-                    title: 'Marketing',
-                    children: [
-                      _Item(
-                        icon: Icons.chat_outlined,
-                        color: const Color(0xFF25D366),
-                        title: 'WhatsApp Marketing',
-                        small: true,
-                        onTap: () => go(() => const WhatsappMarketingScreen()),
-                      ),
-                      _Item(
-                        icon: Icons.mail_outline,
-                        color: const Color(0xFFEA4335),
-                        title: 'Email Marketing',
-                        small: true,
-                        onTap: () => go(() => const EmailMarketingScreen()),
-                      ),
-                    ],
+                        _Group(
+                          icon: Icons.campaign_rounded,
+                          color: const Color(0xFFEC4899),
+                          title: 'Marketing',
+                          children: [
+                            _Item(
+                              icon: Icons.chat_outlined,
+                              color: const Color(0xFF25D366),
+                              title: 'WhatsApp Marketing',
+                              small: true,
+                              onTap: () =>
+                                  go(() => const WhatsappMarketingScreen()),
+                            ),
+                            _Item(
+                              icon: Icons.mail_outline,
+                              color: const Color(0xFFEA4335),
+                              title: 'Email Marketing',
+                              small: true,
+                              onTap: () =>
+                                  go(() => const EmailMarketingScreen()),
+                            ),
+                          ],
+                        ),
+                        _Item(
+                          icon: Icons.call_rounded,
+                          color: const Color(0xFF0EA5E9),
+                          title: 'Calls Management',
+                          onTap: () => go(() => const CallsManagementScreen()),
+                        ),
+                        // _Item(
+                        //   icon: Icons.share_rounded,
+                        //   color: const Color(0xFF6366F1),
+                        //   title: 'Social Media',
+                        //   onTap: () => go(() => const SocialMediaScreen()),
+                        // ),
+                      ],
+                    ),
                   ),
-                  _Item(
-                    icon: Icons.call_rounded,
-                    color: const Color(0xFF0EA5E9),
-                    title: 'Calls Management',
-                    onTap: () => go(() => const CallsManagementScreen()),
-                  ),
-                  // _Item(
-                  //   icon: Icons.share_rounded,
-                  //   color: const Color(0xFF6366F1),
-                  //   title: 'Social Media',
-                  //   onTap: () => go(() => const SocialMediaScreen()),
-                  // ),
                 ],
-              ),
-            ),
-            Divider(
-              height: 1,
-              color: isDark ? TAppColors.darkBorder : TAppColors.lightBorder,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: _Item(
-                icon: Icons.settings_rounded,
-                color: const Color(0xFF64748B),
-                title: 'Settings',
-                onTap: () => go(() => const SettingScreen()),
               ),
             ),
           ],

@@ -13,9 +13,11 @@ class AuthApiEndpoint {
 
   static const String resendOtp = '/auth/resend-otp';
 
-  static const String forgotPassword = '/auth/forgot-password';
+  /// POST { email } -> 6 digit code email par (BaseUrl.production2, bina login)
+  static const String forgotPassword = '/api/v1/auth/forgot-password';
 
-  static const String resetPassword = '/auth/reset-password';
+  /// POST { email, otp, password } (BaseUrl.production2, bina login)
+  static const String resetPassword = '/api/v1/auth/reset-password';
 
   static const String getUserProfile = '/eazotel/getuser';
 
@@ -23,6 +25,12 @@ class AuthApiEndpoint {
 
   // Login kiye hue user ki details (User.emailId) — Bearer token ke saath
   static const String userDetails = '/user/user-details';
+
+  /// Owner: saare client accounts (data[])
+  static const String allClients = '/admin/get-all-clients';
+
+  /// Owner: client account me jao. POST { Email } -> { Status, Token }
+  static const String switchAccount = '/admin/switch-account';
 
   static const String updateProfile = '/auth/profile';
 
@@ -215,6 +223,17 @@ class SubscriptionApiEndpoint {
 
   /// GET /api/v1/subscription/my   (baseUrl: BaseUrl.production2)
   static const String mySubscription = '/api/v1/subscription/my';
+
+  /// GET -> result.data { plans[], apps[] }  (login ki zarurat nahi)
+  static const String plans = '/api/v1/subscription/plans';
+
+  /// POST { planId, appIds, validFor, discount, teamCount, teamCost, gst }
+  /// -> result.doc { orderId, amount }  (Razorpay order)
+  static const String createOrder = '/api/v1/subscription/create-order';
+
+  /// POST { razorpay_payment_id, razorpay_order_id, razorpay_signature,
+  ///        validFor, planId, appIds }
+  static const String verifyPayment = '/api/v1/subscription/verify-payment';
 }
 
 /// Settings > Team Management (base: BaseUrl.production)
@@ -404,4 +423,25 @@ class SeoApiEndpoint {
   /// DELETE
   static String untrack(String keyword) =>
       '$_base/${Uri.encodeComponent(keyword)}';
+}
+
+// ============================================================
+// ONBOARDING (naya account, abhi koi hotel nahi) - web OnboardingForm jaisa
+// ============================================================
+
+class OnboardingApiEndpoint {
+  OnboardingApiEndpoint._();
+
+  /// POST (BaseUrl.production). Token body me jata hai.
+  /// Hotel profile + website + pehli location banata hai.
+  /// -> { Status, hId, Message }
+  static const String createWebsite = '/eazotel/createwebsite';
+
+  /// POST { propertyDetails } (BaseUrl.production2, Bearer)
+  /// 14 din ka free trial shuru. Pehle hi ho chuka ho to 409.
+  static const String complete = '/api/v1/onboarding';
+
+  /// Country / state / city ki list (web bhi yahi use karta hai)
+  static const String placesUrl =
+      'https://countriesnow.space/api/v0.1/countries';
 }

@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'package:eazotel/core/local_storage/token_storage.dart';
 
 import 'package:eazotel/core/api/api_clint_servic.dart';
 import 'package:eazotel/core/constants/api_base_url.dart';
 import 'package:eazotel/core/constants/api_endpoints.dart';
+import 'package:eazotel/features/dashboard_screen/models/auth_user_model.dart';
 import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
 import 'package:eazotel/features/dashboard_screen/models/analytics_responce_modle.dart';
@@ -19,6 +21,65 @@ class DashboardApiService {
     final data = jsonDecode(response.body);
 
     return ProfileResponseModel.fromJson(data);
+  }
+
+  // ============================================================
+  // LOGIN KIYA HUA USER (role, isAdmin, assigned_location)
+  // GET https://nexon.eazotel.com/user/user-details  (Bearer token)
+  // ============================================================
+
+  Future<AuthUserModel?> getAuthUser({String? accessToken}) async {
+    final response = await ApiClient.get(
+      AuthApiEndpoint.userDetails,
+      accessToken: accessToken,
+      authenticated: true,
+    );
+
+    final data = jsonDecode(response.body);
+    final user = data is Map ? data['User'] : null;
+
+    return user is Map
+        ? AuthUserModel.fromJson(Map<String, dynamic>.from(user))
+        : null;
+  }
+
+  // ============================================================
+  // OWNER: CLIENT ACCOUNTS
+  // ============================================================
+
+  /// GET /admin/get-all-clients
+  Future<List<ClientAccountModel>> getAllClients() async {
+    final response = await ApiClient.get(
+      AuthApiEndpoint.allClients,
+      accessToken: await TokenStorage.getOwnerAccessToken(),
+      authenticated: true,
+    );
+
+    final data = jsonDecode(response.body);
+    final list = data is Map ? data['data'] : null;
+
+    return [
+      if (list is List)
+        for (final item in list)
+          if (item is Map)
+            ClientAccountModel.fromJson(Map<String, dynamic>.from(item)),
+    ];
+  }
+
+  /// POST /admin/switch-account { Email } -> client ka naya token (null = fail)
+  Future<String?> switchAccount(String email) async {
+    final response = await ApiClient.post(
+      AuthApiEndpoint.switchAccount,
+      accessToken: await TokenStorage.getOwnerAccessToken(),
+      body: {'Email': email},
+      authenticated: true,
+    );
+
+    final data = jsonDecode(response.body);
+    if (data is! Map || data['Status'] != true) return null;
+
+    final token = '${data['Token'] ?? ''}'.trim();
+    return token.isEmpty ? null : token;
   }
 
   // Get user details

@@ -30,7 +30,7 @@ class SettingProfileCard extends StatelessWidget {
           return text.isEmpty || text == 'None' ? '-' : text;
         }
 
-        final name = show(user?.displayName ?? user?.userName);
+        final name = show(user?.displayName);
         final role = show(user?.role);
 
         final userBlock = Row(
@@ -68,7 +68,7 @@ class SettingProfileCard extends StatelessWidget {
                     style: TextStyle(color: p.subText, fontSize: 12),
                   ),
                   Text(
-                    show(user?.emailId),
+                    show(user?.email),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(color: p.subText, fontSize: 12),

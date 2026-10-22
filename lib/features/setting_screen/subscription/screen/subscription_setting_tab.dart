@@ -16,7 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controller/subscription_controller.dart';
- 
+
 const Color _kAccent = Color(0xFFFF6A13); // orange (Upgrade / days left)
 const Color _kGreen = Color(0xFF22C55E);
 
@@ -185,10 +185,7 @@ class _Hero extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: p.border),
         gradient: LinearGradient(
-          colors: [
-            p.primary.withOpacity(0.05),
-            p.primary.withOpacity(0.16),
-          ],
+          colors: [p.primary.withOpacity(0.05), p.primary.withOpacity(0.16)],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -200,7 +197,10 @@ class _Hero extends StatelessWidget {
             )
           : Row(
               crossAxisAlignment: CrossAxisAlignment.end,
-              children: [Expanded(child: left), chips],
+              children: [
+                Expanded(child: left),
+                chips,
+              ],
             ),
     );
   }
@@ -274,21 +274,14 @@ class _InfoCards extends StatelessWidget {
   Widget build(BuildContext context) {
     final columns = width >= 900 ? 4 : 2;
     const gap = 12.0;
-    final itemWidth = (width - (width < 640 ? 24 : 32) - gap * (columns - 1)) / columns;
+    final itemWidth =
+        (width - (width < 640 ? 24 : 32) - gap * (columns - 1)) / columns;
 
     final items = [
       (Icons.calendar_month_outlined, 'Start date', _date(sub.startDate)),
       (Icons.event_outlined, 'End date', _date(sub.endDate)),
-      (
-        Icons.autorenew,
-        'Auto renew',
-        sub.autoRenew ? 'Enabled' : 'Disabled',
-      ),
-      (
-        Icons.headset_mic_outlined,
-        'Support',
-        _capitalize(sub.plan.support),
-      ),
+      (Icons.autorenew, 'Auto renew', sub.autoRenew ? 'Enabled' : 'Disabled'),
+      (Icons.headset_mic_outlined, 'Support', _capitalize(sub.plan.support)),
     ];
 
     return Wrap(
@@ -372,7 +365,8 @@ class _AppsSection extends StatelessWidget {
 
     final columns = width >= 760 ? 2 : 1;
     const gap = 12.0;
-    final itemWidth = (width - (width < 640 ? 24 : 32) - gap * (columns - 1)) / columns;
+    final itemWidth =
+        (width - (width < 640 ? 24 : 32) - gap * (columns - 1)) / columns;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,7 +385,10 @@ class _AppsSection extends StatelessWidget {
           runSpacing: gap,
           children: [
             for (final app in apps)
-              SizedBox(width: itemWidth, child: _AppCard(app: app)),
+              SizedBox(
+                width: itemWidth,
+                child: _AppCard(app: app),
+              ),
           ],
         ),
       ],
@@ -596,7 +593,9 @@ class _PaymentSection extends StatelessWidget {
                   child: Center(
                     child: OutlinedButton(
                       onPressed: controller.showMorePayments,
-                      child: Text('Show more (${total - payments.length} left)'),
+                      child: Text(
+                        'Show more (${total - payments.length} left)',
+                      ),
                     ),
                   ),
                 ),
@@ -607,7 +606,6 @@ class _PaymentSection extends StatelessWidget {
     );
   }
 }
-
 
 // ---------- Table (tablet / desktop / windows) ----------
 
@@ -786,10 +784,7 @@ class _PaymentCard extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: TextStyle(fontSize: 12.5, color: p.text),
-            ),
+            child: Text(value, style: TextStyle(fontSize: 12.5, color: p.text)),
           ),
         ],
       ),
@@ -838,8 +833,18 @@ class _StatusChip extends StatelessWidget {
 // ============================================================
 
 const _months = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];
 
 String _two(int n) => n.toString().padLeft(2, '0');

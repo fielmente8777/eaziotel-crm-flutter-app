@@ -4,9 +4,11 @@ import 'package:eazotel/core/local_storage/token_storage.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_call_analytics_mixin.dart';
 import 'package:eazotel/features/leads/controller/leads_list_mixin.dart';
 import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';
+import 'package:eazotel/features/dashboard_screen/models/auth_user_model.dart';
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
 import 'package:eazotel/features/dashboard_screen/models/analytics_responce_modle.dart';
 import 'package:eazotel/features/dashboard_screen/services/dashboard_api_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,6 +33,10 @@ class DashboardController extends GetxController
 
   final userNameResponse = Rxn<UserResponseModel>();
   final user = Rxn<ProfileResponseModel>();
+  // null = checking, true = dashboard, false = subscription expired.
+  final isSubscriptionActive = RxnBool();
+  // true = naya account, koi hotel nahi -> pehle onboarding form (web jaisa)
+  final needsOnboarding = RxnBool();
 
   // ============================================================
   // HOTEL
@@ -81,11 +87,24 @@ class DashboardController extends GetxController
         return;
       }
 
-      final result = await apiService.getUserProfile(token);
+      // Profile (hotels) + login kiya hua user (role, assigned locations)
+      // ek saath laao
+      final profileFuture = apiService.getUserProfile(token);
+      final authFuture = _loadAuthUser();
+
+      final result = await profileFuture;
+      await authFuture;
 
       user.value = result;
+      needsOnboarding.value =
+          !result.status || result.profile.hotels.isEmpty;
+      if (needsOnboarding.value == true) return;
+      final endDate = DateTime.tryParse(result.subscriptionDetails.endDate);
+      isSubscriptionActive.value = endDate?.isAfter(DateTime.now()) ?? false;
+      if (isSubscriptionActive.value != true) return;
 
-      final hotels = result.profile.hotels;
+      // Sirf wahi hotels jo is user ko dikhne chahiye
+      final hotels = allowedHotels;
 
       if (hotels.isEmpty) {
         return;
@@ -93,27 +112,77 @@ class DashboardController extends GetxController
 
       final prefs = await SharedPreferences.getInstance();
 
-      final savedHotelId = prefs.getString(hotelIdKey);
+      // Pichhli baar wala hotel, par sirf agar ye user use khol sakta hai
+      final hotelId = _pickHotel(hotels, prefs.getString(hotelIdKey)).hotelId;
+      await prefs.setString(hotelIdKey, hotelId);
 
-      // final hotelId = hotels.first.hotelId;
-
-      selectedHotelId.value = savedHotelId.toString();
+      selectedHotelId.value = hotelId;
 
       // Call analytics starts automatically, in parallel with leads
       // (not awaited, so a slow leads API does not delay it)
-      getCallAnalytics(savedHotelId.toString());
+      getCallAnalytics(hotelId);
 
-      await getLeads(savedHotelId.toString(), reset: true);
+      await getLeads(hotelId, reset: true);
 
-      getAnalytics(savedHotelId.toString());
+      getAnalytics(hotelId);
     } on ApiException catch (e) {
       ApiErrorHandler.handle(e);
     } catch (e) {
-      // Handle unexpected error
+      ApiErrorHandler.handle(e);
     } finally {
       isLoading.value = false;
     }
   }
+
+  // ============================================================
+  // KAUN KAUNSI LOCATION DEKH SAKTA HAI (web dashboard jaisa)
+  //   isAdmin       -> saari locations
+  //   team member   -> sirf assigned_location wali
+  //   role "owner"  -> upar se client accounts bhi (LocationController)
+  // ============================================================
+
+  /// Login kiya hua user (GET /user/user-details)
+  final authUser = Rxn<AuthUserModel>();
+  final ownerUser = Rxn<AuthUserModel>();
+
+  bool get isOwner => (ownerUser.value ?? authUser.value)?.isOwner ?? false;
+  bool get isViewingClient => ownerUser.value?.isOwner ?? false;
+
+  Future<void> _loadAuthUser() async {
+    final ownerToken = await TokenStorage.getOwnerAccessToken();
+    if (ownerToken != null) {
+      try {
+        // Verify owner privileges with the owner's credentials, never a client role.
+        ownerUser.value = await apiService.getAuthUser(accessToken: ownerToken);
+      } catch (e) {
+        debugPrint('OWNER SESSION ERROR: $e');
+      }
+    }
+    try {
+      authUser.value = await apiService.getAuthUser();
+    } catch (e) {
+      // Na mile to pehle jaisa: saari locations (kisi ko bahar na karo)
+      debugPrint('AUTH USER (user-details) ERROR: $e');
+    }
+  }
+
+  /// Is user ko dikhne wale hotels
+  List<HotelModel> get allowedHotels {
+    final all = user.value?.profile.hotels ?? const <HotelModel>[];
+    final me = authUser.value;
+    return me == null ? all : me.allowedHotels(all);
+  }
+
+  HotelModel _pickHotel(List<HotelModel> allowed, String? savedHid) =>
+      authUser.value?.pickHotel(allowed, savedHid) ??
+      allowed.firstWhere(
+        (h) => h.hotelId == savedHid,
+        orElse: () => allowed.first,
+      );
+
+  /// Bahar se bhi (LocationController) same niyam
+  HotelModel? pickHotel(List<HotelModel> allowed, String? savedHid) =>
+      allowed.isEmpty ? null : _pickHotel(allowed, savedHid);
 
   // ============================================================
   // GET USER DETAILS
@@ -203,6 +272,10 @@ class DashboardController extends GetxController
   // ============================================================
 
   void clearDashboardData() {
+    // Login kiya hua user (role / locations)
+    authUser.value = null;
+    ownerUser.value = null;
+
     // Leads, pagination, search, filters
     clearLeadsData();
 
@@ -219,6 +292,8 @@ class DashboardController extends GetxController
     // User
     userNameResponse.value = null;
     user.value = null;
+    isSubscriptionActive.value = null;
+    needsOnboarding.value = null;
 
     // Loading
     isLoading.value = false;

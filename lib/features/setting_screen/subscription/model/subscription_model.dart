@@ -100,6 +100,8 @@ class SubscriptionModel {
 // ============================================================
 
 class SubscriptionPlanModel {
+  /// Plan ki id (_id): "Current plan" pehchanne aur naya plan lene me
+  final String id;
   final String name;
   final num price;
   final String support;
@@ -108,6 +110,7 @@ class SubscriptionPlanModel {
   final int maxLeadsPerMonth;
 
   SubscriptionPlanModel({
+    this.id = '',
     this.name = '',
     this.price = 0,
     this.support = '',
@@ -120,6 +123,7 @@ class SubscriptionPlanModel {
     final limits = _toMap(json['limits']) ?? {};
 
     return SubscriptionPlanModel(
+      id: json['_id']?.toString() ?? '',
       name: json['planName']?.toString() ?? '',
       price: json['price'] is num ? json['price'] as num : 0,
       support: json['support']?.toString() ?? '',
@@ -135,6 +139,8 @@ class SubscriptionPlanModel {
 // ============================================================
 
 class SubscriptionAppModel {
+  /// App ki id (appId._id): "Purchased" pehchanne me
+  final String appId;
   final String name;
   final String code;
   final num price;
@@ -143,6 +149,7 @@ class SubscriptionAppModel {
   final DateTime? endDate;
 
   SubscriptionAppModel({
+    this.appId = '',
     required this.name,
     required this.code,
     required this.price,
@@ -160,6 +167,7 @@ class SubscriptionAppModel {
     final app = _toMap(json['appId']) ?? {};
 
     return SubscriptionAppModel(
+      appId: app['_id']?.toString() ?? '',
       name: app['name']?.toString() ?? '',
       code: app['code']?.toString() ?? '',
       price: app['price'] is num ? app['price'] as num : 0,

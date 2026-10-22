@@ -15,6 +15,7 @@ import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_cont
 import 'package:eazotel/features/setting_screen/whatsapp/models/whatsapp_action_response.dart';
 import 'package:eazotel/features/whatsapp/controller/whatsappController.dart';
 import 'package:eazotel/features/whatsapp/models/whatsappMessegesLeads.dart';
+import 'package:eazotel/features/whatsapp/services/whatsappConversation.dart';
 import 'package:eazotel/features/whatsapp/services/whatsapp_handling_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -44,7 +45,8 @@ class WhatsappHandlingController extends GetxController {
 
   final WhatsappConversationModel chat;
 
-  /// AI on / off har hotel ke liye ek baar hi poochte hain
+  /// AI on / off: pichhla jawab (chat khulte hi turant dikhe), par har
+  /// baar server se dobara poochte hain (Settings me badla ho sakta hai)
   static final Map<String, bool> _aiCache = {};
 
   /// Login kiye hue user ka email (/user/user-details), ek baar hi laate hain
@@ -69,6 +71,11 @@ class WhatsappHandlingController extends GetxController {
   String get userEmail {
     if (_myEmail.isNotEmpty) return _myEmail;
     if (!Get.isRegistered<DashboardController>()) return '';
+
+    // App khulte hi aaya hua login user (user-details)
+    final authEmail =
+        Get.find<DashboardController>().authUser.value?.email ?? '';
+    if (authEmail.isNotEmpty) return authEmail;
     return Get.find<DashboardController>().user.value?.userEmail ?? '';
   }
 
@@ -86,11 +93,13 @@ class WhatsappHandlingController extends GetxController {
     if (isLoading.value) return WaReplyMode.loading;
 
     final h = handling;
-    final byAi = h == null || h.mode == null || h.mode == 'AI';
+    // "AI" / "ai" / "HUMAN" / "human" sab chalein
+    final handlingMode = (h?.mode ?? '').trim().toUpperCase();
+    final byHuman = handlingMode == 'HUMAN';
+    final byAi = !byHuman;
     final mine =
         (h?.assignedTo ?? '').trim().toLowerCase() ==
         userEmail.trim().toLowerCase();
-    final byHuman = h?.mode == 'HUMAN';
 
     if (aiEnabled.value && byHuman && !mine) return WaReplyMode.teammate;
     if (aiEnabled.value && byAi) return WaReplyMode.ai;
@@ -113,7 +122,12 @@ class WhatsappHandlingController extends GetxController {
     isLoading.value = true;
 
     try {
-      await Future.wait([_loadAi(), _loadFlow(), _loadEmail()]);
+      await Future.wait([
+        _loadAi(),
+        _loadFlow(),
+        _loadEmail(),
+        _loadHandling(),
+      ]);
     } finally {
       isLoading.value = false;
     }
@@ -122,18 +136,16 @@ class WhatsappHandlingController extends GetxController {
   Future<void> _loadAi() async {
     final hid = whatsapp.hid;
 
-    if (_aiCache.containsKey(hid)) {
-      aiEnabled.value = _aiCache[hid]!;
-      return;
-    }
+    // Pehle pichhla jawab (agar hai), phir server ka taaza
+    if (_aiCache.containsKey(hid)) aiEnabled.value = _aiCache[hid]!;
 
     try {
       final enabled = await WhatsappHandlingService.isAiEnabled(hid: hid);
       _aiCache[hid] = enabled;
       aiEnabled.value = enabled;
     } catch (_) {
-      // Pata na chale to AI band maan lo (message box dikhe, kaam na ruke)
-      aiEnabled.value = false;
+      // Pata na chale to pichhla jawab rakho, woh bhi na ho to AI band
+      aiEnabled.value = _aiCache[hid] ?? false;
     }
   }
 
@@ -144,6 +156,32 @@ class WhatsappHandlingController extends GetxController {
       _myEmail = await WhatsappHandlingService.getMyEmail();
     } catch (_) {
       // Take over dabane par dobara koshish hogi
+    }
+  }
+
+  /// Is chat ka TAAZA handling (AI ya kaun insaan) server se.
+  /// App me chat list app khulne par ek baar aati hai; tab se web par
+  /// kisi ne take over / hand back kiya ho to purana dikhta tha.
+  Future<void> _loadHandling() async {
+    try {
+      final json = await WhatsappService.getConversations(hid: whatsapp.hid);
+      final result = json['result'];
+      final list = result is Map ? result['conversations'] : null;
+      if (list is! List) return;
+
+      for (final item in list) {
+        if (item is! Map || '${item['_id']}' != chat.id) continue;
+
+        final raw = item['handling'];
+        final fresh = raw is Map
+            ? WhatsappHandlingModel.fromJson(Map<String, dynamic>.from(raw))
+            : WhatsappHandlingModel(mode: 'AI');
+
+        _setHandling(fresh);
+        return;
+      }
+    } catch (e) {
+      debugPrint('HANDLING REFRESH ERROR: $e');
     }
   }
 

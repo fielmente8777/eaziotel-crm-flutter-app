@@ -19,11 +19,13 @@ class ApiClient {
 
   static Future<http.Response> get(
     String endpoint, {
+    String? accessToken,
     bool authenticated = true,
     String? baseUrl,
   }) {
     return _request(
       method: 'GET',
+      accessToken: accessToken,
       endpoint: endpoint,
       authenticated: authenticated,
       baseUrl: baseUrl,
@@ -39,6 +41,7 @@ class ApiClient {
 
   static Future<http.Response> post(
     String endpoint, {
+    String? accessToken,
     Map<String, dynamic>? body,
     bool authenticated = true,
     String? baseUrl,
@@ -53,6 +56,7 @@ class ApiClient {
     return _request(
       timeout: timeout,
       method: 'POST',
+      accessToken: accessToken,
       endpoint: endpoint,
       body: body,
       authenticated: authenticated,
@@ -150,6 +154,7 @@ class ApiClient {
   // ============================================================
 
   static Future<http.Response> _request({
+    String? accessToken,
     required String method,
     Duration? timeout,
     required String endpoint,
@@ -168,7 +173,9 @@ class ApiClient {
       // Get Access Token
       // ----------------------------------------------------------
 
-      final token = authenticated ? await TokenStorage.getAccessToken() : null;
+      final token =
+          accessToken ??
+          (authenticated ? await TokenStorage.getAccessToken() : null);
 
       // ----------------------------------------------------------
       // Headers
@@ -237,7 +244,10 @@ class ApiClient {
       // TOKEN EXPIRED
       // ==========================================================
 
-      if (response.statusCode == 401 && authenticated && retry) {
+      if (response.statusCode == 401 &&
+          authenticated &&
+          retry &&
+          accessToken == null) {
         print('🔄 Access token expired. Refreshing token...');
 
         final refreshed = await _refreshToken();

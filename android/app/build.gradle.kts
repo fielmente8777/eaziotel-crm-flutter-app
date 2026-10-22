@@ -53,6 +53,12 @@ android {
         }
         release {
             signingConfig = signingConfigs.getByName("release")
+
+            // Razorpay ke classes R8 se na hatein (proguard-rules.pro)
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }

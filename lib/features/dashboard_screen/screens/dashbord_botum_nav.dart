@@ -1,18 +1,22 @@
 // ============================================================
 // DASHBOARD BOTTOM NAV
 //
-//   Home | Leads | WhatsApp | Profile
+//   Home | Leads | WhatsApp | Settings
 //
 // Chuna hua tab: rangeen "pill" ke andar bhara (filled) icon.
-// Profile yahin hai (theme, logout, hotel badalna), isliye drawer me
-// alag "Profile" nahi; drawer ke upar "View profile" se yahi khulta hai.
+// Settings tab me sab hai: profile, locations (hotel badalna), theme,
+// logout, app version. Drawer ke upar "View profile" se yahi khulta hai.
 // ============================================================
 
 import 'package:eazotel/features/dashboard_screen/controllers/bottom_nav_controller.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/dashboard_screen.dart';
 import 'package:eazotel/features/leads/screen/leads_screen.dart';
+import 'package:eazotel/features/setting_screen/setting_screen.dart';
+import 'package:eazotel/features/setting_screen/subscription/screen/subscription_plans_screen.dart';
+import 'package:eazotel/features/auth/controllers/login_controller.dart';
+import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
 import 'package:eazotel/features/notifications/controller/notification_controller.dart';
-import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/profile_screen.dart';
+import 'package:eazotel/features/onboarding/screen/onboarding_screen.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/whatsapp_screen.dart';
 import 'package:eazotel/utils/theme/custome_them/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +25,38 @@ import 'package:get/get.dart';
 
 class DashboardBottomNav extends StatelessWidget {
   const DashboardBottomNav({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final dashboard = Get.put(DashboardController());
+    void signOut() {
+      final login = Get.isRegistered<LoginController>()
+          ? Get.find<LoginController>()
+          : Get.put(LoginController());
+      login.logoutUser(context);
+    }
+
+    return Obx(() {
+      // Naya account, koi hotel nahi: pehle "Onboard your property"
+      if (dashboard.needsOnboarding.value == true) {
+        return OnboardingScreen(onSignOut: signOut);
+      }
+
+      final active = dashboard.isSubscriptionActive.value;
+      if (active == false) {
+        // Plan khatam: seedha "Choose your plan" (renew) screen
+        return SubscriptionPlansScreen(
+          onRecheck: dashboard.getUser,
+          onSignOut: signOut,
+        );
+      }
+      return const _DashboardContent();
+    });
+  }
+}
+
+class _DashboardContent extends StatelessWidget {
+  const _DashboardContent();
 
   static const String _whatsappIcon =
       'assets/bottomNavigationIcon/whatsapp.svg';
@@ -65,7 +101,7 @@ class DashboardBottomNav extends StatelessWidget {
             case 2:
               return whatsapp(controller: controller);
             case 3:
-              return ProfileScreen(controller: controller);
+              return const SettingScreen();
             default:
               return DashboardScreen(controller: controller);
           }
@@ -134,9 +170,9 @@ class DashboardBottomNav extends StatelessWidget {
                     label: 'WhatsApp',
                   ),
                   const NavigationDestination(
-                    icon: Icon(Icons.person_outline_rounded),
-                    selectedIcon: Icon(Icons.person_rounded),
-                    label: 'Profile',
+                    icon: Icon(Icons.settings_outlined),
+                    selectedIcon: Icon(Icons.settings_rounded),
+                    label: 'Settings',
                   ),
                 ],
               ),

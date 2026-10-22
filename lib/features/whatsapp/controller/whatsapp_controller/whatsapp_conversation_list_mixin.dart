@@ -33,12 +33,12 @@ mixin WhatsappConversationListMixin
     }
   }
 
-  /// result.docs me kuch ho = WhatsApp juda hai
+  /// Integration records can contain Google Ads or other services as well.
   bool get whatsappIntegrationSuccess {
     final result = whatsappIntegration.value?['result'];
     final docs = result is Map ? result['docs'] : null;
 
-    return docs is Map && docs.isNotEmpty;
+    return docs is Map && docs['metaWhatsapp'] == true;
   }
 
   // ============================================================

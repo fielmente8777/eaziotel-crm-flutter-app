@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Secrets / keys (kabhi GitHub par mat bhejo)
+.env
+.env.*
+!.env.example

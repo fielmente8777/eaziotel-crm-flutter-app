@@ -1,4 +1,5 @@
 import 'package:eazotel/features/auth/controllers/login_controller.dart';
+import 'package:eazotel/features/auth/screens/forgot_password_screen.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashbord_botum_nav.dart';
 import 'package:eazotel/main.dart';
 import 'package:eazotel/welcome.dart';
@@ -8,6 +9,30 @@ import 'package:get/get.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
+
+  /// "Continue with Google" aur "Sign up" dono yahi chalate hain.
+  /// Naye account ka hotel nahi hota, to dashboard khud onboarding dikhata hai.
+  Future<void> _googleLogin(
+    BuildContext context,
+    LoginController controller,
+  ) async {
+    final success = await controller.loginWithGoogle();
+
+    if (!context.mounted) {
+      return;
+    }
+
+    if (success) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const DashboardBottomNav()),
+        (route) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Google login failed')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +184,13 @@ class LoginScreen extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ForgotPasswordScreen(
+                          email: controller.emailController.text.trim(),
+                        ),
+                      ),
+                    ),
                     child: const Text('Forgot password?'),
                   ),
                 ),
@@ -174,7 +205,9 @@ class LoginScreen extends StatelessWidget {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: controller.isLoading.value
+                      // Google chal raha ho to bhi band, par loader sirf
+                      // isi button ka apna (isLoading)
+                      onPressed: controller.isBusy
                           ? null
                           : () async {
                               final success = await controller.login();
@@ -262,7 +295,7 @@ class LoginScreen extends StatelessWidget {
                         size: 30,
                       ),
 
-                      label: controller.isLoading.value
+                      label: controller.isGoogleLoading.value
                           ? const SizedBox(
                               height: 22,
                               width: 22,
@@ -273,31 +306,9 @@ class LoginScreen extends StatelessWidget {
                               style: TextStyle(fontWeight: FontWeight.w500),
                             ),
 
-                      onPressed: controller.isLoading.value
+                      onPressed: controller.isBusy
                           ? null
-                          : () async {
-                              final success = await controller
-                                  .loginWithGoogle();
-
-                              if (!context.mounted) {
-                                return;
-                              }
-
-                              if (success) {
-                                Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(
-                                    builder: (_) => const DashboardBottomNav(),
-                                  ),
-                                  (route) => false,
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('❌ Google login failed'),
-                                  ),
-                                );
-                              }
-                            },
+                          : () => _googleLogin(context, controller),
                     ),
                   );
                 }),
@@ -307,26 +318,40 @@ class LoginScreen extends StatelessWidget {
                 // ==================================================
                 // SIGN UP
                 // ==================================================
+                // Naya account = Google se sign in. Server account bana deta
+                // hai, phir "Onboard your property" form khulta hai (web jaisa)
                 Center(
-                  child: RichText(
-                    text: TextSpan(
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                  child: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account? ",
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                      children: [
-                        const TextSpan(text: "Don't have an account? "),
-
-                        TextSpan(
-                          text: 'Sign up',
-                          style: TextStyle(
-                            color: theme.colorScheme.primary,
-                            decoration: TextDecoration.lineThrough,
-                            decorationColor: theme.colorScheme.primary,
-                            decorationThickness: 2,
+                      Obx(
+                        () => InkWell(
+                          borderRadius: BorderRadius.circular(6),
+                          onTap: controller.isBusy
+                              ? null
+                              : () => _googleLogin(context, controller),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 6,
+                            ),
+                            child: Text(
+                              'Sign up with Google',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
 

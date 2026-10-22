@@ -10,6 +10,7 @@ import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screen
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/dashboardwidget/dashboard_card.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/dashboardwidget/dashboard_hero.dart';
 import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/screens/drawerScreen/drawerScreen.dart';
+import 'package:eazotel/features/dashboard_screen/screens/dashboardScreen/widgets/client_accounts_list.dart';
 import 'package:eazotel/features/googleAnalytis/controller/analytisController.dart';
 import 'package:eazotel/features/googleAnalytis/screen/analytics_line_chart.dart';
 import 'package:eazotel/features/googleAnalytis/screen/widgets/analytics_layout.dart';
@@ -210,36 +211,104 @@ class DashboardScreen extends StatelessWidget {
 
           VSpace(height: 12),
 
-          TextField(
-            onChanged: locationController.searchHotels,
-            decoration: const InputDecoration(
-              hintText: 'Search hotel',
-              prefixIcon: Icon(Icons.search),
-            ),
-          ),
+          // Owner: Locations | Client accounts (baaki users ko sirf locations)
+          Obx(() {
+            if (!locationController.isViewingClient) {
+              return const SizedBox.shrink();
+            }
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.admin_panel_settings_outlined),
+                title: const Text('Owner session active'),
+                subtitle: const Text('Viewing a client account'),
+                trailing: TextButton(
+                  onPressed: locationController.switchingClient.value.isEmpty
+                      ? () => ClientAccountsList.returnToOwner(context)
+                      : null,
+                  child: const Text('Back to my account'),
+                ),
+              ),
+            );
+          }),
+          Obx(() {
+            if (!locationController.isOwner) return const SizedBox.shrink();
 
-          VSpace(height: 12),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment(
+                      value: false,
+                      icon: Icon(Icons.location_on_outlined),
+                      label: Text('Locations'),
+                    ),
+                    ButtonSegment(
+                      value: true,
+                      icon: Icon(Icons.business_center_outlined),
+                      label: Text('Client accounts'),
+                    ),
+                  ],
+                  selected: {locationController.showClients.value},
+                  showSelectedIcon: false,
+                  onSelectionChanged: (s) {
+                    locationController.showClients.value = s.first;
+                    if (s.first && locationController.clients.isEmpty) {
+                      locationController.loadClients();
+                    }
+                  },
+                ),
+              ),
+            );
+          }),
 
           Expanded(
-            child: Obx(() {
-              final hotels = locationController.filteredHotels;
-
-              if (hotels.isEmpty) {
-                return const Center(child: Text('No hotel found'));
-              }
-
-              return ListView.builder(
-                padding: EdgeInsets.zero,
-                itemCount: hotels.length,
-                itemBuilder: (context, index) {
-                  return hotelItem(context, hotels[index]);
-                },
-              );
-            }),
+            child: Obx(
+              () =>
+                  locationController.isOwner &&
+                      locationController.showClients.value
+                  ? ClientAccountsList(controller: locationController)
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          onChanged: locationController.searchHotels,
+                          decoration: const InputDecoration(
+                            hintText: 'Search hotel',
+                            prefixIcon: Icon(Icons.search),
+                          ),
+                        ),
+                        VSpace(height: 12),
+                        Expanded(child: _hotelList()),
+                      ],
+                    ),
+            ),
           ),
         ],
       ),
     );
+  }
+
+  /// Is user ki locations (admin = saari, team member = sirf assigned)
+  Widget _hotelList() {
+    return Obx(() {
+      final hotels = locationController.filteredHotels;
+
+      if (hotels.isEmpty) {
+        return const Center(child: Text('No hotel found'));
+      }
+
+      return ListView.builder(
+        padding: EdgeInsets.zero,
+        itemCount: hotels.length,
+        itemBuilder: (context, index) {
+          return hotelItem(context, hotels[index]);
+        },
+      );
+    });
   }
 
   // ============================================================

@@ -36,7 +36,7 @@ Future<void> main() async {
 
 /// Sirf debug + --dart-define=DEVICE_PREVIEW=true par
 const bool _devicePreview =
-    kDebugMode ;
+    kDebugMode && bool.fromEnvironment('DEVICE_PREVIEW', defaultValue: true);
 
 /// App khulte hi SharedPreferences me saved access token console me dikhata hai.
 /// Sirf debug build me (release me token log nahi hota).

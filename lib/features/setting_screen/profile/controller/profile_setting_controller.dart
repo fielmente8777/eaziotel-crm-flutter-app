@@ -14,7 +14,7 @@ import 'package:eazotel/core/api/apiexception/api_exception.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/dashboard_api_controller.dart';
 import 'package:eazotel/features/dashboard_screen/controllers/headerLocationController.dart';
 import 'package:eazotel/features/dashboard_screen/models/HotelIdProfileResponseModel%20.dart';
-import 'package:eazotel/features/dashboard_screen/models/ProfileMembersModel.dart';
+import 'package:eazotel/features/dashboard_screen/models/auth_user_model.dart';
 import 'package:eazotel/features/setting_screen/whatsapp/models/whatsapp_action_response.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -41,25 +41,17 @@ class ProfileSettingController extends GetxController {
 
   List<HotelModel> get hotels => location.hotels;
 
-  /// Login kiya hua user: hotel ke email wala, warna list ka pehla
-  UserModel? get currentUser {
-    final users = dashboard.userNameResponse.value?.data ?? [];
-    if (users.isEmpty) return null;
-
-    final email = profile?.hotelEmail.trim().toLowerCase() ?? '';
-
-    return users.firstWhereOrNull(
-          (u) => (u.emailId ?? '').trim().toLowerCase() == email,
-        ) ??
-        users.first;
-  }
+  /// GET /user/user-details identity; retain the logged-in owner in client view.
+  AuthUserModel? get currentUser =>
+      dashboard.ownerUser.value ?? dashboard.authUser.value;
 
   // ============================================================
   // HOTELS
   // ============================================================
 
   /// Add / edit / delete sirf admin kar sakta hai (web jaisa)
-  bool get canManageHotels => dashboard.user.value?.admin ?? false;
+  bool get canManageHotels =>
+      dashboard.authUser.value?.isAdmin ?? dashboard.user.value?.admin ?? false;
 
   /// Abhi app me chuna hua hotel
   String get currentHotelId => location.selectedHotel.value?.hotelId ?? '';

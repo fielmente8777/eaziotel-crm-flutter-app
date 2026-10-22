@@ -7,6 +7,14 @@ import 'package:eazotel/features/dashboard_screen/controllers/headerLocationCont
 import 'package:eazotel/features/leads/controller/lead_details_filter_controller.dart';
 import 'package:eazotel/features/leads/controller/lead_notes_api_controller.dart';
 import 'package:eazotel/features/leads/controller/leads_controller.dart';
+import 'package:eazotel/features/setting_screen/controller/setting_controller.dart';
+import 'package:eazotel/features/setting_screen/profile/controller/profile_setting_controller.dart';
+import 'package:eazotel/features/setting_screen/team_management/controller/team_management_controller.dart';
+import 'package:eazotel/features/setting_screen/whatsapp/controller/whatsapp_setting_controller.dart';
+import 'package:eazotel/features/setting_screen/integration/controller/integration_setting_controller.dart';
+import 'package:eazotel/features/setting_screen/notification/controller/notification_setting_controller.dart';
+import 'package:eazotel/features/setting_screen/subscription/controller/subscription_controller.dart';
+import 'package:eazotel/features/setting_screen/eazbot/controller/eazbot_setting_controller.dart';
 import 'package:eazotel/features/googleAnalytis/controller/analytisController.dart';
 import 'package:eazotel/features/notifications/controller/notification_controller.dart';
 import 'package:eazotel/features/whatsapp/controller/WhatsappImageController.dart.dart';
@@ -42,6 +50,17 @@ class SessionCleaner {
   /// screen par hota hai aur bina token ke khali controller dobara bana deta
   /// hai. Unhe hatane par naye user ke liye taaza controller bante hain.
   static void deleteControllers() {
+    // These keep references and settings belonging to the previous account.
+    _delete<ProfileSettingController>();
+    _delete<TeamManagementController>();
+    _delete<WhatsappSettingController>();
+    _delete<IntegrationSettingController>();
+    _delete<NotificationSettingController>();
+    _delete<SubscriptionController>();
+    _delete<EazbotSettingController>();
+    _delete<SettingController>();
+    // Stop location listeners before clearing the old dashboard's observables.
+    _delete<LocationController>();
     if (Get.isRegistered<DashboardController>()) {
       Get.find<DashboardController>().clearDashboardData();
     }
@@ -64,7 +83,6 @@ class SessionCleaner {
     _delete<LeadsController>();
 
     _delete<DashboardController>();
-    _delete<LocationController>();
     _delete<BottomNavController>();
   }
 

@@ -44,6 +44,7 @@ class SettingSectionCard extends StatelessWidget {
     this.title,
     this.subtitle,
     this.trailing,
+    this.headerAction,
   });
 
   final Widget child;
@@ -51,6 +52,7 @@ class SettingSectionCard extends StatelessWidget {
   final String? title;
   final String? subtitle;
   final String? trailing;
+  final Widget? headerAction;
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +76,7 @@ class SettingSectionCard extends StatelessWidget {
                   const SizedBox(width: 8),
                 ],
                 Flexible(
+                  fit: headerAction == null ? FlexFit.loose : FlexFit.tight,
                   child: Text(
                     title!,
                     style: TextStyle(
@@ -90,12 +93,16 @@ class SettingSectionCard extends StatelessWidget {
                     style: TextStyle(color: p.subText, fontSize: 11),
                   ),
                 ],
+                if (headerAction != null) ...[
+                  const SizedBox(width: 8),
+                  headerAction!,
+                ],
               ],
             ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 4),
-              Text(subtitle!, style: TextStyle(color: p.subText, fontSize: 12)),
-            ],
+            // if (subtitle != null) ...[
+            //   const SizedBox(height: 4),
+            //   Text(subtitle!, style: TextStyle(color: p.subText, fontSize: 12)),
+            // ],
             const SizedBox(height: 14),
           ],
           child,
